@@ -152,6 +152,8 @@ namespace res
         {
             gfx::add_material_model((gfx::Material*)(res_model->m_matpool + i), gfx_model); //update this in the future
         }
+
+        gfx_model->ready = true;
     }
 
     void free_model(Model* model) 

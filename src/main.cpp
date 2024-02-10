@@ -33,8 +33,8 @@ int height = 480;
 game::Camera camera;
 glm::mat4 proj, view, model, mvp;
 
-// res::Cache cache;
-// res::Loader loader;
+res::Cache cache;
+res::Loader loader;
 
 //editor
 int mode; // 0 - free / 1 - cam
@@ -76,26 +76,29 @@ int main(void)
     // glFrontFace(GL_CW); 
     glCullFace(GL_BACK);  
 
-    // std::thread loader_thread(res::loader_proc, std::ref(loader));
+    std::thread loader_thread(res::loader_proc, std::ref(loader));
 
     //load shader program
     gfx::Program program;
     res::load_program("shaders/vertex.glsl", "shaders/fragment.glsl", &program);
 
     //creating a model
-    gfx::Model model;
-    {
+    // gfx::Model model;
+    // {
 
-        res::Model res_model;
-        res::load_model("binary/cube.bin", &res_model);
-        res::convert_model(&res_model, &model);
-        res::free_model(&res_model);
-    }
+    //     res::Model res_model;
+    //     res::load_model("binary/sponza.bin", &res_model);
+    //     res::convert_model(&res_model, &model);
+    //     res::free_model(&res_model);
+    // }
+
+    res::order_model("binary/sponza.bin", loader, cache);
 
     //creating a texture
-    gfx::Texture2D texture;
-    res::load_texture2d("textures/wall.jpg", gfx::REPEAT, gfx::REPEAT, gfx::LINEAR, gfx::LINEAR, gfx::LINEAR, &texture);
-    
+    // gfx::Texture2D texture;
+    // res::load_texture2d("textures/wall.jpg", gfx::REPEAT, gfx::REPEAT, gfx::LINEAR, gfx::LINEAR, gfx::LINEAR, &texture);
+    res::order_texture2d("textures/wall.jpg", gfx::REPEAT, gfx::REPEAT, gfx::LINEAR, gfx::LINEAR, gfx::LINEAR, loader, cache);
+
     //create the camera
     game::create_camera({0.0, 0.0, 0.0}, {0.0, 0.0, -1.0}, {0.0, 1.0, 0.0}, 80.0, 1.0f, 10000.0f, 640.0f / 480.0f, &camera);
 
@@ -109,7 +112,7 @@ int main(void)
     while (!glfwWindowShouldClose(window))
     {
 
-        // res::loader_main(loader, cache);
+        res::loader_main(loader, cache);
 
         glfwPollEvents();
 
@@ -165,22 +168,22 @@ int main(void)
         gfx::bind_program(program);
 
         glActiveTexture(GL_TEXTURE0);
-        gfx::bind_texture2d(&texture);
+        gfx::bind_texture2d(&cache.m_textures["textures/wall.jpg"]);
         gfx::set_uniform_int("ourTexture", 0, program);
 
         gfx::set_uniform_mat4("MVP", &mvp[0][0], program);
 
-        gfx::draw_model(program, &model);
+        gfx::draw_model(program, &cache.m_models["binary/sponza.bin"]);
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
     }
 
-    // loader.finish();
-    // loader_thread.join();
+    loader.finish();
+    loader_thread.join();
 
     gfx::free_program(&program);
-    gfx::free_model(&model);
+    gfx::free_model(&cache.m_models["binary/sponza.bin"]);
 
     glfwTerminate();
 

@@ -63,5 +63,9 @@ namespace gfx
 
         unsigned int mesh_count;
         unsigned int mat_count;
+
+        bool ready;
+
+        Model() : ready(false) {}
     };
 }

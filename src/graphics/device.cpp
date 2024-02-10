@@ -249,6 +249,9 @@ namespace gfx
 
     void draw_model(Program program, Model* model) 
     {
+
+        if(!model->ready) { return; }
+
         glBindVertexArray(model->m_vao);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->m_ebo);
 
