@@ -3,6 +3,8 @@
 #include "graphics/primitives.hpp"
 #include "graphics/device.hpp"
 
+#include <iostream>
+
 namespace gfx 
 {
 
@@ -31,7 +33,7 @@ namespace gfx
         {
             char infoLog[512]; //need a logging system
             glGetShaderInfoLog(shader_id, 512, NULL, infoLog);
-            std::cout << infoLog << std::endl;
+            // std::cout << infoLog << std::endl;
             return; //call error on future logging sys
         }
 
@@ -55,7 +57,7 @@ namespace gfx
         if(!gl_success) {
             char infoLog[512];
             glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-            std::cout << infoLog << std::endl;
+            // std::cout << infoLog << std::endl;
             return; //call error on future logging sys
         }
 
@@ -65,133 +67,30 @@ namespace gfx
         *program = shaderProgram;
     }
 
-    void bind_program(const Program& program) 
+    void bind_program(Program program) 
     {
         glUseProgram(program);
     }
     
-    void set_uniform_int(const char* name, int value, const Program& program) 
+    void set_uniform_int(const char* name, int value, Program program) 
     {
         glUniform1i(glGetUniformLocation(program, name), (int)value);
     }
 
-    void set_uniform_mat4(const char* name, float* value, const Program& program) 
+    void set_uniform_mat4(const char* name, float* value, Program program) 
     {
         glUniformMatrix4fv(glGetUniformLocation(program, name), 1, GL_FALSE, value);
+    }
+
+    void set_uniform_vec3(const char* name, float* value, Program program)
+    {
+        glUniform3fv(glGetUniformLocation(program, name), 1, value); 
     }
 
     void free_program(Program* program) 
     {
         glDeleteProgram(*program);
         *program = 0;
-    }
-
-    //buffer
-
-    void create_buffer(BufferTarget target, BufferUsage usage, const void* data, std::size_t size, Buffer* buffer) 
-    {
-        buffer->m_size = size;
-
-        switch (usage) 
-        {
-            case DRAW_STATIC:
-                buffer->m_usage = GL_STATIC_DRAW; break;
-            case DRAW_DYNAMIC:
-                buffer->m_usage = GL_DYNAMIC_DRAW; break;
-            case DRAW_STREAM:
-                buffer->m_usage = GL_STREAM_DRAW; break;
-            default:
-                return; //call error on future logging sys
-        }
-
-        switch (target) 
-        {
-            case VERTEX_DATA:
-                buffer->m_target = GL_ARRAY_BUFFER; break;
-            case INDEX_DATA:
-                buffer->m_target = GL_ELEMENT_ARRAY_BUFFER; break;
-            default:
-                return; //call error on future logging sys
-        }
-
-        unsigned int buffer_id;
-        glGenBuffers(1, &buffer_id);
-
-        glBindBuffer(buffer->m_target, buffer_id);
-        glBufferData(buffer->m_target, buffer->m_size, data, buffer->m_usage); 
-        glBindBuffer(buffer->m_target, 0);
-
-        buffer->buffer_id = buffer_id;
-    }
-
-    void bind_buffer(Buffer& buffer) 
-    {
-        glBindBuffer(buffer.m_target, buffer.buffer_id);
-    }
-
-    void unbind_buffer(Buffer& buffer) 
-    {
-        glBindBuffer(buffer.m_target, 0);
-    }
-
-    void free_buffer(Buffer* buffer) 
-    {
-        glDeleteBuffers(1, &buffer->buffer_id);
-        buffer->buffer_id = 0;
-    }
-
-    //vao
-
-    void create_vao(VertexAtributes* vao) 
-    {
-        unsigned int vao_id;
-        glGenVertexArrays(1, &vao_id);
-
-        *vao = vao_id;
-    }
-
-    void add_atributes(Atribute* atribs, unsigned int length, VertexAtributes& vao) 
-    {
-
-        glBindVertexArray(vao);
-
-        for (unsigned int i = 0; i < length; i++) 
-        {
-            Atribute* atrib = atribs + i;
-            bind_buffer(atrib->m_vb);
-            switch(atrib->m_type) 
-            {
-                case FLOAT:
-                    glVertexAttribPointer(atrib->m_index, atrib->m_size, GL_FLOAT, atrib->m_normalized ? GL_TRUE : GL_FALSE, atrib->m_stride, (void*)atrib->m_offset); break;
-                case INT:
-                    glVertexAttribIPointer(atrib->m_index, atrib->m_size, GL_INT, atrib->m_stride, (void*)atrib->m_offset); break;
-                case DOUBLE:
-                    glVertexAttribLPointer(atrib->m_index, atrib->m_size, GL_DOUBLE, atrib->m_stride, (void*)atrib->m_offset); break;
-                default:
-                    return; //call error on future logging sys
-            }
-
-            glEnableVertexAttribArray(atrib->m_index);
-            unbind_buffer(atrib->m_vb);
-        }
-
-        glBindVertexArray(0);
-    }
-
-    void bind_vao(VertexAtributes& vao) 
-    {
-        glBindVertexArray(vao);
-    }
-
-    void unbind_vao() 
-    {
-        glBindVertexArray(0);
-    }
-
-    void free_vao(VertexAtributes* vao) 
-    {
-        glDeleteVertexArrays(1, vao);
-        *vao = 0;
     }
 
     //texture
@@ -295,55 +194,96 @@ namespace gfx
     void clear() 
     {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
-    //mesh
+    //model
 
-    void create_mesh(void* vs, unsigned int* ind, unsigned int vc, unsigned int ic, Mesh* mesh) 
+    void create_model(float* vs, unsigned int* ind, unsigned int vc, unsigned int ic, Model* model) 
     {
-        create_buffer(VERTEX_DATA, DRAW_STATIC, vs, sizeof(float) * 8 * vc, &mesh->m_vb);
-        create_buffer(INDEX_DATA, DRAW_STATIC, (void*)ind, sizeof(unsigned int) * ic, &mesh->m_ebo);
-        create_vao(&mesh->m_vao);
+        unsigned int vao, vbo, ebo;
+        glGenVertexArrays(1, &vao);
+        glGenBuffers(1, &vbo);
+        glGenBuffers(1, &ebo);
 
+        glBindVertexArray(vao);
+        
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8 * vc, vs, GL_STATIC_DRAW); 
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * ic, ind, GL_STATIC_DRAW); 
+
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0); glEnableVertexAttribArray(0); //position
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))); glEnableVertexAttribArray(1); //normals
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float))); glEnableVertexAttribArray(2); //tex-coords
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
+
+        model->m_vao = vao;
+        model->m_vbo = vbo;
+        model->m_ebo = ebo;
+
+        model->mesh_count = 0;
+        model->mat_count = 0;
+    }
+
+    unsigned int add_material_model(Material* mat, Model* model) 
+    {
+        if (model->mat_count >= 64) { return 0; }
+        Material* mat_dest = model->m_matpool + model->mat_count;
+        *mat_dest = *mat;
+        model->mat_count++;
+        return model->mat_count - 1;
+    }
+
+    void add_mesh_model(Mesh* mesh, Model* model)
+    {
+        if (model->mesh_count >= 64) { return; }
+        Mesh* mesh_dest = model->m_meshes + model->mesh_count;
+        *mesh_dest = *mesh;
+        model->mesh_count++;
+    }
+
+    void draw_model(Program program, Model* model) 
+    {
+        glBindVertexArray(model->m_vao);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->m_ebo);
+
+        // glDrawElements(GL_TRIANGLES, 786801, GL_UNSIGNED_INT, 0);
+        // glDrawRangeElements(GL_TRIANGLES, 6, 9, 3, GL_UNSIGNED_INT, 0);
+
+        for (unsigned int i = 0; i < model->mesh_count; i++) 
         {
-            Atribute atribs[3] = {
-                {mesh->m_vb, 0, 3, FLOAT, false, 8 * sizeof(float), 0},
-                {mesh->m_vb, 1, 3, FLOAT, false, 8 * sizeof(float), 3 * sizeof(float)},
-                {mesh->m_vb, 2, 2, FLOAT, false, 8 * sizeof(float), 6 * sizeof(float)}
-            };
-            
-            add_atributes(atribs, 3, mesh->m_vao);
+            //load in material and textures
+            set_uniform_vec3("Color", model->m_matpool[model->m_meshes[i].m_matindex].color, program);
+
+            //draw mesh
+            glDrawElements(GL_TRIANGLES, model->m_meshes[i].m_count, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * model->m_meshes[i].m_offset));
+
+            // std::cout <<  model->m_meshes[i].m_offset << std::endl;
+            // glDrawRangeElements(GL_TRIANGLES, 
+            //                     model->m_meshes[i].m_offset, 
+            //                     model->m_meshes[i].m_offset + model->m_meshes[i].m_count, 
+            //                     model->m_meshes[i].m_count, 
+            //                     GL_UNSIGNED_INT, (void*)0);
         }
 
-        mesh->m_vc = vc;
-        mesh->m_ic = ic;
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
     }
 
-    void bind_mesh(Mesh& mesh) 
+    void free_model(Model* model) 
     {
-        bind_vao(mesh.m_vao);
-        bind_buffer(mesh.m_ebo);
+        glDeleteBuffers(1, &model->m_vbo);
+        glDeleteBuffers(1, &model->m_ebo);
+        glDeleteVertexArrays(1, &model->m_vao);
+        
+        model->m_vbo = 0;
+        model->m_ebo = 0;
+        model->m_vao = 0;
     }
-
-    void draw_mesh(Mesh& mesh) 
-    {
-        glDrawElements(GL_TRIANGLES, mesh.m_ic, GL_UNSIGNED_INT, 0);
-    }
-
-    void unbind_mesh(Mesh& mesh) 
-    {
-        unbind_buffer(mesh.m_ebo);
-        unbind_vao();
-    }
-
-    void free_mesh(Mesh* mesh) 
-    {
-        free_buffer(&mesh->m_ebo);
-        free_buffer(&mesh->m_vb);
-        free_vao(&mesh->m_vao);
-    }
-
-
 
 }

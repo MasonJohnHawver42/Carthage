@@ -1,13 +1,16 @@
-#include <iostream>
-#include <unistd.h>
-
-#include "core/allocators.hpp"
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
 
 #include <vector>
 #include <unordered_map>
+#include <tuple>
+#include <iostream>
+#include <unistd.h>
+#include <fstream>
+#include <cstring>
+
+#include "resources/resources.hpp"
 
 struct Vertex 
 {
@@ -16,58 +19,62 @@ struct Vertex
     float tx, ty;
 };
 
-struct Mesh 
+void convert_path(char* fn) 
 {
-    float* data;
-    unsigned int* indicies;
-};
-
-struct Material 
-{
-    char* name;
-};
-
-struct Model 
-{
-    struct 
+    int i = 0;
+    while (fn[i] != '\0') 
     {
-        Mesh mesh;
-        Material mat;
-    }* objects;
+        if (fn[i] == '\\') { fn[i] = '/'; }
+        i++;
+    }
 }
+ 
+int convert_object(const char* in_fn, const char* in_dir, const char* out_fn) 
+{
+    std::string inputfn = std::string(MY_DATA_DIR) + in_fn;
+    std::string outputfn = std::string(MY_DATA_DIR) + out_fn;
 
-int main(void) {
-
-    std::string inputfile = std::string(MY_DATA_DIR) + "models/sponza/sponza.obj";
     tinyobj::ObjReaderConfig reader_config;
-    reader_config.mtl_search_path = std::string(MY_DATA_DIR) + "models/sponza"; // Path to material files
+    reader_config.mtl_search_path = std::string(MY_DATA_DIR) + in_dir; // Path to material files
 
     tinyobj::ObjReader reader;
 
-    if (!reader.ParseFromFile(inputfile, reader_config)) {
-    if (!reader.Error().empty()) {
-        std::cerr << "TinyObjReader: " << reader.Error();
-    }
-        exit(1);
+    if (!reader.ParseFromFile(inputfn, reader_config)) {
+        if (!reader.Error().empty()) {
+            std::cerr << "TinyObjReader: " << reader.Error();
+        }
+        return 1;
     }
 
     if (!reader.Warning().empty()) {
-    std::cout << "TinyObjReader: " << reader.Warning();
+        std::cout << "TinyObjReader: " << reader.Warning();
     }
 
     auto& attrib = reader.GetAttrib();
     auto& shapes = reader.GetShapes();
     auto& materials = reader.GetMaterials();
 
+    res::Model model;
 
+    std::vector<Vertex> verts;
+    std::vector<unsigned int> inds;
     for (size_t m = 0; m < materials.size(); m++) 
     {
+        std::unordered_map<size_t, unsigned int> vert_map;
 
-        std::vector<Vertex> verts();
-        std::vector<unsigned int> inds();
+        model.m_meshes[m].m_offset = inds.size();
+        model.m_meshes[m].m_matindex = m;
 
-        std::unordered_map<std::tuple<int, int, int>, unsigned int> vert_map();
-        unsigned int vert_index = 0;
+        for (int ti = 0; ti < 3; ti++) 
+        {
+            model.m_matpool[m].color[ti] = materials[m].diffuse[ti];
+        }
+
+        std::strcpy(model.m_matpool[m].diffuse_fn, in_dir);
+        std::strcat(model.m_matpool[m].diffuse_fn, materials[m].diffuse_texname.c_str());
+        convert_path(model.m_matpool[m].diffuse_fn);
+        std::cout << model.m_matpool[m].diffuse_fn << std::endl;
+        // std::cout << model.m_matpool[m].color[0] << " " << model.m_matpool[m].color[1] << " " << model.m_matpool[m].color[2] << " " << m << std::endl;
 
         for (size_t s = 0; s < shapes.size(); s++) 
         {
@@ -89,9 +96,10 @@ int main(void) {
                     for (size_t v = 0; v < fv; v++) 
                     {
                         tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
-                        std::tuple<int, int, int> hash = std::make_tuple(idx.vertex_index, idx.normal_index, idx.texcoord_index);
+                        size_t hash = idx.vertex_index + (idx.normal_index * attrib.vertices.size()) + (idx.texcoord_index * attrib.vertices.size() * attrib.normals.size());
+                        
                         auto it = vert_map.find(hash);
-                        if (it != vert_map.end() && idx.normal_index >= 0 && idx.texcoord_index >= 0) 
+                        if (it != vert_map.end()) 
                         {
                             inds.push_back(vert_map[hash]);
                         }
@@ -126,12 +134,16 @@ int main(void) {
                                 vert.ty = 0.0f;
                             }
 
+                            inds.push_back(verts.size());
+                            vert_map[hash] = verts.size();
                             verts.push_back(vert);
-                            inds.push_back(vert_index);
-                            vert_index++;
+
+                            // std::cout << idx.vertex_index << " " << vert.x << " " << vert.y << " " << vert.z << " " << verts.size() - 1 << std::endl;
                         }
+
                     }
 
+                    // std::cout << std::endl;
                 }
                 
                 index_offset += fv;
@@ -141,9 +153,69 @@ int main(void) {
 
         } 
 
-        
-
+        model.m_meshes[m].m_count = inds.size() - model.m_meshes[m].m_offset;
     }
+
+    float* data = (float*)malloc(verts.size() * sizeof(float) * 8);
+    unsigned int* inds_data = (unsigned int*)malloc(inds.size() * sizeof(unsigned int));
+
+    std::copy(inds.begin(), inds.end(), inds_data);
+    for (size_t i = 0; i < verts.size(); i++) 
+    {
+        data[(i * 8) + 0] = verts[i].x;
+        data[(i * 8) + 1] = verts[i].y;
+        data[(i * 8) + 2] = verts[i].z;
+        data[(i * 8) + 3] = verts[i].nx;
+        data[(i * 8) + 4] = verts[i].ny;
+        data[(i * 8) + 5] = verts[i].nz;
+        data[(i * 8) + 6] = verts[i].tx;
+        data[(i * 8) + 7] = verts[i].ty;
+    }
+
+    model.data = data;
+    model.indicies = inds_data;
+
+    model.vc = verts.size();
+    model.ic = inds.size();
+    model.mesh_count = materials.size();
+    model.mat_count = materials.size();
+
+    std::ofstream fs(outputfn, std::ios::out | std::ios::binary );
+
+    if (!fs) {
+        std::cerr << "Error opening the file." << std::endl;
+        return 1;
+    }
+
+    std::cout << model.vc << " " << model.ic << std::endl;
+
+    fs.write((const char*)(&model.vc), sizeof(unsigned int));
+    fs.write((const char*)(&model.ic), sizeof(unsigned int));
+
+    fs.write((const char*)(&model.mesh_count), sizeof(unsigned int));
+    fs.write((const char*)(&model.mat_count), sizeof(unsigned int));
+
+    fs.write((const char*)(model.m_matpool), sizeof(res::Material) * 64);
+    fs.write((const char*)(model.m_meshes), sizeof(res::Mesh) * 64);
+
+    fs.write((const char*)(model.data), sizeof(float) * model.vc * 8);
+    fs.write((const char*)(model.indicies), sizeof(unsigned int) * model.ic);
+
+    fs.close();
+
+    //free
+    delete[] model.data;
+    delete[] model.indicies;
+
+    return 0;
+}
+
+int main(void) 
+{
+
+    int res0 = convert_object("models/bunny/bunny.obj", "models/bunny/", "binary/bunny.bin");
+    int res1 = convert_object("models/sponza/sponza.obj", "models/sponza/", "binary/sponza.bin");
+    int res2 = convert_object("models/cube/cube.obj", "models/cube/", "binary/cube.bin");
 
     return 0;
 }

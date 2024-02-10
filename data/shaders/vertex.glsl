@@ -7,6 +7,7 @@ out vec3 ourColor; // output a color to the fragment shader
 out vec2 TexCord; // output a color to the fragment shader
 
 uniform mat4 MVP;
+uniform vec3 Color;
 
 void main()
 {

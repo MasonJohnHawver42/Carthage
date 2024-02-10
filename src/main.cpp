@@ -6,16 +6,21 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/string_cast.hpp>
 
-#include <iostream>
+// #include <iostream>
 
 //my graphics library
 #include "graphics/device.hpp"
 
 //my file resource library
 #include "resources/resources.hpp"
+#include "resources/loader.hpp"
 
 //my game library
 #include "game/camera.hpp"
+
+#include <iostream>
+#include <thread>
+#include <unistd.h>
 
 void error_callback(int error, const char* description);
 
@@ -27,6 +32,9 @@ int height = 480;
 
 game::Camera camera;
 glm::mat4 proj, view, model, mvp;
+
+// res::Cache cache;
+// res::Loader loader;
 
 //editor
 int mode; // 0 - free / 1 - cam
@@ -59,38 +67,50 @@ int main(void)
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
-        std::cout << "Failed to initialize GLAD" << std::endl;
+        // std::cout << "Failed to initialize GLAD" << std::endl;
         exit(EXIT_FAILURE);
     }
 
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);  
+    // glFrontFace(GL_CW); 
+    glCullFace(GL_BACK);  
+
+    // std::thread loader_thread(res::loader_proc, std::ref(loader));
+
+    //load shader program
     gfx::Program program;
     res::load_program("shaders/vertex.glsl", "shaders/fragment.glsl", &program);
 
-    float vertices[] = {
-        // positions          // colors           // texture coords
-        0.8f,  0.8f, -1.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
-        0.8f, -0.8f, -1.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
-        -0.8f, -0.8f, -1.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
-        -0.8f,  0.8f, -1.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
-    };
+    //creating a model
+    gfx::Model model;
+    {
 
-    unsigned int indices[] = {  // note that we start from 0!
-        0, 1, 3,   // first triangle
-        1, 2, 3    // second triangle
-    }; 
+        res::Model res_model;
+        res::load_model("binary/cube.bin", &res_model);
+        res::convert_model(&res_model, &model);
+        res::free_model(&res_model);
+    }
 
-    gfx::Mesh mesh;
-    gfx::create_mesh((void*)vertices, indices, 4, 6, &mesh);
-
-    gfx::Texture2D tex;
-    res::load_texture2d("textures/wall.jpg", gfx::REPEAT, gfx::REPEAT, gfx::LINEAR, gfx::LINEAR, gfx::LINEAR, &tex);
-    game::create_camera({0.0, 0.0, 0.0}, {0.0, 0.0, -1.0}, {0.0, 1.0, 0.0}, 80.0, 0, 100, 640.0f / 480.0f, &camera);
+    //creating a texture
+    gfx::Texture2D texture;
+    res::load_texture2d("textures/wall.jpg", gfx::REPEAT, gfx::REPEAT, gfx::LINEAR, gfx::LINEAR, gfx::LINEAR, &texture);
+    
+    //create the camera
+    game::create_camera({0.0, 0.0, 0.0}, {0.0, 0.0, -1.0}, {0.0, 1.0, 0.0}, 80.0, 1.0f, 10000.0f, 640.0f / 480.0f, &camera);
 
     glfwGetCursorPos(window, &xpos0, &ypos0);
+
+    // Get the process ID
+    pid_t processId = getpid();
+    std::cout << "Process ID: " << processId << std::endl;
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
+
+        // res::loader_main(loader, cache);
+
         glfwPollEvents();
 
         if (mode == 2) 
@@ -98,7 +118,7 @@ int main(void)
             double xpos1, ypos1;
             glfwGetCursorPos(window, &xpos1, &ypos1);
 
-            operate_camera(0.1, 1, .02, xpos1 - xpos0, ypos1 - ypos0,
+            operate_camera(0.1, 100, .02, xpos1 - xpos0, ypos1 - ypos0,
                 glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS, 
                 glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS,
                 glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS,
@@ -135,8 +155,6 @@ int main(void)
             mode = 0;
         }
 
-
-
         game::proj_matrix(camera, proj);
         game::view_matrix(camera, view);
 
@@ -145,23 +163,24 @@ int main(void)
         gfx::clear();
 
         gfx::bind_program(program);
-        gfx::bind_mesh(mesh);
 
         glActiveTexture(GL_TEXTURE0);
-        gfx::bind_texture2d(&tex);
+        gfx::bind_texture2d(&texture);
         gfx::set_uniform_int("ourTexture", 0, program);
 
         gfx::set_uniform_mat4("MVP", &mvp[0][0], program);
 
-        gfx::draw_mesh(mesh);
-        gfx::unbind_mesh(mesh);
+        gfx::draw_model(program, &model);
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
     }
 
+    // loader.finish();
+    // loader_thread.join();
+
     gfx::free_program(&program);
-    gfx::free_mesh(&mesh);
+    gfx::free_model(&model);
 
     glfwTerminate();
 

@@ -21,8 +21,6 @@ namespace game
         cam->m_near = near;
         cam->m_far = far;
         cam->m_aspect = aspect;
-
-        // cam->m_right = glm::normalize(glm::cross(view_dir, up));
     }
 
     void view_matrix(Camera& cam, glm::mat4& mat) 

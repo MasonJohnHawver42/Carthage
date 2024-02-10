@@ -13,52 +13,6 @@ namespace gfx
     typedef unsigned int Shader;
     typedef unsigned int Program;
 
-    enum BufferTarget 
-    {
-        VERTEX_DATA,
-        INDEX_DATA
-    };
-
-    enum BufferUsage 
-    {
-        DRAW_STATIC,
-        DRAW_DYNAMIC,
-        DRAW_STREAM
-    };
-
-    struct Buffer 
-    {
-        GLenum m_target;
-        GLenum m_usage;
-
-        std::size_t m_size;
-
-        unsigned int buffer_id;
-    };
-
-    enum VertexType 
-    {
-        FLOAT,
-        INT,
-        DOUBLE
-    };
-
-    struct Atribute 
-    {
-        Buffer m_vb;
-
-        unsigned int m_index;
-        unsigned int m_size;
-
-        VertexType m_type;
-
-        bool m_normalized;
-
-        std::size_t m_stride, m_offset;
-    };
-
-    typedef unsigned int VertexAtributes;
-
     enum PixelFormat 
     {
         RGBA,
@@ -83,14 +37,31 @@ namespace gfx
         FilterConfig m_max, m_min, m_mipmap;
 
         unsigned int id, width, height;
+
+        Texture2D() {}
     };
-    
+
+    struct Material 
+    {
+        float color[3];
+    };
+
     struct Mesh 
     {
-        Buffer m_vb;
-        Buffer m_ebo;
-        VertexAtributes m_vao;
+        unsigned int m_offset, m_count;
+        unsigned int m_matindex;
+    };
 
-        unsigned int m_vc, m_ic;
+    struct Model 
+    {
+        unsigned int m_vbo;
+        unsigned int m_ebo;
+        unsigned int m_vao;
+
+        Material m_matpool[64];
+        Mesh     m_meshes[64];
+
+        unsigned int mesh_count;
+        unsigned int mat_count;
     };
 }
