@@ -44,6 +44,7 @@ namespace gfx
     struct Material 
     {
         float color[3];
+        unsigned int diffuse_texture_id;
     };
 
     struct Mesh 

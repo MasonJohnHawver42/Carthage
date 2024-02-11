@@ -167,9 +167,9 @@ int main(void)
 
         gfx::bind_program(program);
 
-        glActiveTexture(GL_TEXTURE0);
-        gfx::bind_texture2d(&cache.m_textures["textures/wall.jpg"]);
-        gfx::set_uniform_int("ourTexture", 0, program);
+        // glActiveTexture(GL_TEXTURE0);
+        // gfx::bind_texture2d(&cache.m_textures["textures/wall.jpg"]);
+        // gfx::set_uniform_int("ourTexture", 0, program);
 
         gfx::set_uniform_mat4("MVP", &mvp[0][0], program);
 

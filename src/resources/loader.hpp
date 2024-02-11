@@ -89,21 +89,15 @@ namespace res
 
         void load(const LoadIMG& msg) 
         {
-            {
-                std::lock_guard lock(m_load_m);
-                m_load_q.emplace(msg);  
-            }
-
+            std::lock_guard lock(m_load_m);
+            m_load_q.emplace(msg);  
             m_cond.notify_one();
         }
 
         void load(const LoadModel& msg) 
         {
-            {
-                std::lock_guard lock(m_load_m);
-                m_load_q.emplace(msg);  
-            }
-
+            std::lock_guard lock(m_load_m);
+            m_load_q.emplace(msg);  
             m_cond.notify_one();
         }
 
@@ -176,17 +170,6 @@ namespace res
                 else 
                 {
                     //wtf
-                }
-
-                {
-                    LoadIMG load_img;
-                    std::lock_guard lock(loader.m_load_m);
-                    for (int i = 0; i < model->mat_count; i++) 
-                    {
-                        std::strcpy(load_img.file_name, model->m_matpool[i].diffuse_fn);
-                        loader.m_load_q.emplace(load_img);
-                        loader.m_cond.notify_one();
-                    }
                 }
 
                 std::lock_guard<std::mutex> lock(loader.m_comp_m);
@@ -265,8 +248,29 @@ namespace res
                 else { model = &cache.m_models[key]; }
 
                 model_data = comp_msg.m_model.m_model;
-
                 convert_model(model_data, model);
+
+                {
+                    LoadIMG load_img;
+                    gfx::Texture2D* texture; 
+                    std::lock_guard lock(loader.m_load_m);
+                    for (int i = 0; i < model_data->mat_count; i++) 
+                    {
+                        std::string key = model_data->m_matpool[i].diffuse_fn;
+                        if (cache.m_models.find(key) != cache.m_models.end()) { continue; }
+
+                        cache.m_textures.try_emplace(key);
+                        texture = &cache.m_textures[key];
+                        gfx::create_texture2d(gfx::REPEAT, gfx::REPEAT, gfx::LINEAR, gfx::LINEAR, gfx::LINEAR, texture);
+
+                        model->m_matpool[i].diffuse_texture_id = texture->id;
+
+                        std::strcpy(load_img.file_name, model_data->m_matpool[i].diffuse_fn);
+                        loader.m_load_q.emplace(load_img);
+                        loader.m_cond.notify_one();
+                    }
+                }
+
                 free_model(model_data);
 
                 break;

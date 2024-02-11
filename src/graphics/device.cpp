@@ -258,10 +258,15 @@ namespace gfx
         // glDrawElements(GL_TRIANGLES, 786801, GL_UNSIGNED_INT, 0);
         // glDrawRangeElements(GL_TRIANGLES, 6, 9, 3, GL_UNSIGNED_INT, 0);
 
+        gfx::set_uniform_int("ourTexture", 0, program);
+
         for (unsigned int i = 0; i < model->mesh_count; i++) 
         {
             //load in material and textures
             set_uniform_vec3("Color", model->m_matpool[model->m_meshes[i].m_matindex].color, program);
+
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, model->m_matpool[i].diffuse_texture_id);
 
             //draw mesh
             glDrawElements(GL_TRIANGLES, model->m_meshes[i].m_count, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * model->m_meshes[i].m_offset));

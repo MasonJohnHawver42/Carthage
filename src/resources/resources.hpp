@@ -150,7 +150,9 @@ namespace res
 
         for (int i = 0; i < res_model->mat_count; i++) 
         {
-            gfx::add_material_model((gfx::Material*)(res_model->m_matpool + i), gfx_model); //update this in the future
+            gfx_model->m_matpool[i].color[0] = res_model->m_matpool[i].color[0];
+            gfx_model->m_matpool[i].color[1] = res_model->m_matpool[i].color[1];
+            gfx_model->m_matpool[i].color[2] = res_model->m_matpool[i].color[2];
         }
 
         gfx_model->ready = true;
