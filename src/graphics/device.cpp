@@ -33,7 +33,8 @@ namespace gfx
         {
             char infoLog[512]; //need a logging system
             glGetShaderInfoLog(shader_id, 512, NULL, infoLog);
-            // std::cout << infoLog << std::endl;
+            std::cout << "Shader: " << source << std::endl;
+            std::cout << infoLog << std::endl;
             return; //call error on future logging sys
         }
 
@@ -57,7 +58,8 @@ namespace gfx
         if(!gl_success) {
             char infoLog[512];
             glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-            // std::cout << infoLog << std::endl;
+            std::cout << "Program : " << vert_source << " " << frag_source << std::endl;
+            std::cout << infoLog << std::endl;
             return; //call error on future logging sys
         }
 
@@ -75,6 +77,11 @@ namespace gfx
     void set_uniform_int(const char* name, int value, Program program) 
     {
         glUniform1i(glGetUniformLocation(program, name), (int)value);
+    }
+
+    void set_uniform_float(const char* name, float value, Program program) 
+    {
+        glUniform1f(glGetUniformLocation(program, name), (int)value);
     }
 
     void set_uniform_mat4(const char* name, float* value, Program program) 
@@ -172,21 +179,43 @@ namespace gfx
     {
         glBindTexture(GL_TEXTURE_2D, tex->id);
     }
+
+    void free_texture2d(Texture2D* tex) 
+    {
+        glDeleteTextures(1, &tex->id);
+    }
     
     void load_texture2d(int width, int height, int nc, unsigned char* data, Texture2D* tex) 
     {
 
-        if (nc != 3 && nc != 4) { return; }
+        if (nc != 1 && nc != 3 && nc != 4) { return; }
 
         bind_texture2d(tex);
 
-        GLint pf = (nc == 3) ? GL_RGB : GL_RGBA;
+        GLint pf;
+        if (nc == 1) { pf = GL_RED; }
+        if (nc == 3) { pf = GL_RGB; }
+        if (nc == 4)  { pf = GL_RGBA; }
 
         glTexImage2D(GL_TEXTURE_2D, 0, pf, width, height, 0, pf, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
 
         tex->width = width;
         tex->height = height;
+    }
+
+    void default_texture2d(Texture2D* tex) 
+    {
+        create_texture2d(WrapConfig::REPEAT, WrapConfig::REPEAT, FilterConfig::NEAREST, FilterConfig::NEAREST, FilterConfig::NEAREST, tex);
+        
+        unsigned char image[8][8];
+        unsigned char* data = (unsigned char *)image;
+        for (int i = 0; i < 8 * 8; i++) 
+        {
+            image[i / 8][i % 8] = (i + i / 8) % 2 ? 0 : 255;
+        }
+
+        load_texture2d(8, 8, 1, data, tex);
     }
 
     //util
@@ -230,57 +259,12 @@ namespace gfx
         model->mat_count = 0;
     }
 
-    unsigned int add_material_model(Material* mat, Model* model) 
-    {
-        if (model->mat_count >= 64) { return 0; }
-        Material* mat_dest = model->m_matpool + model->mat_count;
-        *mat_dest = *mat;
-        model->mat_count++;
-        return model->mat_count - 1;
-    }
-
     void add_mesh_model(Mesh* mesh, Model* model)
     {
         if (model->mesh_count >= 64) { return; }
         Mesh* mesh_dest = model->m_meshes + model->mesh_count;
         *mesh_dest = *mesh;
         model->mesh_count++;
-    }
-
-    void draw_model(Program program, Model* model) 
-    {
-
-        if(!model->ready) { return; }
-
-        glBindVertexArray(model->m_vao);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->m_ebo);
-
-        // glDrawElements(GL_TRIANGLES, 786801, GL_UNSIGNED_INT, 0);
-        // glDrawRangeElements(GL_TRIANGLES, 6, 9, 3, GL_UNSIGNED_INT, 0);
-
-        gfx::set_uniform_int("ourTexture", 0, program);
-
-        for (unsigned int i = 0; i < model->mesh_count; i++) 
-        {
-            //load in material and textures
-            set_uniform_vec3("Color", model->m_matpool[model->m_meshes[i].m_matindex].color, program);
-
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, model->m_matpool[i].diffuse_texture_id);
-
-            //draw mesh
-            glDrawElements(GL_TRIANGLES, model->m_meshes[i].m_count, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * model->m_meshes[i].m_offset));
-
-            // std::cout <<  model->m_meshes[i].m_offset << std::endl;
-            // glDrawRangeElements(GL_TRIANGLES, 
-            //                     model->m_meshes[i].m_offset, 
-            //                     model->m_meshes[i].m_offset + model->m_meshes[i].m_count, 
-            //                     model->m_meshes[i].m_count, 
-            //                     GL_UNSIGNED_INT, (void*)0);
-        }
-
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-        glBindVertexArray(0);
     }
 
     void free_model(Model* model) 
@@ -292,6 +276,144 @@ namespace gfx
         model->m_vbo = 0;
         model->m_ebo = 0;
         model->m_vao = 0;
+    }
+
+
+    float shape_vs[] = 
+    {
+        0.5f, -0.5f, -0.5f,
+        0.5f, -0.5f, 0.5f,
+        -0.5f, -0.5f, 0.5f,
+        -0.5f, -0.5f, -0.5f,
+        0.5f, 0.5f, -0.5f,
+        0.5f, 0.5f, 0.5f,
+        -0.5f, 0.5f, 0.5f,
+        -0.5f, 0.5f, -0.5f
+    };
+
+    unsigned int shape_ind[] = 
+    {
+        1, 2, 3,
+        4, 7, 6,
+        4, 5, 1,
+        1, 5, 6,
+        6, 7, 3,
+        4, 0, 3,
+        0, 1, 3,
+        5, 4, 6,
+        0, 4, 1,
+        2, 1, 6,
+        2, 6, 3,
+        7, 4, 3
+    };
+
+    void create_shape_buffer(unsigned int size, ShapeBuffer* sb) 
+    {
+        unsigned int vao, vbo, ebo;
+        glGenVertexArrays(1, &vao);
+        glGenBuffers(1, &vbo);
+        glGenBuffers(1, &ebo);
+
+        glBindVertexArray(vao);
+        
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(shape_vs), shape_vs, GL_STATIC_DRAW); 
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(shape_ind), shape_ind, GL_STATIC_DRAW); 
+    
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0); glEnableVertexAttribArray(0); //position
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
+
+        sb->m_vao = vao;
+        sb->m_vbo = vbo;
+        sb->m_ebo = ebo;
+
+        unsigned int ssbo;
+        glGenBuffers(1, &ssbo);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, size * sizeof(ShapeEntry), NULL, GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+        sb->m_ssbo = ssbo;
+
+        sb->m_shapes[0].m_offset = 0;
+        sb->m_shapes[0].m_count = 36;
+        sb->m_count = 0;
+    }
+
+    void push_shape_buffer(unsigned int size, Shape type, void* data, ShapeBuffer* sb) 
+    {
+        if (sb->m_count == Shape::SHAPE_COUNT && sb->m_partition[sb->m_count - 1].m_type != type) { return; }
+        unsigned int offset = sb->m_count == 0 ? 0 : (sb->m_partition[sb->m_count - 1].m_offset + sb->m_partition[sb->m_count - 1].m_count);
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, sb->m_ssbo);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset * sizeof(ShapeEntry), size * sizeof(ShapeEntry), data);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+        if ( sb->m_count > 0 && sb->m_partition[sb->m_count - 1].m_type == type) { sb->m_partition[sb->m_count - 1].m_count += size; }
+        else 
+        {
+            sb->m_partition[sb->m_count].m_offset = offset;
+            sb->m_partition[sb->m_count].m_count = size;
+            sb->m_partition[sb->m_count].m_type = type;
+            sb->m_count++;
+        }
+
+    }
+
+    void flush_shape_buffer(ShapeBuffer* sb) 
+    {
+        sb->m_count = 0;
+    }
+
+    void draw_shape_buffer(Program program, ShapeBuffer* sb) 
+    {
+        glBindVertexArray(sb->m_vao);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sb->m_ebo);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, sb->m_ssbo);
+        // printf("%d %d %d %d %d %d\n", sb->m_count, sb->m_partition[0].m_type, sb->m_partition[0].m_offset, sb->m_partition[0].m_count, sb->m_shapes[0].m_count, sb->m_shapes[0].m_offset);
+        for (int i = 0; i < sb->m_count; i++) 
+        {
+            unsigned int s = sb->m_partition[i].m_type;
+            set_uniform_int("offset", sb->m_partition[i].m_offset, program);
+            glDrawElementsInstanced(GL_TRIANGLES, sb->m_shapes[s].m_count, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * sb->m_shapes[s].m_offset), sb->m_partition[i].m_count);
+        }
+        // glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, 0);
+    }
+
+    void free_shape_buffer(ShapeBuffer* sb) 
+    {
+        glDeleteBuffers(1, &sb->m_ssbo);
+        glDeleteVertexArrays(1, &sb->m_vao);
+        glDeleteBuffers(1, &sb->m_ebo);
+        glDeleteBuffers(1, &sb->m_vbo);
+    }
+
+
+    void bind_pipeline(Pipeline* pipe) 
+    {
+        glUseProgram(pipe->m_prog);
+        glEnable(GL_CULL_FACE);
+
+        switch (pipe->m_cull) 
+        {
+            case NONE:  glDisable(GL_CULL_FACE); break;
+            case FRONT: glCullFace(GL_FRONT); break;
+            case BACK:  glCullFace(GL_BACK); break;
+        }
+
+        switch (pipe->m_draw) 
+        {
+            case FILL: glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); break;
+            case LINE: glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); break;
+        }
     }
 
 }

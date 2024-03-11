@@ -13,6 +13,26 @@ namespace gfx
     typedef unsigned int Shader;
     typedef unsigned int Program;
 
+    enum CullMode 
+    {
+        NONE,
+        FRONT,
+        BACK
+    };
+
+    enum DrawMode 
+    {
+        FILL,
+        LINE
+    };
+
+    struct Pipeline 
+    {
+        Program m_prog;
+        CullMode m_cull;
+        DrawMode m_draw;
+    };  
+
     enum PixelFormat 
     {
         RGBA,
@@ -49,8 +69,7 @@ namespace gfx
 
     struct Mesh 
     {
-        unsigned int m_offset, m_count;
-        unsigned int m_matindex;
+        unsigned int m_offset, m_count, m_mat_id;
     };
 
     struct Model 
@@ -59,7 +78,6 @@ namespace gfx
         unsigned int m_ebo;
         unsigned int m_vao;
 
-        Material m_matpool[64];
         Mesh     m_meshes[64];
 
         unsigned int mesh_count;
@@ -67,6 +85,46 @@ namespace gfx
 
         bool ready;
 
+        float aabb_min[3];
+        float aabb_max[3];
+
         Model() : ready(false) {}
     };
+
+    enum Shape 
+    {
+        CUBE = 0,
+        // QUAD = 1,
+        // CYLINDER = 2,
+        // CONE = 3,
+        SHAPE_COUNT = 1
+    };
+
+    struct ShapeEntry
+    {
+        float mat[16];
+        float color[4];
+    };
+
+    struct ShapeBuffer 
+    {
+        unsigned int m_vbo;
+        unsigned int m_ebo;
+        unsigned int m_vao;
+        unsigned int m_ssbo;
+
+        struct 
+        {
+            unsigned int m_offset, m_count;
+        } m_shapes[Shape::SHAPE_COUNT];
+
+        struct 
+        {
+            unsigned int m_offset, m_count;
+            Shader m_type;
+        } m_partition[Shape::SHAPE_COUNT];
+
+        unsigned int m_count;
+    };
+
 }

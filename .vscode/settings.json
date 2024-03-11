@@ -71,9 +71,19 @@
         "typeinfo": "cpp",
         "valarray": "cpp",
         "variant": "cpp",
-        "*.ipp": "cpp"
+        "*.ipp": "cpp",
+        "cassert": "cpp",
+        "primitiveset": "cpp",
+        "camera": "cpp",
+        "graphicscontext": "cpp"
     },
     "cSpell.words": [
-        "matpool"
+        "aabb",
+        "amax",
+        "avil",
+        "matpool",
+        "Octree",
+        "voxel",
+        "WIREFRAME"
     ]
 }

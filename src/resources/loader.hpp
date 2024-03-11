@@ -10,6 +10,9 @@
 #include <condition_variable>
 
 #include "resources/resources.hpp"
+#include "graphics/render.hpp"
+#include "core/event.hpp"
+
 
 namespace res 
 {
@@ -181,7 +184,7 @@ namespace res
         }
     }
 
-    void loader_main(Loader& loader, Cache& cache) 
+    void loader_main(Loader& loader, Cache& cache, gfx::Cache& gfx_cache) 
     {
 
         CompMSG comp_msg;
@@ -212,58 +215,74 @@ namespace res
             {
                 case FileType::IMG:
 
-                std::cout << "[INFO] Loading Texture: " << comp_msg.m_img.file_name << std::endl;
 
                 key = comp_msg.m_img.file_name;
-                if (cache.m_textures.find(key) == cache.m_textures.end()) 
+                if (cache.m_texture_map.find(key) == cache.m_texture_map.end()) 
                 {
-                    auto res = cache.m_textures.try_emplace(key);
-                    texture = &(res.first->second);
-                    gfx::create_texture2d(gfx::REPEAT, gfx::REPEAT, gfx::LINEAR, gfx::LINEAR, gfx::LINEAR, texture);
+                    unsigned int index;
+                    index = gfx_cache.m_texture_pool.allocate();
+                    texture = gfx_cache.m_texture_pool[index];
+                    cache.m_texture_map[key] = index; 
                 }
-                else { texture = &cache.m_textures[key]; }
+                else { texture = gfx_cache.m_texture_pool[cache.m_texture_map[key]]; }
 
                 img = comp_msg.m_img.m_img;
 
                 if (!img->data) 
                 {
-                    std::cout << "HERE" << std::endl;
+                    gfx::free_texture2d(texture);
+                    *texture = gfx_cache.m_default_tex;
+                }
+                else 
+                {
+                    gfx::load_texture2d(img->width, img->height, img->nc, img->data, texture);
+                    printf("[res::INFO] Loaded Texture [%d] : %s\n", texture->id, comp_msg.m_img.file_name);
                 }
 
-                gfx::load_texture2d(img->width, img->height, img->nc, img->data, texture);
                 stbi_image_free(img->data);
 
                 break;
 
                 case FileType::MODEL:
 
-                std::cout << "[INFO] Loading Model: " << comp_msg.m_model.file_name << std::endl;
                 key = comp_msg.m_model.file_name;
 
-                if (cache.m_models.find(key) == cache.m_models.end()) 
+                if (cache.m_model_map.find(key) == cache.m_model_map.end()) 
                 {
-                    auto res = cache.m_models.try_emplace(key);
-                    model = &(res.first->second);
+                    //wtf
+                    unsigned int index;
+                    index = gfx_cache.m_model_pool.allocate();
+                    model = gfx_cache.m_model_pool[index];
+                    cache.m_model_map[key] = index;
+                    
                 }
-                else { model = &cache.m_models[key]; }
+                else { model = gfx_cache.m_model_pool[cache.m_model_map[key]]; }
 
                 model_data = comp_msg.m_model.m_model;
-                convert_model(model_data, model);
+                unsigned int matid_map[model_data->mat_count];
+
+                convert_model(model_data, model, matid_map, cache, gfx_cache);
+                // unsigned int* data = (unsigned int *)handler.push_event(0, cache.m_model_map[key], sizeof(unsigned int));
+                // *data = cache.m_model_map[key];
 
                 {
                     LoadIMG load_img;
-                    gfx::Texture2D* texture; 
+                    gfx::Texture2D* texture;
+                    gfx::Material* material;
                     std::lock_guard lock(loader.m_load_m);
                     for (int i = 0; i < model_data->mat_count; i++) 
                     {
                         std::string key = model_data->m_matpool[i].diffuse_fn;
-                        if (cache.m_models.find(key) != cache.m_models.end()) { continue; }
+                        unsigned int index;
+                        if (cache.m_texture_map.find(key) != cache.m_texture_map.end()) { continue; }
 
-                        cache.m_textures.try_emplace(key);
-                        texture = &cache.m_textures[key];
+                        index = gfx_cache.m_texture_pool.allocate();
+                        texture = gfx_cache.m_texture_pool[index];
+                        cache.m_texture_map[key] = index;
                         gfx::create_texture2d(gfx::REPEAT, gfx::REPEAT, gfx::LINEAR, gfx::LINEAR, gfx::LINEAR, texture);
 
-                        model->m_matpool[i].diffuse_texture_id = texture->id;
+                        material = gfx_cache.m_material_pool[matid_map[i]];
+                        material->diffuse_texture_id = index;
 
                         std::strcpy(load_img.file_name, model_data->m_matpool[i].diffuse_fn);
                         loader.m_load_q.emplace(load_img);
@@ -273,25 +292,30 @@ namespace res
 
                 free_model(model_data);
 
+                printf("[res::INFO] Loaded Model [%d] : %s\n", cache.m_model_map[key], comp_msg.m_model.file_name);
+
                 break;
             }
         }
     }
 
-    void order_texture2d(const char* fn, gfx::WrapConfig xw, gfx::WrapConfig yw, gfx::FilterConfig max, gfx::FilterConfig min, gfx::FilterConfig mipmap, Loader& loader, Cache& cache) 
+    void order_texture2d(const char* fn, gfx::WrapConfig xw, gfx::WrapConfig yw, gfx::FilterConfig max, gfx::FilterConfig min, gfx::FilterConfig mipmap, Loader& loader, Cache& cache, gfx::Cache& gfx_cache) 
     {
         
         gfx::Texture2D* texture;
 
-        if (cache.m_textures.find(fn) == cache.m_textures.end()) 
+        if (cache.m_texture_map.find(fn) == cache.m_texture_map.end()) 
         {
             std::string key = fn;
-            cache.m_textures.try_emplace(key);
-            texture = &cache.m_textures[key];
+            unsigned int index;
+            index = gfx_cache.m_texture_pool.allocate();
+            texture = gfx_cache.m_texture_pool[index];
+            cache.m_texture_map[key] = index;
         }
         else 
         {
             //wtf
+            return;
         }
 
         gfx::create_texture2d(xw, yw, max, min, mipmap, texture);
@@ -300,26 +324,27 @@ namespace res
         loader.load(load_msg);
     }
 
-    void order_model(const char* fn, Loader& loader, Cache& cache) 
+    unsigned int order_model(const char* fn, Loader& loader, Cache& cache, gfx::Cache& gfx_cache) 
     {
         
-        gfx::Model* model;
+        // gfx::Model* model;
+        unsigned int index;
 
-        if (cache.m_models.find(fn) == cache.m_models.end()) 
+        if (cache.m_model_map.find(fn) == cache.m_model_map.end()) 
         {
             std::string key = fn;
-            cache.m_models.try_emplace(key);
-            model = &cache.m_models[key];
+            index = gfx_cache.m_model_pool.allocate();
+            cache.m_model_map[key] = index;
         }
         else 
         {
             //wtf
+            return -1;
         }
-        // load_image(fn, &img);
-        // gfx::load_texture2d(img.width, img.height, img.nc, img.data, texture);
 
         LoadModel load_msg; std::strcpy(load_msg.file_name, fn);
         loader.load(load_msg);
+        return index;
     }
 
 

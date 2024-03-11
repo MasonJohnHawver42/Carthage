@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <fstream>
 #include <cstring>
+#include <limits>
 
 #include "resources/resources.hpp"
 
@@ -55,6 +56,14 @@ int convert_object(const char* in_fn, const char* in_dir, const char* out_fn)
     auto& materials = reader.GetMaterials();
 
     res::Model model;
+
+    model.aabb_min[0] = std::numeric_limits<float>::infinity();
+    model.aabb_min[1] = std::numeric_limits<float>::infinity();
+    model.aabb_min[2] = std::numeric_limits<float>::infinity();
+
+    model.aabb_max[0] = -std::numeric_limits<float>::infinity();
+    model.aabb_max[1] = -std::numeric_limits<float>::infinity();
+    model.aabb_max[2] = -std::numeric_limits<float>::infinity();
 
     std::vector<Vertex> verts;
     std::vector<unsigned int> inds;
@@ -109,6 +118,14 @@ int convert_object(const char* in_fn, const char* in_dir, const char* out_fn)
                             vert.x = attrib.vertices[3*size_t(idx.vertex_index)+0];
                             vert.y = attrib.vertices[3*size_t(idx.vertex_index)+1];
                             vert.z = attrib.vertices[3*size_t(idx.vertex_index)+2];
+
+                            model.aabb_min[0] = std::min(model.aabb_min[0], vert.x);
+                            model.aabb_min[1] = std::min(model.aabb_min[1], vert.y);
+                            model.aabb_min[2] = std::min(model.aabb_min[2], vert.z);
+
+                            model.aabb_max[0] = std::max(model.aabb_max[0], vert.x);
+                            model.aabb_max[1] = std::max(model.aabb_max[1], vert.y);
+                            model.aabb_max[2] = std::max(model.aabb_max[2], vert.z);
 
                             // Check if `normal_index` is zero or positive. negative = no normal data
                             if (idx.normal_index >= 0) {
@@ -200,6 +217,9 @@ int convert_object(const char* in_fn, const char* in_dir, const char* out_fn)
 
     fs.write((const char*)(model.data), sizeof(float) * model.vc * 8);
     fs.write((const char*)(model.indicies), sizeof(unsigned int) * model.ic);
+
+    fs.write((const char*)(model.aabb_min), sizeof(float) * 3);
+    fs.write((const char*)(model.aabb_max), sizeof(float) * 3);
 
     fs.close();
 

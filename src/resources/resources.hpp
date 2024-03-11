@@ -1,6 +1,7 @@
 #pragma once
 
-#include "graphics/device.hpp"
+#include "graphics/render.hpp"
+#include "core/containers.hpp"
 
 // //image loading
 #define STB_IMAGE_IMPLEMENTATION
@@ -52,6 +53,9 @@ namespace res
         Material m_matpool[64];
         Mesh     m_meshes[64];
 
+        float aabb_min[3];
+        float aabb_max[3];
+
         Model() {}
 
         // Model(Model&& other) noexcept : vc(other.vc), ic(other.ic), mesh_count(other.mesh_count), mat_count(other.mat_count), data(other.data), indicies(other.indicies) {
@@ -64,10 +68,10 @@ namespace res
 
     };
 
-    struct Cache 
+    struct Cache
     {
-        std::unordered_map<std::string, gfx::Texture2D> m_textures;
-        std::unordered_map<std::string, gfx::Model> m_models;
+        std::unordered_map<std::string, unsigned int> m_texture_map;
+        std::unordered_map<std::string, unsigned int> m_model_map;
     };
 
     void load_program(const char* fn_vert, const char* fn_frag, gfx::Program* prog) 
@@ -138,21 +142,38 @@ namespace res
         fs.close();
     }
 
-    void convert_model(Model* res_model, gfx::Model* gfx_model) 
+    void convert_model(Model* res_model, gfx::Model* gfx_model, unsigned int* matid_map, Cache& cache, gfx::Cache& gfx_cache) 
     {
         gfx::create_model(res_model->data, res_model->indicies, res_model->vc, res_model->ic, gfx_model);
 
-        for (int i = 0; i < res_model->mesh_count; i++) 
-        {
-            gfx::add_mesh_model((gfx::Mesh*)(res_model->m_meshes + i), gfx_model);
-            // std::cout << gfx_model->m_meshes[i].m_offset << " " <<  gfx_model->m_meshes[i].m_count << " " << gfx_model->m_meshes[i].m_offset + gfx_model->m_meshes[i].m_count << " " << gfx_model->m_meshes[i].m_matindex << std::endl; 
-        }
+        unsigned int index;
+        gfx::Material* gfx_mat;
+
+        // unsigned int matid_map[res_model->mat_count];
 
         for (int i = 0; i < res_model->mat_count; i++) 
         {
-            gfx_model->m_matpool[i].color[0] = res_model->m_matpool[i].color[0];
-            gfx_model->m_matpool[i].color[1] = res_model->m_matpool[i].color[1];
-            gfx_model->m_matpool[i].color[2] = res_model->m_matpool[i].color[2];
+            index = gfx_cache.m_material_pool.allocate();
+            gfx_mat = gfx_cache.m_material_pool[index];
+            matid_map[i] = index;
+
+            gfx_mat->color[0] = res_model->m_matpool[i].color[0];
+            gfx_mat->color[1] = res_model->m_matpool[i].color[1];
+            gfx_mat->color[2] = res_model->m_matpool[i].color[2];
+        }
+
+        gfx::Mesh tmp_mesh;
+
+        for (int i = 0; i < res_model->mesh_count; i++) 
+        {
+            tmp_mesh = { res_model->m_meshes[i].m_offset, res_model->m_meshes[i].m_count, matid_map[res_model->m_meshes[i].m_matindex] };
+            gfx::add_mesh_model(&tmp_mesh, gfx_model);
+        }
+
+        for (int i = 0; i < 3; i++) 
+        {
+            gfx_model->aabb_min[i] = res_model->aabb_min[i];
+            gfx_model->aabb_max[i] = res_model->aabb_max[i];
         }
 
         gfx_model->ready = true;
