@@ -142,7 +142,7 @@ namespace core
 
         unsigned int face_state(unsigned int* voxel, unsigned int depth, unsigned int axis, unsigned int dir) 
         {
-            
+            return 0;
         }
 
         void walk(std::function<void(unsigned int* v, unsigned int d, OctreeNode* parent)> func) 

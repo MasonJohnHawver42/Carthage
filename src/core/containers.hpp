@@ -47,7 +47,7 @@ namespace core
             assert(BLOCK_SIZE <= 0xFFFF);
             assert(BLOCKS <= 0xFFFF);
             memset(allocated, 0, BLOCKS); 
-            printf("Pool <%s>{%ld}\n", typeid(T).name(), sizeof(T));
+            // printf("Pool <%s>{%ld}\n", typeid(T).name(), sizeof(T));
         }
 
         Pool(unsigned int n) : Pool()

@@ -40,4 +40,7 @@ namespace gfx
     void draw_shape_buffer(Program program, ShapeBuffer* sb);
     void free_shape_buffer(ShapeBuffer* sb);
 
+    void create_quad_buffer(QuadBuffer* qb);
+    void draw_quad_buffer(Program program, float* pos, float* size, float* color, QuadBuffer* qb);
+    void free_quad_buffer(QuadBuffer* sb);
 }

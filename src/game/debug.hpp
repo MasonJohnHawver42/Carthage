@@ -15,11 +15,11 @@ namespace game
     public:
         DebugRenderer(const char* vs, const char * fs) 
         {
-            shape_pipeline = {0, gfx::CullMode::BACK, gfx::DrawMode::LINE};
+            shape_pipeline = {0, gfx::CullMode::BACK, gfx::DrawMode::FILL};
             res::load_program(vs, fs, &shape_pipeline.m_prog);
 
-            gfx::create_shape_buffer(1024, &shape_buffer);
-            buffer_size = 1024; 
+            buffer_size = 1024 * 4; 
+            gfx::create_shape_buffer(buffer_size, &shape_buffer);
         }
 
         gfx::ShapeEntry* shape(unsigned int type) 
@@ -56,11 +56,9 @@ namespace game
                     // printf("used %d\n", block.used);
                     if (used + block.used > buffer_size) 
                     {
-                        // printf("inter %d\n", used);
                         gfx::draw_shape_buffer(shape_pipeline.m_prog, &shape_buffer);
                         gfx::flush_shape_buffer(&shape_buffer);
                         used = 0;
-                        return true;
                     }
                     gfx::push_shape_buffer(block.used, (gfx::Shape)type, block[0], &shape_buffer);
                     used += block.used;

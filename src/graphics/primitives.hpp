@@ -94,7 +94,7 @@ namespace gfx
     enum Shape 
     {
         CUBE = 0,
-        // QUAD = 1,
+        // PLANE = 1,
         // CYLINDER = 2,
         // CONE = 3,
         SHAPE_COUNT = 1
@@ -125,6 +125,12 @@ namespace gfx
         } m_partition[Shape::SHAPE_COUNT];
 
         unsigned int m_count;
+    };
+
+    struct QuadBuffer 
+    {
+        unsigned int m_vbo;
+        unsigned int m_vao;
     };
 
 }

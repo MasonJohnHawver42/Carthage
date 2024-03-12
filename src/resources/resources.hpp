@@ -85,6 +85,7 @@ namespace res
         std::string frag_content((std::istreambuf_iterator<char>(frag_file)), std::istreambuf_iterator<char>());
 
         gfx::create_program(vert_content.c_str(), frag_content.c_str(), prog);
+        printf("[res::INFO] Loaded Program [%d] : %s | %s\n", *prog, fn_vert, fn_frag);
     }
 
     void load_image(const char* fn, res::Image* img) 
@@ -138,6 +139,9 @@ namespace res
 
         fs.read((char*)(model->data), sizeof(float) * model->vc * 8);
         fs.read((char*)(model->indicies), sizeof(unsigned int) * model->ic);
+
+        fs.read((char*)(model->aabb_min), sizeof(float) * 3);
+        fs.read((char*)(model->aabb_max), sizeof(float) * 3);
 
         fs.close();
     }
