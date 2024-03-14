@@ -53,14 +53,11 @@ namespace game
             for (; type < gfx::Shape::SHAPE_COUNT; type++) 
             {
                 buckets[type].for_each([&](unsigned int i, core::Block<gfx::ShapeEntry, 1024>& block){
-                    // printf("used %d\n", block.used);
                     if (used + block.used > buffer_size) 
                     {
-                        // printf("inter %d\n", used);
                         gfx::draw_shape_buffer(shape_pipeline.m_prog, &shape_buffer);
                         gfx::flush_shape_buffer(&shape_buffer);
                         used = 0;
-                        return true;
                     }
                     gfx::push_shape_buffer(block.used, (gfx::Shape)type, block[0], &shape_buffer);
                     used += block.used;

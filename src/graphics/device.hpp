@@ -13,7 +13,9 @@ namespace gfx
     void bind_program(Program program);
     void set_uniform_int(const char* name, int value, Program program);
     void set_uniform_float(const char* name, float value, Program program);
+    void set_uniform_vec2(const char* name, float* value, Program program);
     void set_uniform_vec3(const char* name, float* value, Program program);
+    void set_uniform_vec4(const char* name, float* value, Program program);
     void set_uniform_mat4(const char* name, float* value, Program program);
     void free_program(Program* program);
 
@@ -40,4 +42,7 @@ namespace gfx
     void draw_shape_buffer(Program program, ShapeBuffer* sb);
     void free_shape_buffer(ShapeBuffer* sb);
 
+    // void create_quad_buffer(QuadBuffer* qb);
+    // void draw_quad_buffer(Program program, float* pos, float* size, float* color, QuadBuffer* qb);
+    // void free_quad_buffer(QuadBuffer* sb);
 }

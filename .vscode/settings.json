@@ -75,7 +75,9 @@
         "cassert": "cpp",
         "primitiveset": "cpp",
         "camera": "cpp",
-        "graphicscontext": "cpp"
+        "graphicscontext": "cpp",
+        "any": "cpp",
+        "slist": "cpp"
     },
     "cSpell.words": [
         "aabb",

@@ -6,10 +6,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/string_cast.hpp>
 
-// #include <iostream>
-
-#include "core/event.hpp"
-
 //my graphics library
 #include "graphics/device.hpp"
 
@@ -97,12 +93,12 @@ int main(void)
 
     gfx::ShapeEntry* ent;
     
-    // for (int i = 0; i < 1000 * 1000; i++) 
-    // {
-    //     ent = debug_renderer.shape(gfx::Shape::CUBE);
-    //     game::transform_mat({{my_rand() * 20 - 10, my_rand() * 20, my_rand() * 2 - 1.4}, {1, 1, 1}, 0, {.1, .1, .1}}, ent->mat);
-    //     game::set_color(my_rand(), my_rand(), my_rand(), 1, ent->color);
-    // }
+    for (int i = 0; i < 1000 * 100; i++) 
+    {
+        ent = debug_renderer.shape(gfx::Shape::CUBE);
+        game::transform_mat({{my_rand() * 20 - 10, my_rand() * 20, my_rand() * 2 - 1.4}, {1, 1, 1}, 0, {.1, .1, .1}}, ent->mat);
+        game::set_color(my_rand(), my_rand(), my_rand(), 1, ent->color);
+    }
 
     std::thread loader_thread(res::loader_proc, std::ref(loader));
 

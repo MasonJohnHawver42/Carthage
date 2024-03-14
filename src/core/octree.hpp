@@ -12,7 +12,8 @@ namespace core
     enum OctreeState
     {
         EMPTY = 0,
-        FULL  = 1
+        PARTIAL = 1,
+        FULL  = 2
     };
 
     struct OctreeNode;
@@ -34,8 +35,8 @@ namespace core
 
     enum OctreeDirs 
     {
-        POS,
-        NEG
+        POS = 1,
+        NEG = -1
     };
 
     /*
@@ -50,6 +51,15 @@ namespace core
     7 - 1|1|1
 
     */
+
+    unsigned int face_dirs[6][4] = {
+        {0b000, 0b001, 0b010, 0b011}, //x-
+        {0b000, 0b001, 0b100, 0b101}, //y-
+        {0b000, 0b010, 0b100, 0b110}, //z-
+        {0b100, 0b101, 0b110, 0b111}, //x+
+        {0b010, 0b011, 0b110, 0b111}, //y+
+        {0b001, 0b011, 0b101, 0b111}, //z+
+    };
 
     struct Octree 
     {
@@ -71,41 +81,72 @@ namespace core
         void voxel(float* point, unsigned int* voxel) 
         {
             unsigned int n = 1 << max_subdivisions;
-            for (int i = 0; i < 3; i++) { voxel[i] = std::min((unsigned int)((float)((point[i] - aabb_min[i]) / (aabb_max[i] - aabb_min[i])) * n), n - 1); }
-        }
-
-        void add(unsigned int* voxel) 
-        {
-            OctreeNode* current = &root;
-            unsigned int n, mask, child, index;
-
-            for (int i = 0; i < max_subdivisions; i++) 
-            {
-                n = max_subdivisions - i - 1; 
-                mask = 1 << n;
-                child = ((voxel[0] & mask) >> (n + 2)) | ((voxel[1] & mask) >> (n + 1)) | ((voxel[2] & mask) >> n);
-                
-                current->child_states[child] = OctreeState::FULL;
-                
-                if (current->group == NULL && i + 1 < max_subdivisions)
-                {
-                    index = m_alloc.allocate();
-                    current->group = m_alloc[index];
-                    for (int c = 0; c < 8; c++) 
-                    {
-                        (*current->group)[c].group = NULL;
-                        for (int i = 0; i < 8; i++) 
-                        { 
-                            (*current->group)[c].child_states[i] = OctreeState::EMPTY; 
-                        }
-                    }
-                }
-
-                if (i + 1 < max_subdivisions) { current = *(current->group) + child; }
+            for (int i = 0; i < 3; i++) { 
+                voxel[i] = (unsigned int)((float)((point[i] - aabb_min[i]) / (aabb_max[i] - aabb_min[i])) * n); 
+                voxel[i] = std::max(std::min(voxel[i], n - 1), (unsigned int)0);
             }
         }
 
-        unsigned int state(unsigned int* voxel, unsigned int depth) 
+        void add_voxel(unsigned int* voxel, unsigned int depth) 
+        {
+            assert(depth <= max_subdivisions);
+            OctreeNode* current = &root;
+            unsigned int n, mask, child, index;
+
+            for (int i = 0; i < depth; i++) 
+            {
+                n = depth - i - 1; 
+                mask = 1 << n;
+                child = (((voxel[0] & mask) >> n) << 2) | (((voxel[1] & mask) >> n) << 1) | ((voxel[2] & mask) >> n);
+
+                current->child_states[child] = i + 1 < depth ? OctreeState::PARTIAL : OctreeState::FULL;
+                
+                if (i + 1 < depth) 
+                {
+                    if (current->group == NULL) 
+                    {
+                        index = m_alloc.allocate();
+                        current->group = m_alloc[index];
+                        for (int c = 0; c < 8; c++) 
+                        {
+                            (*current->group)[c].group = NULL;
+                            for (int i = 0; i < 8; i++) 
+                            { 
+                                (*current->group)[c].child_states[i] = OctreeState::EMPTY; 
+                            }
+                        }
+                    }
+
+                    current = *(current->group) + child;
+                }
+            }
+        }
+
+        void optimize(OctreeNode* current) 
+        {
+            unsigned int empty_cnt, full_cnt;
+            OctreeNode* child;
+            if (current->group == NULL) { return; }
+            for (int c = 0; c < 8; c++) 
+            {
+                optimize((*current->group) + c);
+
+                empty_cnt = 0;
+                full_cnt = 0;
+                child = (*current->group) + c;
+
+                for (int c2 = 0; c2 < 8; c2++) 
+                {
+                    if (child->child_states[c2] == OctreeState::EMPTY) { empty_cnt++; }
+                    if (child->child_states[c2] == OctreeState::FULL) { full_cnt++; }
+                }
+
+                if (empty_cnt == 8) { current->child_states[c] = OctreeState::EMPTY; }
+                if (full_cnt == 8) { current->child_states[c] = OctreeState::FULL; }
+            }
+        }
+
+        void state(unsigned int* voxel, unsigned int depth, OctreeNode** frame, unsigned int* state) 
         {
             assert(depth <= max_subdivisions);
             OctreeNode* current = &root;
@@ -116,7 +157,7 @@ namespace core
             {
                 n = depth - i - 1;
                 mask = 1 << n;
-                child = ((voxel[0] & mask) >> (n - 2)) | ((voxel[1] & mask) >> (n - 1)) | ((voxel[2] & mask) >> n);
+                child = (((voxel[0] & mask) >> n) << 2) | (((voxel[1] & mask) >> n) << 1) | ((voxel[2] & mask) >> n);
                 
                 current = *(current->group) + child;
                 i++;
@@ -124,25 +165,44 @@ namespace core
             
             n = depth - i - 1;
             mask = 1 << n;
-            child = ((voxel[0] & mask) >> (n - 2)) | ((voxel[1] & mask) >> (n - 1)) | ((voxel[2] & mask) >> n);
+            child = (((voxel[0] & mask) >> n) << 2) | (((voxel[1] & mask) >> n) << 1) | ((voxel[2] & mask) >> n);
 
-            return current->child_states[child];
+            *state = current->child_states[child];
+            *frame = current->group != NULL ? (*current->group) + child : NULL;
         }
 
-        int neighbor(unsigned int* voxel, unsigned int depth, unsigned int axis, unsigned int dir, int* n_voxel) 
+        bool neighbor(unsigned int* voxel, unsigned int depth, unsigned int axis, int dir, int* n_voxel) 
         {
             assert(depth <= max_subdivisions);
-            unsigned int i = 0;
-
             for (int i = 0; i < 3; i++) { n_voxel[i] = voxel[i]; }
-            if ( dir == NEG && n_voxel[axis] > 0 ) { n_voxel[axis] -= 1; return 0; }
-            if ( dir == POS && n_voxel[axis] < (1 << depth) - 1) { n_voxel[axis] += 1; return 0; }
-            return -1;
+            n_voxel[axis] += dir;
+            return 0 <= n_voxel[axis] && n_voxel[axis] <= (1 << depth);
         }
 
-        unsigned int face_state(unsigned int* voxel, unsigned int depth, unsigned int axis, unsigned int dir) 
+        bool face(OctreeNode* frame, unsigned int state, unsigned int axis, int dir) 
         {
-            
+            assert(dir == -1 || dir == 1);
+            if (frame == NULL) { return state != OctreeState::EMPTY; }
+            bool result = true;
+            unsigned int j, i, child;
+            j =  dir == -1 ? axis : axis + 3;
+            for (int i = 0; i < 4; i++) 
+            {
+                child = face_dirs[j][i];
+                if (frame->group != NULL) 
+                {
+                    if (!face((*frame->group) + child, frame->child_states[child], axis, dir)) 
+                    {
+                        result = false;
+                    }
+                }
+                else if (frame->child_states[child] == OctreeState::EMPTY) 
+                {
+                    result = false;
+                }
+            }
+
+            return result;
         }
 
         void walk(std::function<void(unsigned int* v, unsigned int d, OctreeNode* parent)> func) 

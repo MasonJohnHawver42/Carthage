@@ -49,8 +49,8 @@ def walk(p_voxel, p_depth, curr):
     # if sum([1 if curr.states[i] == 2 or curr.states[i] == 1 else 0 for i in range(4)]) == 4:
     #     color = (0, 1, 0)
 
-    plt.plot([center[0] - half_size, center[0] + half_size], [center[1], center[1]], "b-")
-    plt.plot([center[0], center[0]], [center[1] - half_size, center[1] + half_size], "b-")
+    # plt.plot([center[0] - half_size, center[0] + half_size], [center[1], center[1]], "b-")
+    # plt.plot([center[0], center[0]], [center[1] - half_size, center[1] + half_size], "b-")
 
     voxel = [ v << 1 for v in p_voxel ]
     depth = p_depth + 1
@@ -76,27 +76,27 @@ def walk(p_voxel, p_depth, curr):
             ]
 
             # Plot the filled square
-            rand_color = (random.uniform(0, .4), random.uniform(0, .4), random.uniform(0, .4))
+            rand_color = (random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1))
             plt.fill(*zip(*square_coords), color=rand_color)
 
             # square_coords = []
 
-            for j in range(4):
-                axis = j & 1
-                dir = (j & 2) - 1
-                n_vox, valid = nbr(voxel, depth, axis, dir)
+            # for j in range(4):
+            #     axis = j & 1
+            #     dir = (j & 2) - 1
+            #     n_vox, valid = nbr(voxel, depth, axis, dir)
                 
-                v_face = [((pt[0] * 2 * half_size) + start[0], (pt[1] * 2 * half_size) + start[1]) for pt in faces[axis + dir + 1]]
+            #     v_face = [((pt[0] * 2 * half_size) + start[0], (pt[1] * 2 * half_size) + start[1]) for pt in faces[axis + dir + 1]]
 
-                if not valid:
-                    plt.plot(*zip(*v_face), 'r-')
-                    continue
+            #     if not valid:
+            #         plt.plot(*zip(*v_face), 'r-')
+            #         continue
                 
-                state, frame = get_state(n_vox, depth)
-                fs = face_state(state, frame, axis, -1 * dir)
+            #     state, frame = get_state(n_vox, depth)
+            #     fs = face_state(state, frame, axis, -1 * dir)
 
-                if not fs:
-                    plt.plot(*zip(*v_face), 'r-')
+            #     if not fs:
+            #         plt.plot(*zip(*v_face), 'r-')
 
         if (len(curr.children) != 0 and curr.states[i] != 2 and curr.states[i] != 3):
             walk(voxel, depth, curr.children[i])
@@ -207,10 +207,10 @@ def circle_pts(r, d, n, pos):
 root = Node()
 max_depth = 6
 
-pts_1 = circle_pts(.8 / 2.0, .1, 10**(max(max_depth - 2, 3)), [.5, .5])
-pts_2 = circle_pts(.01 / 2.0, .1, 10**(max(max_depth - 2, 3)), [.375, .625])
-pts_3 = circle_pts(.01 / 2.0, .1, 10**(max(max_depth - 2, 3)), [.625, .625])
-pts_4 = circle_pts(.01 / 2.0, .1, 10**(max(max_depth - 2, 3)), [.5, .375])
+pts_1 = circle_pts(.4 / 2.0, .5, 10**(max(max_depth - 1, 3)), [.5, .5])
+pts_2 = circle_pts(.01 / 2.0, .1, 10**(max(max_depth - 1, 3)), [.375, .625])
+pts_3 = circle_pts(.01 / 2.0, .1, 10**(max(max_depth - 1, 3)), [.625, .625])
+pts_4 = circle_pts(.01 / 2.0, .1, 10**(max(max_depth - 1, 3)), [.5, .375])
 
 
 pts = pts_1 + pts_2 + pts_3 + pts_4
@@ -236,6 +236,6 @@ plt.plot(x, y, 'b-')
 walk([0, 0], 0, root)
 
 x, y = zip(*pts)
-plt.scatter(x, y, marker='o', color='yellow')
+# plt.scatter(x, y, marker='o', color='yellow')
 
 plt.show()
