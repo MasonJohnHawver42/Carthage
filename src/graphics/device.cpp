@@ -89,9 +89,19 @@ namespace gfx
         glUniformMatrix4fv(glGetUniformLocation(program, name), 1, GL_FALSE, value);
     }
 
+    void set_uniform_vec4(const char* name, float* value, Program program) 
+    {
+        glUniform4fv(glGetUniformLocation(program, name), 1, value); 
+    }
+
     void set_uniform_vec3(const char* name, float* value, Program program)
     {
         glUniform3fv(glGetUniformLocation(program, name), 1, value); 
+    }
+
+    void set_uniform_vec2(const char* name, float* value, Program program) 
+    {
+        glUniform2fv(glGetUniformLocation(program, name), 1, value); 
     }
 
     void free_program(Program* program) 
@@ -414,6 +424,52 @@ namespace gfx
             case FILL: glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); break;
             case LINE: glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); break;
         }
+    }
+
+    float quadVertices[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
+        // positions   // texCoords
+        -1.0f,  1.0f,  0.0f, 1.0f,
+        -1.0f, -1.0f,  0.0f, 0.0f,
+         1.0f, -1.0f,  1.0f, 0.0f,
+
+        -1.0f,  1.0f,  0.0f, 1.0f,
+         1.0f, -1.0f,  1.0f, 0.0f,
+         1.0f,  1.0f,  1.0f, 1.0f
+    };
+
+    void create_quad_buffer(QuadBuffer* qb) 
+    {
+        unsigned int vao, vbo;
+        glGenVertexArrays(1, &vao);
+        glGenBuffers(1, &vbo);
+
+        glBindVertexArray(vao);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+
+        qb->m_vao = vao;
+        qb->m_vbo = vbo;
+    }
+
+    void draw_quad_buffer(Program program, float* pos, float* size, float* color, QuadBuffer* qb) 
+    {
+        set_uniform_vec2("offset", pos, program);
+        set_uniform_vec2("scale", size, program);
+        set_uniform_vec4("color", color, program);
+
+        glBindVertexArray(qb->m_vao);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+    
+    void free_quad_buffer(QuadBuffer* qb) 
+    {
+        glDeleteBuffers(1, &qb->m_vbo);
+        glDeleteVertexArrays(1, &qb->m_vao);
+        
     }
 
 }

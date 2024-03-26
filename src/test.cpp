@@ -236,6 +236,8 @@ int main(void)
     int res0 = convert_object("models/bunny/bunny.obj", "models/bunny/", "binary/bunny.bin");
     int res1 = convert_object("models/sponza/sponza.obj", "models/sponza/", "binary/sponza.bin");
     int res2 = convert_object("models/cube/cube.obj", "models/cube/", "binary/cube.bin");
+    int res3 = convert_object("models/035_power_drill/google_64k/textured.obj", "models/035_power_drill/google_64k/", "binary/drill.bin");
+    int res4 = convert_object("models/005_tomato_soup_can/google_64k/textured.obj", "models/005_tomato_soup_can/google_64k/", "binary/can.bin");
 
     return 0;
 }

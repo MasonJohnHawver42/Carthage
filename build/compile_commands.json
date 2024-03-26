@@ -1,0 +1,242 @@
+[
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/c++ -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -I/home/mjh/Programming/fun/aaa/src -I/home/mjh/Programming/fun/aaa/ext -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glad/include -I/home/mjh/Programming/fun/aaa/ext/stb -I/home/mjh/Programming/fun/aaa/ext/tinyobjloader -I/home/mjh/Programming/fun/aaa/ext/imgui -I/home/mjh/Programming/fun/aaa/ext/imgui/backends -g -std=gnu++17 -o CMakeFiles/aaa_main.dir/src/game/scene.cpp.o -c /home/mjh/Programming/fun/aaa/src/game/scene.cpp",
+  "file": "/home/mjh/Programming/fun/aaa/src/game/scene.cpp",
+  "output": "CMakeFiles/aaa_main.dir/src/game/scene.cpp.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/c++ -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -I/home/mjh/Programming/fun/aaa/src -I/home/mjh/Programming/fun/aaa/ext -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glad/include -I/home/mjh/Programming/fun/aaa/ext/stb -I/home/mjh/Programming/fun/aaa/ext/tinyobjloader -I/home/mjh/Programming/fun/aaa/ext/imgui -I/home/mjh/Programming/fun/aaa/ext/imgui/backends -g -std=gnu++17 -o CMakeFiles/aaa_main.dir/src/graphics/device.cpp.o -c /home/mjh/Programming/fun/aaa/src/graphics/device.cpp",
+  "file": "/home/mjh/Programming/fun/aaa/src/graphics/device.cpp",
+  "output": "CMakeFiles/aaa_main.dir/src/graphics/device.cpp.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/c++ -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -I/home/mjh/Programming/fun/aaa/src -I/home/mjh/Programming/fun/aaa/ext -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glad/include -I/home/mjh/Programming/fun/aaa/ext/stb -I/home/mjh/Programming/fun/aaa/ext/tinyobjloader -I/home/mjh/Programming/fun/aaa/ext/imgui -I/home/mjh/Programming/fun/aaa/ext/imgui/backends -g -std=gnu++17 -o CMakeFiles/aaa_main.dir/src/resources/resources.cpp.o -c /home/mjh/Programming/fun/aaa/src/resources/resources.cpp",
+  "file": "/home/mjh/Programming/fun/aaa/src/resources/resources.cpp",
+  "output": "CMakeFiles/aaa_main.dir/src/resources/resources.cpp.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/c++ -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -I/home/mjh/Programming/fun/aaa/src -I/home/mjh/Programming/fun/aaa/ext -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glad/include -I/home/mjh/Programming/fun/aaa/ext/stb -I/home/mjh/Programming/fun/aaa/ext/tinyobjloader -I/home/mjh/Programming/fun/aaa/ext/imgui -I/home/mjh/Programming/fun/aaa/ext/imgui/backends -g -std=gnu++17 -o CMakeFiles/aaa_main.dir/ext/imgui/imgui.cpp.o -c /home/mjh/Programming/fun/aaa/ext/imgui/imgui.cpp",
+  "file": "/home/mjh/Programming/fun/aaa/ext/imgui/imgui.cpp",
+  "output": "CMakeFiles/aaa_main.dir/ext/imgui/imgui.cpp.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/c++ -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -I/home/mjh/Programming/fun/aaa/src -I/home/mjh/Programming/fun/aaa/ext -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glad/include -I/home/mjh/Programming/fun/aaa/ext/stb -I/home/mjh/Programming/fun/aaa/ext/tinyobjloader -I/home/mjh/Programming/fun/aaa/ext/imgui -I/home/mjh/Programming/fun/aaa/ext/imgui/backends -g -std=gnu++17 -o CMakeFiles/aaa_main.dir/ext/imgui/imgui_demo.cpp.o -c /home/mjh/Programming/fun/aaa/ext/imgui/imgui_demo.cpp",
+  "file": "/home/mjh/Programming/fun/aaa/ext/imgui/imgui_demo.cpp",
+  "output": "CMakeFiles/aaa_main.dir/ext/imgui/imgui_demo.cpp.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/c++ -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -I/home/mjh/Programming/fun/aaa/src -I/home/mjh/Programming/fun/aaa/ext -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glad/include -I/home/mjh/Programming/fun/aaa/ext/stb -I/home/mjh/Programming/fun/aaa/ext/tinyobjloader -I/home/mjh/Programming/fun/aaa/ext/imgui -I/home/mjh/Programming/fun/aaa/ext/imgui/backends -g -std=gnu++17 -o CMakeFiles/aaa_main.dir/ext/imgui/imgui_draw.cpp.o -c /home/mjh/Programming/fun/aaa/ext/imgui/imgui_draw.cpp",
+  "file": "/home/mjh/Programming/fun/aaa/ext/imgui/imgui_draw.cpp",
+  "output": "CMakeFiles/aaa_main.dir/ext/imgui/imgui_draw.cpp.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/c++ -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -I/home/mjh/Programming/fun/aaa/src -I/home/mjh/Programming/fun/aaa/ext -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glad/include -I/home/mjh/Programming/fun/aaa/ext/stb -I/home/mjh/Programming/fun/aaa/ext/tinyobjloader -I/home/mjh/Programming/fun/aaa/ext/imgui -I/home/mjh/Programming/fun/aaa/ext/imgui/backends -g -std=gnu++17 -o CMakeFiles/aaa_main.dir/ext/imgui/imgui_tables.cpp.o -c /home/mjh/Programming/fun/aaa/ext/imgui/imgui_tables.cpp",
+  "file": "/home/mjh/Programming/fun/aaa/ext/imgui/imgui_tables.cpp",
+  "output": "CMakeFiles/aaa_main.dir/ext/imgui/imgui_tables.cpp.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/c++ -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -I/home/mjh/Programming/fun/aaa/src -I/home/mjh/Programming/fun/aaa/ext -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glad/include -I/home/mjh/Programming/fun/aaa/ext/stb -I/home/mjh/Programming/fun/aaa/ext/tinyobjloader -I/home/mjh/Programming/fun/aaa/ext/imgui -I/home/mjh/Programming/fun/aaa/ext/imgui/backends -g -std=gnu++17 -o CMakeFiles/aaa_main.dir/ext/imgui/imgui_widgets.cpp.o -c /home/mjh/Programming/fun/aaa/ext/imgui/imgui_widgets.cpp",
+  "file": "/home/mjh/Programming/fun/aaa/ext/imgui/imgui_widgets.cpp",
+  "output": "CMakeFiles/aaa_main.dir/ext/imgui/imgui_widgets.cpp.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/gcc-12 -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -I/home/mjh/Programming/fun/aaa/src -I/home/mjh/Programming/fun/aaa/ext -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glad/include -I/home/mjh/Programming/fun/aaa/ext/stb -I/home/mjh/Programming/fun/aaa/ext/tinyobjloader -I/home/mjh/Programming/fun/aaa/ext/imgui -I/home/mjh/Programming/fun/aaa/ext/imgui/backends -g -o CMakeFiles/aaa_main.dir/ext/glad/src/glad.c.o -c /home/mjh/Programming/fun/aaa/ext/glad/src/glad.c",
+  "file": "/home/mjh/Programming/fun/aaa/ext/glad/src/glad.c",
+  "output": "CMakeFiles/aaa_main.dir/ext/glad/src/glad.c.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/c++ -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -I/home/mjh/Programming/fun/aaa/src -I/home/mjh/Programming/fun/aaa/ext -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glad/include -I/home/mjh/Programming/fun/aaa/ext/stb -I/home/mjh/Programming/fun/aaa/ext/tinyobjloader -I/home/mjh/Programming/fun/aaa/ext/imgui -I/home/mjh/Programming/fun/aaa/ext/imgui/backends -g -std=gnu++17 -o CMakeFiles/aaa_main.dir/ext/imgui/backends/imgui_impl_glfw.cpp.o -c /home/mjh/Programming/fun/aaa/ext/imgui/backends/imgui_impl_glfw.cpp",
+  "file": "/home/mjh/Programming/fun/aaa/ext/imgui/backends/imgui_impl_glfw.cpp",
+  "output": "CMakeFiles/aaa_main.dir/ext/imgui/backends/imgui_impl_glfw.cpp.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/c++ -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -I/home/mjh/Programming/fun/aaa/src -I/home/mjh/Programming/fun/aaa/ext -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glad/include -I/home/mjh/Programming/fun/aaa/ext/stb -I/home/mjh/Programming/fun/aaa/ext/tinyobjloader -I/home/mjh/Programming/fun/aaa/ext/imgui -I/home/mjh/Programming/fun/aaa/ext/imgui/backends -g -std=gnu++17 -o CMakeFiles/aaa_main.dir/ext/imgui/backends/imgui_impl_opengl3.cpp.o -c /home/mjh/Programming/fun/aaa/ext/imgui/backends/imgui_impl_opengl3.cpp",
+  "file": "/home/mjh/Programming/fun/aaa/ext/imgui/backends/imgui_impl_opengl3.cpp",
+  "output": "CMakeFiles/aaa_main.dir/ext/imgui/backends/imgui_impl_opengl3.cpp.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/c++ -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -I/home/mjh/Programming/fun/aaa/src -I/home/mjh/Programming/fun/aaa/ext -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glad/include -I/home/mjh/Programming/fun/aaa/ext/stb -I/home/mjh/Programming/fun/aaa/ext/tinyobjloader -I/home/mjh/Programming/fun/aaa/ext/imgui -I/home/mjh/Programming/fun/aaa/ext/imgui/backends -g -std=gnu++17 -o CMakeFiles/aaa_main.dir/src/main.cpp.o -c /home/mjh/Programming/fun/aaa/src/main.cpp",
+  "file": "/home/mjh/Programming/fun/aaa/src/main.cpp",
+  "output": "CMakeFiles/aaa_main.dir/src/main.cpp.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/c++ -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -I/home/mjh/Programming/fun/aaa/src -I/home/mjh/Programming/fun/aaa/ext -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glad/include -I/home/mjh/Programming/fun/aaa/ext/stb -I/home/mjh/Programming/fun/aaa/ext/tinyobjloader -I/home/mjh/Programming/fun/aaa/ext/imgui -I/home/mjh/Programming/fun/aaa/ext/imgui/backends -g -std=gnu++17 -o CMakeFiles/aaa_obj.dir/src/game/scene.cpp.o -c /home/mjh/Programming/fun/aaa/src/game/scene.cpp",
+  "file": "/home/mjh/Programming/fun/aaa/src/game/scene.cpp",
+  "output": "CMakeFiles/aaa_obj.dir/src/game/scene.cpp.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/c++ -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -I/home/mjh/Programming/fun/aaa/src -I/home/mjh/Programming/fun/aaa/ext -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glad/include -I/home/mjh/Programming/fun/aaa/ext/stb -I/home/mjh/Programming/fun/aaa/ext/tinyobjloader -I/home/mjh/Programming/fun/aaa/ext/imgui -I/home/mjh/Programming/fun/aaa/ext/imgui/backends -g -std=gnu++17 -o CMakeFiles/aaa_obj.dir/src/graphics/device.cpp.o -c /home/mjh/Programming/fun/aaa/src/graphics/device.cpp",
+  "file": "/home/mjh/Programming/fun/aaa/src/graphics/device.cpp",
+  "output": "CMakeFiles/aaa_obj.dir/src/graphics/device.cpp.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/c++ -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -I/home/mjh/Programming/fun/aaa/src -I/home/mjh/Programming/fun/aaa/ext -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glad/include -I/home/mjh/Programming/fun/aaa/ext/stb -I/home/mjh/Programming/fun/aaa/ext/tinyobjloader -I/home/mjh/Programming/fun/aaa/ext/imgui -I/home/mjh/Programming/fun/aaa/ext/imgui/backends -g -std=gnu++17 -o CMakeFiles/aaa_obj.dir/src/resources/resources.cpp.o -c /home/mjh/Programming/fun/aaa/src/resources/resources.cpp",
+  "file": "/home/mjh/Programming/fun/aaa/src/resources/resources.cpp",
+  "output": "CMakeFiles/aaa_obj.dir/src/resources/resources.cpp.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/c++ -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -I/home/mjh/Programming/fun/aaa/src -I/home/mjh/Programming/fun/aaa/ext -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glad/include -I/home/mjh/Programming/fun/aaa/ext/stb -I/home/mjh/Programming/fun/aaa/ext/tinyobjloader -I/home/mjh/Programming/fun/aaa/ext/imgui -I/home/mjh/Programming/fun/aaa/ext/imgui/backends -g -std=gnu++17 -o CMakeFiles/aaa_obj.dir/ext/imgui/imgui.cpp.o -c /home/mjh/Programming/fun/aaa/ext/imgui/imgui.cpp",
+  "file": "/home/mjh/Programming/fun/aaa/ext/imgui/imgui.cpp",
+  "output": "CMakeFiles/aaa_obj.dir/ext/imgui/imgui.cpp.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/c++ -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -I/home/mjh/Programming/fun/aaa/src -I/home/mjh/Programming/fun/aaa/ext -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glad/include -I/home/mjh/Programming/fun/aaa/ext/stb -I/home/mjh/Programming/fun/aaa/ext/tinyobjloader -I/home/mjh/Programming/fun/aaa/ext/imgui -I/home/mjh/Programming/fun/aaa/ext/imgui/backends -g -std=gnu++17 -o CMakeFiles/aaa_obj.dir/ext/imgui/imgui_demo.cpp.o -c /home/mjh/Programming/fun/aaa/ext/imgui/imgui_demo.cpp",
+  "file": "/home/mjh/Programming/fun/aaa/ext/imgui/imgui_demo.cpp",
+  "output": "CMakeFiles/aaa_obj.dir/ext/imgui/imgui_demo.cpp.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/c++ -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -I/home/mjh/Programming/fun/aaa/src -I/home/mjh/Programming/fun/aaa/ext -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glad/include -I/home/mjh/Programming/fun/aaa/ext/stb -I/home/mjh/Programming/fun/aaa/ext/tinyobjloader -I/home/mjh/Programming/fun/aaa/ext/imgui -I/home/mjh/Programming/fun/aaa/ext/imgui/backends -g -std=gnu++17 -o CMakeFiles/aaa_obj.dir/ext/imgui/imgui_draw.cpp.o -c /home/mjh/Programming/fun/aaa/ext/imgui/imgui_draw.cpp",
+  "file": "/home/mjh/Programming/fun/aaa/ext/imgui/imgui_draw.cpp",
+  "output": "CMakeFiles/aaa_obj.dir/ext/imgui/imgui_draw.cpp.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/c++ -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -I/home/mjh/Programming/fun/aaa/src -I/home/mjh/Programming/fun/aaa/ext -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glad/include -I/home/mjh/Programming/fun/aaa/ext/stb -I/home/mjh/Programming/fun/aaa/ext/tinyobjloader -I/home/mjh/Programming/fun/aaa/ext/imgui -I/home/mjh/Programming/fun/aaa/ext/imgui/backends -g -std=gnu++17 -o CMakeFiles/aaa_obj.dir/ext/imgui/imgui_tables.cpp.o -c /home/mjh/Programming/fun/aaa/ext/imgui/imgui_tables.cpp",
+  "file": "/home/mjh/Programming/fun/aaa/ext/imgui/imgui_tables.cpp",
+  "output": "CMakeFiles/aaa_obj.dir/ext/imgui/imgui_tables.cpp.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/c++ -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -I/home/mjh/Programming/fun/aaa/src -I/home/mjh/Programming/fun/aaa/ext -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glad/include -I/home/mjh/Programming/fun/aaa/ext/stb -I/home/mjh/Programming/fun/aaa/ext/tinyobjloader -I/home/mjh/Programming/fun/aaa/ext/imgui -I/home/mjh/Programming/fun/aaa/ext/imgui/backends -g -std=gnu++17 -o CMakeFiles/aaa_obj.dir/ext/imgui/imgui_widgets.cpp.o -c /home/mjh/Programming/fun/aaa/ext/imgui/imgui_widgets.cpp",
+  "file": "/home/mjh/Programming/fun/aaa/ext/imgui/imgui_widgets.cpp",
+  "output": "CMakeFiles/aaa_obj.dir/ext/imgui/imgui_widgets.cpp.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/gcc-12 -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -I/home/mjh/Programming/fun/aaa/src -I/home/mjh/Programming/fun/aaa/ext -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glad/include -I/home/mjh/Programming/fun/aaa/ext/stb -I/home/mjh/Programming/fun/aaa/ext/tinyobjloader -I/home/mjh/Programming/fun/aaa/ext/imgui -I/home/mjh/Programming/fun/aaa/ext/imgui/backends -g -o CMakeFiles/aaa_obj.dir/ext/glad/src/glad.c.o -c /home/mjh/Programming/fun/aaa/ext/glad/src/glad.c",
+  "file": "/home/mjh/Programming/fun/aaa/ext/glad/src/glad.c",
+  "output": "CMakeFiles/aaa_obj.dir/ext/glad/src/glad.c.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/c++ -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -I/home/mjh/Programming/fun/aaa/src -I/home/mjh/Programming/fun/aaa/ext -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glad/include -I/home/mjh/Programming/fun/aaa/ext/stb -I/home/mjh/Programming/fun/aaa/ext/tinyobjloader -I/home/mjh/Programming/fun/aaa/ext/imgui -I/home/mjh/Programming/fun/aaa/ext/imgui/backends -g -std=gnu++17 -o CMakeFiles/aaa_obj.dir/ext/imgui/backends/imgui_impl_glfw.cpp.o -c /home/mjh/Programming/fun/aaa/ext/imgui/backends/imgui_impl_glfw.cpp",
+  "file": "/home/mjh/Programming/fun/aaa/ext/imgui/backends/imgui_impl_glfw.cpp",
+  "output": "CMakeFiles/aaa_obj.dir/ext/imgui/backends/imgui_impl_glfw.cpp.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/c++ -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -I/home/mjh/Programming/fun/aaa/src -I/home/mjh/Programming/fun/aaa/ext -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glad/include -I/home/mjh/Programming/fun/aaa/ext/stb -I/home/mjh/Programming/fun/aaa/ext/tinyobjloader -I/home/mjh/Programming/fun/aaa/ext/imgui -I/home/mjh/Programming/fun/aaa/ext/imgui/backends -g -std=gnu++17 -o CMakeFiles/aaa_obj.dir/ext/imgui/backends/imgui_impl_opengl3.cpp.o -c /home/mjh/Programming/fun/aaa/ext/imgui/backends/imgui_impl_opengl3.cpp",
+  "file": "/home/mjh/Programming/fun/aaa/ext/imgui/backends/imgui_impl_opengl3.cpp",
+  "output": "CMakeFiles/aaa_obj.dir/ext/imgui/backends/imgui_impl_opengl3.cpp.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/c++ -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -I/home/mjh/Programming/fun/aaa/src -I/home/mjh/Programming/fun/aaa/ext -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glad/include -I/home/mjh/Programming/fun/aaa/ext/stb -I/home/mjh/Programming/fun/aaa/ext/tinyobjloader -I/home/mjh/Programming/fun/aaa/ext/imgui -I/home/mjh/Programming/fun/aaa/ext/imgui/backends -g -std=gnu++17 -o CMakeFiles/aaa_obj.dir/src/obj.cpp.o -c /home/mjh/Programming/fun/aaa/src/obj.cpp",
+  "file": "/home/mjh/Programming/fun/aaa/src/obj.cpp",
+  "output": "CMakeFiles/aaa_obj.dir/src/obj.cpp.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/gcc-12 -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -D_GLFW_USE_CONFIG_H -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glfw/src -I/home/mjh/Programming/fun/aaa/build/ext/glfw/src -g -std=gnu99 -fPIC -Wall -Wdeclaration-after-statement -o ext/glfw/src/CMakeFiles/glfw.dir/context.c.o -c /home/mjh/Programming/fun/aaa/ext/glfw/src/context.c",
+  "file": "/home/mjh/Programming/fun/aaa/ext/glfw/src/context.c",
+  "output": "ext/glfw/src/CMakeFiles/glfw.dir/context.c.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/gcc-12 -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -D_GLFW_USE_CONFIG_H -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glfw/src -I/home/mjh/Programming/fun/aaa/build/ext/glfw/src -g -std=gnu99 -fPIC -Wall -Wdeclaration-after-statement -o ext/glfw/src/CMakeFiles/glfw.dir/init.c.o -c /home/mjh/Programming/fun/aaa/ext/glfw/src/init.c",
+  "file": "/home/mjh/Programming/fun/aaa/ext/glfw/src/init.c",
+  "output": "ext/glfw/src/CMakeFiles/glfw.dir/init.c.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/gcc-12 -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -D_GLFW_USE_CONFIG_H -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glfw/src -I/home/mjh/Programming/fun/aaa/build/ext/glfw/src -g -std=gnu99 -fPIC -Wall -Wdeclaration-after-statement -o ext/glfw/src/CMakeFiles/glfw.dir/input.c.o -c /home/mjh/Programming/fun/aaa/ext/glfw/src/input.c",
+  "file": "/home/mjh/Programming/fun/aaa/ext/glfw/src/input.c",
+  "output": "ext/glfw/src/CMakeFiles/glfw.dir/input.c.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/gcc-12 -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -D_GLFW_USE_CONFIG_H -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glfw/src -I/home/mjh/Programming/fun/aaa/build/ext/glfw/src -g -std=gnu99 -fPIC -Wall -Wdeclaration-after-statement -o ext/glfw/src/CMakeFiles/glfw.dir/monitor.c.o -c /home/mjh/Programming/fun/aaa/ext/glfw/src/monitor.c",
+  "file": "/home/mjh/Programming/fun/aaa/ext/glfw/src/monitor.c",
+  "output": "ext/glfw/src/CMakeFiles/glfw.dir/monitor.c.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/gcc-12 -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -D_GLFW_USE_CONFIG_H -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glfw/src -I/home/mjh/Programming/fun/aaa/build/ext/glfw/src -g -std=gnu99 -fPIC -Wall -Wdeclaration-after-statement -o ext/glfw/src/CMakeFiles/glfw.dir/vulkan.c.o -c /home/mjh/Programming/fun/aaa/ext/glfw/src/vulkan.c",
+  "file": "/home/mjh/Programming/fun/aaa/ext/glfw/src/vulkan.c",
+  "output": "ext/glfw/src/CMakeFiles/glfw.dir/vulkan.c.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/gcc-12 -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -D_GLFW_USE_CONFIG_H -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glfw/src -I/home/mjh/Programming/fun/aaa/build/ext/glfw/src -g -std=gnu99 -fPIC -Wall -Wdeclaration-after-statement -o ext/glfw/src/CMakeFiles/glfw.dir/window.c.o -c /home/mjh/Programming/fun/aaa/ext/glfw/src/window.c",
+  "file": "/home/mjh/Programming/fun/aaa/ext/glfw/src/window.c",
+  "output": "ext/glfw/src/CMakeFiles/glfw.dir/window.c.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/gcc-12 -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -D_GLFW_USE_CONFIG_H -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glfw/src -I/home/mjh/Programming/fun/aaa/build/ext/glfw/src -g -std=gnu99 -fPIC -Wall -o ext/glfw/src/CMakeFiles/glfw.dir/x11_init.c.o -c /home/mjh/Programming/fun/aaa/ext/glfw/src/x11_init.c",
+  "file": "/home/mjh/Programming/fun/aaa/ext/glfw/src/x11_init.c",
+  "output": "ext/glfw/src/CMakeFiles/glfw.dir/x11_init.c.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/gcc-12 -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -D_GLFW_USE_CONFIG_H -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glfw/src -I/home/mjh/Programming/fun/aaa/build/ext/glfw/src -g -std=gnu99 -fPIC -Wall -o ext/glfw/src/CMakeFiles/glfw.dir/x11_monitor.c.o -c /home/mjh/Programming/fun/aaa/ext/glfw/src/x11_monitor.c",
+  "file": "/home/mjh/Programming/fun/aaa/ext/glfw/src/x11_monitor.c",
+  "output": "ext/glfw/src/CMakeFiles/glfw.dir/x11_monitor.c.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/gcc-12 -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -D_GLFW_USE_CONFIG_H -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glfw/src -I/home/mjh/Programming/fun/aaa/build/ext/glfw/src -g -std=gnu99 -fPIC -Wall -o ext/glfw/src/CMakeFiles/glfw.dir/x11_window.c.o -c /home/mjh/Programming/fun/aaa/ext/glfw/src/x11_window.c",
+  "file": "/home/mjh/Programming/fun/aaa/ext/glfw/src/x11_window.c",
+  "output": "ext/glfw/src/CMakeFiles/glfw.dir/x11_window.c.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/gcc-12 -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -D_GLFW_USE_CONFIG_H -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glfw/src -I/home/mjh/Programming/fun/aaa/build/ext/glfw/src -g -std=gnu99 -fPIC -Wall -o ext/glfw/src/CMakeFiles/glfw.dir/xkb_unicode.c.o -c /home/mjh/Programming/fun/aaa/ext/glfw/src/xkb_unicode.c",
+  "file": "/home/mjh/Programming/fun/aaa/ext/glfw/src/xkb_unicode.c",
+  "output": "ext/glfw/src/CMakeFiles/glfw.dir/xkb_unicode.c.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/gcc-12 -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -D_GLFW_USE_CONFIG_H -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glfw/src -I/home/mjh/Programming/fun/aaa/build/ext/glfw/src -g -std=gnu99 -fPIC -Wall -o ext/glfw/src/CMakeFiles/glfw.dir/posix_time.c.o -c /home/mjh/Programming/fun/aaa/ext/glfw/src/posix_time.c",
+  "file": "/home/mjh/Programming/fun/aaa/ext/glfw/src/posix_time.c",
+  "output": "ext/glfw/src/CMakeFiles/glfw.dir/posix_time.c.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/gcc-12 -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -D_GLFW_USE_CONFIG_H -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glfw/src -I/home/mjh/Programming/fun/aaa/build/ext/glfw/src -g -std=gnu99 -fPIC -Wall -o ext/glfw/src/CMakeFiles/glfw.dir/posix_thread.c.o -c /home/mjh/Programming/fun/aaa/ext/glfw/src/posix_thread.c",
+  "file": "/home/mjh/Programming/fun/aaa/ext/glfw/src/posix_thread.c",
+  "output": "ext/glfw/src/CMakeFiles/glfw.dir/posix_thread.c.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/gcc-12 -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -D_GLFW_USE_CONFIG_H -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glfw/src -I/home/mjh/Programming/fun/aaa/build/ext/glfw/src -g -std=gnu99 -fPIC -Wall -o ext/glfw/src/CMakeFiles/glfw.dir/glx_context.c.o -c /home/mjh/Programming/fun/aaa/ext/glfw/src/glx_context.c",
+  "file": "/home/mjh/Programming/fun/aaa/ext/glfw/src/glx_context.c",
+  "output": "ext/glfw/src/CMakeFiles/glfw.dir/glx_context.c.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/gcc-12 -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -D_GLFW_USE_CONFIG_H -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glfw/src -I/home/mjh/Programming/fun/aaa/build/ext/glfw/src -g -std=gnu99 -fPIC -Wall -Wdeclaration-after-statement -o ext/glfw/src/CMakeFiles/glfw.dir/egl_context.c.o -c /home/mjh/Programming/fun/aaa/ext/glfw/src/egl_context.c",
+  "file": "/home/mjh/Programming/fun/aaa/ext/glfw/src/egl_context.c",
+  "output": "ext/glfw/src/CMakeFiles/glfw.dir/egl_context.c.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/gcc-12 -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -D_GLFW_USE_CONFIG_H -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glfw/src -I/home/mjh/Programming/fun/aaa/build/ext/glfw/src -g -std=gnu99 -fPIC -Wall -Wdeclaration-after-statement -o ext/glfw/src/CMakeFiles/glfw.dir/osmesa_context.c.o -c /home/mjh/Programming/fun/aaa/ext/glfw/src/osmesa_context.c",
+  "file": "/home/mjh/Programming/fun/aaa/ext/glfw/src/osmesa_context.c",
+  "output": "ext/glfw/src/CMakeFiles/glfw.dir/osmesa_context.c.o"
+},
+{
+  "directory": "/home/mjh/Programming/fun/aaa/build",
+  "command": "/usr/bin/gcc-12 -DMY_DATA_DIR=\\\"/home/mjh/Programming/fun/aaa/data/\\\" -DMY_SRC_DIR=\\\"/home/mjh/Programming/fun/aaa/src/\\\" -D_GLFW_USE_CONFIG_H -I/home/mjh/Programming/fun/aaa/ext/glfw/include -I/home/mjh/Programming/fun/aaa/ext/glfw/src -I/home/mjh/Programming/fun/aaa/build/ext/glfw/src -g -std=gnu99 -fPIC -Wall -o ext/glfw/src/CMakeFiles/glfw.dir/linux_joystick.c.o -c /home/mjh/Programming/fun/aaa/ext/glfw/src/linux_joystick.c",
+  "file": "/home/mjh/Programming/fun/aaa/ext/glfw/src/linux_joystick.c",
+  "output": "ext/glfw/src/CMakeFiles/glfw.dir/linux_joystick.c.o"
+}
+]

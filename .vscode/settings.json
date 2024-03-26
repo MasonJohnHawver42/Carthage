@@ -76,8 +76,10 @@
         "primitiveset": "cpp",
         "camera": "cpp",
         "graphicscontext": "cpp",
+        "pointers": "cpp",
         "any": "cpp",
-        "slist": "cpp"
+        "slist": "cpp",
+        "mixinvector": "cpp"
     },
     "cSpell.words": [
         "aabb",

@@ -75,7 +75,7 @@ namespace game
 
         void update_cam(float dt, double xpos1, double ypos1, bool click, bool forward, bool backward, 
                         bool rightward, bool leftward, 
-                        bool upward, bool downward, int width, int height, bool* setpos, int* nx, int* ny, bool* show, bool* hide, Camera& cam);
+                        bool upward, bool downward, bool input_captured, int width, int height, bool* setpos, int* nx, int* ny, bool* show, bool* hide, Camera& cam);
     };
 
     void operate_camera(float dt, float speed, float angular_speed, 
@@ -110,7 +110,7 @@ namespace game
 
     void CameraOperator::update_cam(float dt, double xpos1, double ypos1, bool click, bool forward, bool backward, 
                         bool rightward, bool leftward, 
-                        bool upward, bool downward, int width, int height, bool* setpos, int* nx, int* ny, bool* show, bool* hide, Camera& cam) 
+                        bool upward, bool downward, bool input_captured, int width, int height, bool* setpos, int* nx, int* ny, bool* show, bool* hide, Camera& cam) 
     {
         *setpos = 0;
         *hide = 0;
@@ -128,7 +128,7 @@ namespace game
             xpos0 = width >> 1; ypos0 = height >> 1;
         }
 
-        if (mode == 0 && click) 
+        if (mode == 0 && click && !input_captured) 
         {
             mode = 1;
             *hide = 1;

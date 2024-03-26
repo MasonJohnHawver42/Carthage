@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION "3.1")
 
+include(CMakePrintHelpers)
+
 project("aaa")
 
 # Find OpenGL, set link library names and include paths
@@ -7,6 +9,9 @@ find_package(OpenGL REQUIRED)
 set(OPENGL_LIBRARIES ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY})
 set(OPENGL_INCLUDE_DIRS ${OPENGL_INCLUDE_DIR})
 include_directories(${OPENGL_INCLUDE_DIRS})
+
+# find_package(Boost REQUIRED)
+# find_package(CGAL REQUIRED)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
@@ -33,10 +38,12 @@ set(
 
 list(REMOVE_ITEM MY_SOURCES ${MAIN_SOURCES})
 
-set(
-    SOURCES
-    ext/glad/src/glad.c
-)
+file(GLOB IMGUI_SOURCE_FILES "ext/imgui/*.cpp")
+
+list(APPEND MY_SOURCES ${IMGUI_SOURCE_FILES})
+list(APPEND MY_SOURCES "ext/glad/src/glad.c")
+list(APPEND MY_SOURCES "ext/imgui/backends/imgui_impl_glfw.cpp")
+list(APPEND MY_SOURCES "ext/imgui/backends/imgui_impl_opengl3.cpp")
 
 set(
     INCLUDE_DIRS
@@ -46,6 +53,8 @@ set(
     ext/glad/include
     ext/stb
     ext/tinyobjloader
+    ext/imgui
+    ext/imgui/backends
 )
 
 set(
@@ -58,7 +67,7 @@ foreach(MAIN_SOURCE ${MAIN_SOURCES})
 
     get_filename_component(MAIN_NAME ${MAIN_SOURCE} NAME_WE)
 
-    add_executable(${PROJECT_NAME}_${MAIN_NAME} ${MY_SOURCES} ${SOURCES} ${MAIN_SOURCE})
+    add_executable(${PROJECT_NAME}_${MAIN_NAME} ${MY_SOURCES} ${MAIN_SOURCE})
 
     include_directories(${INCLUDE_DIRS})
 

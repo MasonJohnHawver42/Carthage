@@ -68,7 +68,7 @@ namespace game
 
         ModelRenderer(const char* vs, const char* fs) : m_objects() 
         {
-            model_pipeline = {0, gfx::CullMode::BACK, gfx::DrawMode::FILL};
+            model_pipeline = {0, gfx::CullMode::BACK, gfx::DrawMode::LINE};
             res::load_program(vs, fs, &model_pipeline.m_prog);
         }
 
@@ -100,24 +100,4 @@ namespace game
             gfx::free_program(&model_pipeline.m_prog);
         }
     };
-
-    void normalize_object(glm::vec3 pos, float size, Object& obj, gfx::Cache& cache) 
-    {
-        gfx::Model *model = cache.m_model_pool[obj.model_id];
-        glm::vec3 center;
-        float longest_axis = 0;
-        float tmp;
-
-        for (int i = 0; i < 3; i++) 
-        {
-            center[i] = (model->aabb_max[i] + model->aabb_min[i]) / 2.0;
-            tmp = model->aabb_max[i] - model->aabb_min[i];
-            if (tmp > longest_axis) { longest_axis = tmp; }
-        }
-        
-        tmp = (size / longest_axis);
-        obj.m_trans.scale = {tmp, tmp, tmp};
-        obj.m_trans.pos = pos - center;
-    }
-
 }
