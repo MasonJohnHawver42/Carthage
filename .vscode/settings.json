@@ -79,7 +79,8 @@
         "pointers": "cpp",
         "any": "cpp",
         "slist": "cpp",
-        "mixinvector": "cpp"
+        "mixinvector": "cpp",
+        "codecvt": "cpp"
     },
     "cSpell.words": [
         "aabb",

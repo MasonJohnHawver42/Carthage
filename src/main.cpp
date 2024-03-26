@@ -15,12 +15,9 @@
 
 //my file resource library
 #include "resources/resources.hpp"
-#include "resources/loader.hpp"
 
 //my game library
-#include "game/camera.hpp"
-#include "game/object.hpp"
-#include "game/debug.hpp"
+#include "game/scene.hpp"
 #include "core/octree.hpp"
 
 #include <iostream>
@@ -38,15 +35,12 @@ int height = 480;
 game::Camera* g_camera;
 game::CameraOperator* g_cam_op;
 
-gfx::QuadBuffer*    g_quad_buffer;
-gfx::Pipeline*      g_quad_pipeline;
-
-gfx::Cache*         g_gfx_cache;
-res::Cache*         g_res_cache;
-res::Loader*        g_loader;
-
+game::Cache*          g_cache;
+game::Scene*          g_scene;
 game::DebugRenderer*  g_debug_renderer;
-game::ModelRenderer* g_model_renderer;
+game::SceneRenderer*  g_scene_renderer;
+
+// res::Loader*        g_loader;
 
 //editor
 
@@ -55,172 +49,73 @@ void tick(void);
 
 float my_rand() { return rand() / (float)RAND_MAX; }
 
-void normalize_transform(glm::vec3 pos, float size, float* aabb_min, float* aabb_max, game::Transform& trans) 
-{
-    glm::vec3 center;
-    float longest_axis = 0;
-    float tmp;
-
-    for (int i = 0; i < 3; i++) 
-    {
-        center[i] = (aabb_max[i] + aabb_min[i]) / 2.0;
-        tmp = aabb_max[i] - aabb_min[i];
-        if (tmp > longest_axis) { longest_axis = tmp; }
-    }
-    
-    tmp = (size / longest_axis);
-    trans.scale = {tmp, tmp, tmp};
-    trans.pos = pos - center * tmp;
-}
-
-void sample_mesh(res::Model* model, float* pt, float* normal) 
-{
-    unsigned int fid = rand() % (model->ic / 3);
-    unsigned int aid = model->indicies[(fid * 3) + 0];
-    unsigned int bid = model->indicies[(fid * 3) + 1];
-    unsigned int cid = model->indicies[(fid * 3) + 2];
-    float u = my_rand();
-    float v = my_rand();
-    float a;
-    if (u + v > 1) { v = 1 - v; u = 1 - u; }
-    a = 1 - u - v;
-
-    for (int i = 0; i < 3; i++) 
-    {
-        pt[i] = (a * model->data[(8 * aid) + i]) + 
-                (u * model->data[(8 * bid) + i]) + 
-                (v * model->data[(8 * cid) + i]);
-
-        normal[i] = (a * model->data[(8 * aid) + i + 3]) + 
-                (u * model->data[(8 * bid) + i + 3]) + 
-                (v * model->data[(8 * cid) + i + 3]);
-    }
-}
-
 bool show_demo_window = true;
 bool allow_input = true;
 ImGuiIO* io;
-
-struct Segmentation 
-{
-    float color[3];
-    unsigned int out_id, pc;
-};
-
-struct Point 
-{
-    float pos[3];
-    float normal[3];
-    unsigned int seg_id;
-    gfx::ShapeEntry* ent;
-    bool seg;
-};
-
-struct PartSeg
-{
-    core::Pool<Segmentation, 32, 1024> m_seg;
-    Point* m_points;
-
-    unsigned int create_seg() 
-    {
-        unsigned int id = m_seg.allocate();
-        *m_seg[id] = {{0, 0, 0}, 0, 0};
-        return id;
-    }
-
-    void seg_pt(unsigned int index, unsigned int id) 
-    {
-        if (m_points[index].seg) 
-        {
-            Segmentation* old = m_seg[m_points[index].seg_id];
-            old->pc--;
-        }
-
-        m_seg[id]->pc++;
-        m_points[index].seg_id = id;
-        m_points[index].seg = true;
-    }
-
-    void assign_segs() 
-    {
-        unsigned int i = 0;
-        m_seg.for_each([&](unsigned int index, Segmentation& seg){
-            if (seg.pc > 0) 
-            {
-                seg.color[0] = my_rand();
-                seg.color[1] = my_rand();
-                seg.color[2] = my_rand();
-                seg.out_id = i;
-                i++;
-            }
-        });
-    }
-};
-
-PartSeg part_seg;
 
 int main(void)
 {
     init();
 
-    gfx::QuadBuffer quad_buffer;
-    gfx::create_quad_buffer(&quad_buffer);
+    game::Cache cache = game::Cache();
+    game::Scene scene = game::Scene();
 
-    gfx::Pipeline quad_pipeline = {0, gfx::CullMode::NONE, gfx::DrawMode::FILL};
-    res::load_program("shaders/quad_vert.glsl", "shaders/quad_frag.glsl", &quad_pipeline.m_prog);
+    gfx::Program model_prog, debug_prog;
+    res::load_program("shaders/vertex.glsl", "shaders/fragment.glsl", &model_prog);
+    res::load_program("shaders/shape_vert.glsl", "shaders/shape_frag.glsl", &debug_prog);
 
-    gfx::Cache gfx_cache = gfx::Cache();
-    res::Cache res_cache = res::Cache();
-    res::Loader loader = res::Loader();
-    
-    game::DebugRenderer debug_renderer = game::DebugRenderer("shaders/shape_vert.glsl", "shaders/shape_frag.glsl");
-    game::ModelRenderer model_renderer = game::ModelRenderer("shaders/vertex.glsl", "shaders/fragment.glsl");
+    game::DebugRenderer debug_renderer = game::DebugRenderer(debug_prog);
+    game::SceneRenderer scene_renderer = game::SceneRenderer(model_prog);
     game::Camera camera = game::Camera({0.0, 0.0, 2.0}, {0.0, 0.0, -1.0}, {0.0, 1.0, 0.0}, 45.0, 0.01f, 300.0f, 640.0f / 480.0f);
-    game::CameraOperator cam_op = game::CameraOperator(.3, .01);
-
-    g_quad_buffer = &quad_buffer;
-    g_quad_pipeline = &quad_pipeline;
-    g_gfx_cache = &gfx_cache;
-    g_res_cache = &res_cache;
-    g_loader = &loader;
+    game::CameraOperator cam_op = game::CameraOperator(1, .03);
+   
+    // res::Loader loader = res::Loader();
+    
+    g_scene = &scene;
+    g_cache = &cache;
     g_debug_renderer = &debug_renderer;
-    g_model_renderer = &model_renderer;
+    g_scene_renderer = &scene_renderer;
     g_camera = &camera;
     g_cam_op = &cam_op;
+    // g_loader = &loader;
 
-    //load mesh
-    unsigned int bunny_id = res::order_model("binary/bunny.bin", loader, res_cache, gfx_cache);
-    unsigned int model_id = res::order_model("binary/sponza.bin", loader, res_cache, gfx_cache);
-    
-    unsigned int object_id = model_renderer.m_objects.allocate();
-    game::Object* obj = model_renderer.m_objects[object_id];
-    obj->model_id = model_id;
-    obj->m_trans = game::Transform({0, 0, 0}, {0, 1, 0}, 0, {0.01f, 0.01f, 0.01f});
+    //load scene
+    res::load_scene("scenes/test.scn", scene, cache);
 
-    object_id = model_renderer.m_objects.allocate();
-    obj = model_renderer.m_objects[object_id];
-    obj->model_id = bunny_id;
-    obj->m_trans = game::Transform({-0.05, 0, -2}, {0, 1, 0}, 0, {1, 1, 1});
+    // unsigned int bunny_id = res::load_model("binary/bunny.bin", cache);
+    // unsigned int model_id = res::load_model("binary/sponza.bin", cache);
+
+    // unsigned int object_id = scene.m_objects.allocate();
+    // game::Object* obj = scene.m_objects[object_id];
+    // obj->model_id = model_id;
+    // obj->m_trans = game::Transform({0, 0, 0}, {0, 1, 0}, 0, {0.01f, 0.01f, 0.01f});
+
+    // object_id = scene.m_objects.allocate();
+    // obj = scene.m_objects[object_id];
+    // obj->model_id = bunny_id;
+    // obj->m_trans = game::Transform({-0.05, 0, -2}, {0, 1, 0}, 0, {1, 1, 1});
 
     gfx::ShapeEntry* ent;
+    game::Transform trans_tmp;
     
-    for (int i = 0; i < 1000 * 100; i++) 
+    for (int i = 0; i < 1000 * 10; i++) 
     {
         ent = debug_renderer.shape(gfx::Shape::CUBE);
-        game::transform_mat({{my_rand() * 20 - 10, my_rand() * 20, my_rand() * 2 - 1.4}, {1, 1, 1}, 0, {.1, .1, .1}}, ent->mat);
+        trans_tmp = {{(rand() % 200) * .1 - 10, (rand() % 200) * .1, (rand() % 20) * .1 - 1.4}, {1, 1, 1}, 0, {.1, .1, .1}};
+        trans_tmp.mat4(ent->mat);
         game::set_color(my_rand(), my_rand(), my_rand(), 1, ent->color);
     }
 
-    std::thread loader_thread(res::loader_proc, std::ref(loader));
+    // std::thread loader_thread(res::loader_proc, std::ref(loader));
 
     while (!glfwWindowShouldClose(window)) { tick(); }
 
-    loader.finish();
-    loader_thread.join();
+    // loader.finish();
+    // loader_thread.join();
     
     debug_renderer.free();
-    model_renderer.free();
-    gfx_cache.free();
+    scene_renderer.free();
+    cache.free();
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
@@ -249,7 +144,7 @@ unsigned int mode = 0;
 
 void tick() 
 {
-    res::loader_main(*g_loader, *g_res_cache, *g_gfx_cache);
+    // res::loader_main(*g_loader, *g_cache);
 
     glfwPollEvents();
 
@@ -279,18 +174,12 @@ void tick()
     if (setpos) { glfwSetCursorPos(window, nx, ny); }
 
     g_camera->update_mats();
-    g_model_renderer->update_mats();
+    g_scene->update_mats();
 
     gfx::clear();
 
-    g_model_renderer->render(*g_gfx_cache, *g_camera);
+    g_scene_renderer->render(*g_cache, *g_camera, *g_scene);
     g_debug_renderer->draw(*g_camera);
-
-    // float pos[2] = {0, 0};
-    // float size[2] = {.5, .5};
-    // float color[4] = {1, 1, 1, .3};
-    // gfx::bind_pipeline(g_quad_pipeline);
-    // gfx::draw_quad_buffer(g_quad_pipeline->m_prog, (float*)pos, (float*)size, (float*)color, g_quad_buffer);
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

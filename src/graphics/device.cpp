@@ -228,6 +228,12 @@ namespace gfx
         load_texture2d(8, 8, 1, data, tex);
     }
 
+    void activate_texture2d(Texture2D* tex) 
+    {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, tex->id);
+    }
+
     //util
 
     void clear() 
@@ -276,6 +282,27 @@ namespace gfx
         *mesh_dest = *mesh;
         model->mesh_count++;
     }
+
+    void bind_model(Model* model) 
+    {
+        glBindVertexArray(model->m_vao);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->m_ebo);
+    }
+
+    void draw_mesh(Program program, Model* model, unsigned int i, gfx::Material* material) 
+    {
+        // set_uniform_int("ourTexture", 0, program);
+        set_uniform_vec3("Color", material->color, program);
+
+        glDrawElements(GL_TRIANGLES, model->m_meshes[i].m_count, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * model->m_meshes[i].m_offset));
+    }
+
+    void unbind_model() 
+    {
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
+    }
+
 
     void free_model(Model* model) 
     {

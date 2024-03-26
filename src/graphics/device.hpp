@@ -27,12 +27,15 @@ namespace gfx
     void load_texture2d(int width, int height, int nc, unsigned char* data, Texture2D* tex);
     void free_texture2d(Texture2D* tex);
     void default_texture2d(Texture2D* tex);
+    void activate_texture2d(Texture2D* tex);
 
     //model
     void create_model(float* vs, unsigned int* ind, unsigned int vc, unsigned int ic, Model* model);
     unsigned int add_material_model(Material* mat, Model* model);
     void add_mesh_model(Mesh* mesh, Model* model);
-    void draw_model(Program prog, Model* model);
+    void bind_model(Model* model);
+    void draw_mesh(Program program, Model* model, unsigned int i, gfx::Material* material);
+    void unbind_model();
     void free_model(Model* model);
 
     //debug shapes

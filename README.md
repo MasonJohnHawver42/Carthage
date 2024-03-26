@@ -12,31 +12,31 @@ make
 
 # Gallery
 
-![render0](data/promo/sponzarender0.png)
+![render0](assets/promo/sponzarender0.png) 
 
 # Todo
 
- - [X] texture loading
- - [X] model loading / compression
- - [X] Debug shapes
-  - [ ] add opacity
- - [X] Multiple Objects
- - [ ] frame buffer / deferred rendering - to display depth data [two hours]
- - [ ] save buffer to disk - [an hour]
- - [ ] BVH to test if point is inside
- - [ ] directional lights
- - [ ] update materials for blin phong shadding
-   - [ ] specular maps / optional maps
- - [ ] SSAO
- - [ ] generate trajectories with Metropolis hastings samplings
- - [ ] debug axis to move objects around [couple days]
+- [X] texture loading
+- [X] model loading / compression
+- [X] Debug shapes
+- [X] Multiple Objects
+- [ ] Scene files
+- [ ] Build Octrees
+- [ ] Render Octrees
+- [ ] Build RRT
+- [ ] Metropolis Hastings Trajectory sampeling
+- [ ] Frame Buffer
+- [ ] Add Documentation
 
+# Data Pipeline
 
+| Proc | Lang |
+|------|------|
+|.obj -> .bin  | c++  (Done) |
+|.bin -> .scene    | python (Todo) |
+|.scene -> .octree | python (Todo) |
+|.octree -> .rrt   | python (Todo -> if theres not a work around) |
+|.bin .octree .rrt -> data | c++ |
+|data -> cnn | python (Big Todo) |
+|cnn -> inferance | c++ (Big Todo) |
 
-Latter:
- - [ ] lights and Blinn-Phong Shading
- - [ ] directional shadows
- - [ ] compute shader fun ???
-   - [ ] Forward Rendering
-   - [ ] Grass / FFT Ocean / Water Sim / Particles
- - [ ] Scene Graph

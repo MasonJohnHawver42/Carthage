@@ -1,10 +1,11 @@
-cmake_minimum_required(VERSION "3.1")
+cmake_minimum_required(VERSION "3.5")
 
 include(CMakePrintHelpers)
 
 project("aaa")
 
 # Find OpenGL, set link library names and include paths
+set(OpenGL_GL_PREFERENCE "LEGACY")
 find_package(OpenGL REQUIRED)
 set(OPENGL_LIBRARIES ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY})
 set(OPENGL_INCLUDE_DIRS ${OPENGL_INCLUDE_DIR})
@@ -30,11 +31,13 @@ add_subdirectory(ext/glfw)
 # Source files
 file(GLOB_RECURSE MY_SOURCES "src/*.cpp")
 
-set(
-    MAIN_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
-)
+# set(
+#     MAIN_SOURCES
+#     ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
+#     ${CMAKE_CURRENT_SOURCE_DIR}/src/obj.cpp
+# )
+
+file(GLOB MAIN_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 
 list(REMOVE_ITEM MY_SOURCES ${MAIN_SOURCES})
 

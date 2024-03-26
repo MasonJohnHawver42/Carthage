@@ -95,6 +95,11 @@ namespace core
             if (block_index < lowest_open) { lowest_open = block_index; }
         }
 
+        void free_all() 
+        {
+            
+        }
+
         void for_each(std::function<bool(unsigned int, Block<T, BLOCK_SIZE>&)> func) 
         {
             for (unsigned int i = 0; i < BLOCKS; i++)
