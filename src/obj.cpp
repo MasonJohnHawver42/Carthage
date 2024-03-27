@@ -242,14 +242,7 @@ int main(int argc, char *argv[])
     fs::path first_arg_path(argv[1]);
     std::string second_arg = first_arg_path.parent_path();
 
-
     int res = convert_object(argv[1], second_arg.c_str(), argv[2]);
-
-    // int res0 = convert_object("models/bunny/bunny.obj", "models/bunny/", "binary/bunny.bin");
-    // int res1 = convert_object("models/sponza/sponza.obj", "models/sponza/", "binary/sponza.bin");
-    // int res2 = convert_object("models/cube/cube.obj", "models/cube/", "binary/cube.bin");
-    // int res3 = convert_object("models/035_power_drill/google_64k/textured.obj", "models/035_power_drill/google_64k/", "binary/drill.bin");
-    // int res4 = convert_object("models/005_tomato_soup_can/google_64k/textured.obj", "models/005_tomato_soup_can/google_64k/", "binary/can.bin");
 
     return 0;
 }

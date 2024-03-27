@@ -1,18 +1,13 @@
-cmake_minimum_required(VERSION "3.5")
+cmake_minimum_required(VERSION 3.5)
 
 include(CMakePrintHelpers)
 
-project("aaa")
+project(carthage)
 
 # Find OpenGL, set link library names and include paths
 set(OpenGL_GL_PREFERENCE "LEGACY")
 find_package(OpenGL REQUIRED)
 set(OPENGL_LIBRARIES ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY})
-set(OPENGL_INCLUDE_DIRS ${OPENGL_INCLUDE_DIR})
-include_directories(${OPENGL_INCLUDE_DIRS})
-
-# find_package(Boost REQUIRED)
-# find_package(CGAL REQUIRED)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
@@ -30,23 +25,36 @@ add_subdirectory(ext/glfw)
 
 # Source files
 file(GLOB_RECURSE MY_SOURCES "src/*.cpp")
-
-# set(
-#     MAIN_SOURCES
-#     ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/src/obj.cpp
-# )
-
 file(GLOB MAIN_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
-
 list(REMOVE_ITEM MY_SOURCES ${MAIN_SOURCES})
 
-file(GLOB IMGUI_SOURCE_FILES "ext/imgui/*.cpp")
+# Include imgui
+add_library(glad STATIC
+    ext/glad/src/glad.c
+)
 
-list(APPEND MY_SOURCES ${IMGUI_SOURCE_FILES})
-list(APPEND MY_SOURCES "ext/glad/src/glad.c")
-list(APPEND MY_SOURCES "ext/imgui/backends/imgui_impl_glfw.cpp")
-list(APPEND MY_SOURCES "ext/imgui/backends/imgui_impl_opengl3.cpp")
+# Include imgui
+add_library(imgui STATIC
+    ext/imgui/imgui.cpp
+    ext/imgui/imgui_demo.cpp
+    ext/imgui/imgui_draw.cpp
+    ext/imgui/imgui_tables.cpp
+    ext/imgui/imgui_widgets.cpp
+)
+
+add_library(carthage STATIC
+    ext/imgui/backends/imgui_impl_glfw.cpp
+    ext/imgui/backends/imgui_impl_opengl3.cpp
+    ${MY_SOURCES}
+)
+
+target_link_libraries(carthage PRIVATE
+    glad
+    glfw
+    imgui
+    ${OPENGL_gl_LIBRARY} 
+    ${OPENGL_glu_LIBRARY}
+)
 
 set(
     INCLUDE_DIRS
@@ -58,26 +66,28 @@ set(
     ext/tinyobjloader
     ext/imgui
     ext/imgui/backends
+    ${OPENGL_INCLUDE_DIR}
 )
+
+include_directories(${INCLUDE_DIRS})
 
 set(
     LIBS
+    glad
     glfw
-    ${OPENGL_LIBRARIES}
+    imgui
+    carthage
+    ${OPENGL_gl_LIBRARY} 
+    ${OPENGL_glu_LIBRARY}
 )
 
 foreach(MAIN_SOURCE ${MAIN_SOURCES})
-
     get_filename_component(MAIN_NAME ${MAIN_SOURCE} NAME_WE)
-
-    add_executable(${PROJECT_NAME}_${MAIN_NAME} ${MY_SOURCES} ${MAIN_SOURCE})
-
-    include_directories(${INCLUDE_DIRS})
-
-    target_link_libraries(${PROJECT_NAME}_${MAIN_NAME} PRIVATE ${LIBS})
-
-    # For MS Visual Code
-    if (MSVC)
+    
+    add_executable(${MAIN_NAME} ${MAIN_SOURCE})
+    target_link_libraries(${MAIN_NAME} PRIVATE ${LIBS})
+    
+    if (MSVC) # For MS Visual Code
         target_compile_options(${PROJECT_NAME}_${MAIN_NAME} PRIVATE "/MP")
         set_property(TARGET ${PROJECT_NAME}_${MAIN_NAME} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME}_${MAIN_NAME})
     endif()

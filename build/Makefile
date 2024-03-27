@@ -57,10 +57,10 @@ RM = /home/mjh/miniforge3/lib/python3.10/site-packages/cmake/data/bin/cmake -E r
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/mjh/Programming/fun/aaa
+CMAKE_SOURCE_DIR = /home/mjh/Programming/fun/carthage
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/mjh/Programming/fun/aaa/build
+CMAKE_BINARY_DIR = /home/mjh/Programming/fun/carthage/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -132,9 +132,9 @@ install/strip/fast: preinstall/fast
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/mjh/Programming/fun/aaa/build/CMakeFiles /home/mjh/Programming/fun/aaa/build//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/mjh/Programming/fun/carthage/build/CMakeFiles /home/mjh/Programming/fun/carthage/build//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/mjh/Programming/fun/aaa/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/mjh/Programming/fun/carthage/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -162,30 +162,82 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named aaa_main
+# Target rules for targets named glad
 
 # Build rule for target.
-aaa_main: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 aaa_main
-.PHONY : aaa_main
+glad: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 glad
+.PHONY : glad
 
 # fast build rule for target.
-aaa_main/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/build
-.PHONY : aaa_main/fast
+glad/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/glad.dir/build.make CMakeFiles/glad.dir/build
+.PHONY : glad/fast
 
 #=============================================================================
-# Target rules for targets named aaa_obj
+# Target rules for targets named imgui
 
 # Build rule for target.
-aaa_obj: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 aaa_obj
-.PHONY : aaa_obj
+imgui: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 imgui
+.PHONY : imgui
 
 # fast build rule for target.
-aaa_obj/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/build
-.PHONY : aaa_obj/fast
+imgui/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/build
+.PHONY : imgui/fast
+
+#=============================================================================
+# Target rules for targets named carthage
+
+# Build rule for target.
+carthage: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 carthage
+.PHONY : carthage
+
+# fast build rule for target.
+carthage/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/carthage.dir/build.make CMakeFiles/carthage.dir/build
+.PHONY : carthage/fast
+
+#=============================================================================
+# Target rules for targets named main
+
+# Build rule for target.
+main: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 main
+.PHONY : main
+
+# fast build rule for target.
+main/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/build
+.PHONY : main/fast
+
+#=============================================================================
+# Target rules for targets named obj
+
+# Build rule for target.
+obj: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 obj
+.PHONY : obj
+
+# fast build rule for target.
+obj/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/obj.dir/build.make CMakeFiles/obj.dir/build
+.PHONY : obj/fast
+
+#=============================================================================
+# Target rules for targets named octree
+
+# Build rule for target.
+octree: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 octree
+.PHONY : octree
+
+# fast build rule for target.
+octree/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/octree.dir/build.make CMakeFiles/octree.dir/build
+.PHONY : octree/fast
 
 #=============================================================================
 # Target rules for targets named uninstall
@@ -231,8 +283,7 @@ ext/glad/src/glad.o: ext/glad/src/glad.c.o
 
 # target to build an object file
 ext/glad/src/glad.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/ext/glad/src/glad.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/ext/glad/src/glad.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/glad.dir/build.make CMakeFiles/glad.dir/ext/glad/src/glad.c.o
 .PHONY : ext/glad/src/glad.c.o
 
 ext/glad/src/glad.i: ext/glad/src/glad.c.i
@@ -240,8 +291,7 @@ ext/glad/src/glad.i: ext/glad/src/glad.c.i
 
 # target to preprocess a source file
 ext/glad/src/glad.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/ext/glad/src/glad.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/ext/glad/src/glad.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/glad.dir/build.make CMakeFiles/glad.dir/ext/glad/src/glad.c.i
 .PHONY : ext/glad/src/glad.c.i
 
 ext/glad/src/glad.s: ext/glad/src/glad.c.s
@@ -249,8 +299,7 @@ ext/glad/src/glad.s: ext/glad/src/glad.c.s
 
 # target to generate assembly for a file
 ext/glad/src/glad.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/ext/glad/src/glad.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/ext/glad/src/glad.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/glad.dir/build.make CMakeFiles/glad.dir/ext/glad/src/glad.c.s
 .PHONY : ext/glad/src/glad.c.s
 
 ext/imgui/backends/imgui_impl_glfw.o: ext/imgui/backends/imgui_impl_glfw.cpp.o
@@ -258,8 +307,7 @@ ext/imgui/backends/imgui_impl_glfw.o: ext/imgui/backends/imgui_impl_glfw.cpp.o
 
 # target to build an object file
 ext/imgui/backends/imgui_impl_glfw.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/ext/imgui/backends/imgui_impl_glfw.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/ext/imgui/backends/imgui_impl_glfw.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/carthage.dir/build.make CMakeFiles/carthage.dir/ext/imgui/backends/imgui_impl_glfw.cpp.o
 .PHONY : ext/imgui/backends/imgui_impl_glfw.cpp.o
 
 ext/imgui/backends/imgui_impl_glfw.i: ext/imgui/backends/imgui_impl_glfw.cpp.i
@@ -267,8 +315,7 @@ ext/imgui/backends/imgui_impl_glfw.i: ext/imgui/backends/imgui_impl_glfw.cpp.i
 
 # target to preprocess a source file
 ext/imgui/backends/imgui_impl_glfw.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/ext/imgui/backends/imgui_impl_glfw.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/ext/imgui/backends/imgui_impl_glfw.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/carthage.dir/build.make CMakeFiles/carthage.dir/ext/imgui/backends/imgui_impl_glfw.cpp.i
 .PHONY : ext/imgui/backends/imgui_impl_glfw.cpp.i
 
 ext/imgui/backends/imgui_impl_glfw.s: ext/imgui/backends/imgui_impl_glfw.cpp.s
@@ -276,8 +323,7 @@ ext/imgui/backends/imgui_impl_glfw.s: ext/imgui/backends/imgui_impl_glfw.cpp.s
 
 # target to generate assembly for a file
 ext/imgui/backends/imgui_impl_glfw.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/ext/imgui/backends/imgui_impl_glfw.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/ext/imgui/backends/imgui_impl_glfw.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/carthage.dir/build.make CMakeFiles/carthage.dir/ext/imgui/backends/imgui_impl_glfw.cpp.s
 .PHONY : ext/imgui/backends/imgui_impl_glfw.cpp.s
 
 ext/imgui/backends/imgui_impl_opengl3.o: ext/imgui/backends/imgui_impl_opengl3.cpp.o
@@ -285,8 +331,7 @@ ext/imgui/backends/imgui_impl_opengl3.o: ext/imgui/backends/imgui_impl_opengl3.c
 
 # target to build an object file
 ext/imgui/backends/imgui_impl_opengl3.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/ext/imgui/backends/imgui_impl_opengl3.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/ext/imgui/backends/imgui_impl_opengl3.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/carthage.dir/build.make CMakeFiles/carthage.dir/ext/imgui/backends/imgui_impl_opengl3.cpp.o
 .PHONY : ext/imgui/backends/imgui_impl_opengl3.cpp.o
 
 ext/imgui/backends/imgui_impl_opengl3.i: ext/imgui/backends/imgui_impl_opengl3.cpp.i
@@ -294,8 +339,7 @@ ext/imgui/backends/imgui_impl_opengl3.i: ext/imgui/backends/imgui_impl_opengl3.c
 
 # target to preprocess a source file
 ext/imgui/backends/imgui_impl_opengl3.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/ext/imgui/backends/imgui_impl_opengl3.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/ext/imgui/backends/imgui_impl_opengl3.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/carthage.dir/build.make CMakeFiles/carthage.dir/ext/imgui/backends/imgui_impl_opengl3.cpp.i
 .PHONY : ext/imgui/backends/imgui_impl_opengl3.cpp.i
 
 ext/imgui/backends/imgui_impl_opengl3.s: ext/imgui/backends/imgui_impl_opengl3.cpp.s
@@ -303,8 +347,7 @@ ext/imgui/backends/imgui_impl_opengl3.s: ext/imgui/backends/imgui_impl_opengl3.c
 
 # target to generate assembly for a file
 ext/imgui/backends/imgui_impl_opengl3.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/ext/imgui/backends/imgui_impl_opengl3.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/ext/imgui/backends/imgui_impl_opengl3.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/carthage.dir/build.make CMakeFiles/carthage.dir/ext/imgui/backends/imgui_impl_opengl3.cpp.s
 .PHONY : ext/imgui/backends/imgui_impl_opengl3.cpp.s
 
 ext/imgui/imgui.o: ext/imgui/imgui.cpp.o
@@ -312,8 +355,7 @@ ext/imgui/imgui.o: ext/imgui/imgui.cpp.o
 
 # target to build an object file
 ext/imgui/imgui.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/ext/imgui/imgui.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/ext/imgui/imgui.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/ext/imgui/imgui.cpp.o
 .PHONY : ext/imgui/imgui.cpp.o
 
 ext/imgui/imgui.i: ext/imgui/imgui.cpp.i
@@ -321,8 +363,7 @@ ext/imgui/imgui.i: ext/imgui/imgui.cpp.i
 
 # target to preprocess a source file
 ext/imgui/imgui.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/ext/imgui/imgui.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/ext/imgui/imgui.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/ext/imgui/imgui.cpp.i
 .PHONY : ext/imgui/imgui.cpp.i
 
 ext/imgui/imgui.s: ext/imgui/imgui.cpp.s
@@ -330,8 +371,7 @@ ext/imgui/imgui.s: ext/imgui/imgui.cpp.s
 
 # target to generate assembly for a file
 ext/imgui/imgui.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/ext/imgui/imgui.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/ext/imgui/imgui.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/ext/imgui/imgui.cpp.s
 .PHONY : ext/imgui/imgui.cpp.s
 
 ext/imgui/imgui_demo.o: ext/imgui/imgui_demo.cpp.o
@@ -339,8 +379,7 @@ ext/imgui/imgui_demo.o: ext/imgui/imgui_demo.cpp.o
 
 # target to build an object file
 ext/imgui/imgui_demo.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/ext/imgui/imgui_demo.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/ext/imgui/imgui_demo.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/ext/imgui/imgui_demo.cpp.o
 .PHONY : ext/imgui/imgui_demo.cpp.o
 
 ext/imgui/imgui_demo.i: ext/imgui/imgui_demo.cpp.i
@@ -348,8 +387,7 @@ ext/imgui/imgui_demo.i: ext/imgui/imgui_demo.cpp.i
 
 # target to preprocess a source file
 ext/imgui/imgui_demo.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/ext/imgui/imgui_demo.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/ext/imgui/imgui_demo.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/ext/imgui/imgui_demo.cpp.i
 .PHONY : ext/imgui/imgui_demo.cpp.i
 
 ext/imgui/imgui_demo.s: ext/imgui/imgui_demo.cpp.s
@@ -357,8 +395,7 @@ ext/imgui/imgui_demo.s: ext/imgui/imgui_demo.cpp.s
 
 # target to generate assembly for a file
 ext/imgui/imgui_demo.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/ext/imgui/imgui_demo.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/ext/imgui/imgui_demo.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/ext/imgui/imgui_demo.cpp.s
 .PHONY : ext/imgui/imgui_demo.cpp.s
 
 ext/imgui/imgui_draw.o: ext/imgui/imgui_draw.cpp.o
@@ -366,8 +403,7 @@ ext/imgui/imgui_draw.o: ext/imgui/imgui_draw.cpp.o
 
 # target to build an object file
 ext/imgui/imgui_draw.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/ext/imgui/imgui_draw.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/ext/imgui/imgui_draw.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/ext/imgui/imgui_draw.cpp.o
 .PHONY : ext/imgui/imgui_draw.cpp.o
 
 ext/imgui/imgui_draw.i: ext/imgui/imgui_draw.cpp.i
@@ -375,8 +411,7 @@ ext/imgui/imgui_draw.i: ext/imgui/imgui_draw.cpp.i
 
 # target to preprocess a source file
 ext/imgui/imgui_draw.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/ext/imgui/imgui_draw.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/ext/imgui/imgui_draw.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/ext/imgui/imgui_draw.cpp.i
 .PHONY : ext/imgui/imgui_draw.cpp.i
 
 ext/imgui/imgui_draw.s: ext/imgui/imgui_draw.cpp.s
@@ -384,8 +419,7 @@ ext/imgui/imgui_draw.s: ext/imgui/imgui_draw.cpp.s
 
 # target to generate assembly for a file
 ext/imgui/imgui_draw.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/ext/imgui/imgui_draw.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/ext/imgui/imgui_draw.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/ext/imgui/imgui_draw.cpp.s
 .PHONY : ext/imgui/imgui_draw.cpp.s
 
 ext/imgui/imgui_tables.o: ext/imgui/imgui_tables.cpp.o
@@ -393,8 +427,7 @@ ext/imgui/imgui_tables.o: ext/imgui/imgui_tables.cpp.o
 
 # target to build an object file
 ext/imgui/imgui_tables.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/ext/imgui/imgui_tables.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/ext/imgui/imgui_tables.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/ext/imgui/imgui_tables.cpp.o
 .PHONY : ext/imgui/imgui_tables.cpp.o
 
 ext/imgui/imgui_tables.i: ext/imgui/imgui_tables.cpp.i
@@ -402,8 +435,7 @@ ext/imgui/imgui_tables.i: ext/imgui/imgui_tables.cpp.i
 
 # target to preprocess a source file
 ext/imgui/imgui_tables.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/ext/imgui/imgui_tables.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/ext/imgui/imgui_tables.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/ext/imgui/imgui_tables.cpp.i
 .PHONY : ext/imgui/imgui_tables.cpp.i
 
 ext/imgui/imgui_tables.s: ext/imgui/imgui_tables.cpp.s
@@ -411,8 +443,7 @@ ext/imgui/imgui_tables.s: ext/imgui/imgui_tables.cpp.s
 
 # target to generate assembly for a file
 ext/imgui/imgui_tables.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/ext/imgui/imgui_tables.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/ext/imgui/imgui_tables.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/ext/imgui/imgui_tables.cpp.s
 .PHONY : ext/imgui/imgui_tables.cpp.s
 
 ext/imgui/imgui_widgets.o: ext/imgui/imgui_widgets.cpp.o
@@ -420,8 +451,7 @@ ext/imgui/imgui_widgets.o: ext/imgui/imgui_widgets.cpp.o
 
 # target to build an object file
 ext/imgui/imgui_widgets.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/ext/imgui/imgui_widgets.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/ext/imgui/imgui_widgets.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/ext/imgui/imgui_widgets.cpp.o
 .PHONY : ext/imgui/imgui_widgets.cpp.o
 
 ext/imgui/imgui_widgets.i: ext/imgui/imgui_widgets.cpp.i
@@ -429,8 +459,7 @@ ext/imgui/imgui_widgets.i: ext/imgui/imgui_widgets.cpp.i
 
 # target to preprocess a source file
 ext/imgui/imgui_widgets.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/ext/imgui/imgui_widgets.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/ext/imgui/imgui_widgets.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/ext/imgui/imgui_widgets.cpp.i
 .PHONY : ext/imgui/imgui_widgets.cpp.i
 
 ext/imgui/imgui_widgets.s: ext/imgui/imgui_widgets.cpp.s
@@ -438,8 +467,7 @@ ext/imgui/imgui_widgets.s: ext/imgui/imgui_widgets.cpp.s
 
 # target to generate assembly for a file
 ext/imgui/imgui_widgets.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/ext/imgui/imgui_widgets.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/ext/imgui/imgui_widgets.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/imgui.dir/build.make CMakeFiles/imgui.dir/ext/imgui/imgui_widgets.cpp.s
 .PHONY : ext/imgui/imgui_widgets.cpp.s
 
 src/game/scene.o: src/game/scene.cpp.o
@@ -447,8 +475,7 @@ src/game/scene.o: src/game/scene.cpp.o
 
 # target to build an object file
 src/game/scene.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/src/game/scene.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/src/game/scene.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/carthage.dir/build.make CMakeFiles/carthage.dir/src/game/scene.cpp.o
 .PHONY : src/game/scene.cpp.o
 
 src/game/scene.i: src/game/scene.cpp.i
@@ -456,8 +483,7 @@ src/game/scene.i: src/game/scene.cpp.i
 
 # target to preprocess a source file
 src/game/scene.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/src/game/scene.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/src/game/scene.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/carthage.dir/build.make CMakeFiles/carthage.dir/src/game/scene.cpp.i
 .PHONY : src/game/scene.cpp.i
 
 src/game/scene.s: src/game/scene.cpp.s
@@ -465,8 +491,7 @@ src/game/scene.s: src/game/scene.cpp.s
 
 # target to generate assembly for a file
 src/game/scene.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/src/game/scene.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/src/game/scene.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/carthage.dir/build.make CMakeFiles/carthage.dir/src/game/scene.cpp.s
 .PHONY : src/game/scene.cpp.s
 
 src/graphics/device.o: src/graphics/device.cpp.o
@@ -474,8 +499,7 @@ src/graphics/device.o: src/graphics/device.cpp.o
 
 # target to build an object file
 src/graphics/device.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/src/graphics/device.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/src/graphics/device.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/carthage.dir/build.make CMakeFiles/carthage.dir/src/graphics/device.cpp.o
 .PHONY : src/graphics/device.cpp.o
 
 src/graphics/device.i: src/graphics/device.cpp.i
@@ -483,8 +507,7 @@ src/graphics/device.i: src/graphics/device.cpp.i
 
 # target to preprocess a source file
 src/graphics/device.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/src/graphics/device.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/src/graphics/device.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/carthage.dir/build.make CMakeFiles/carthage.dir/src/graphics/device.cpp.i
 .PHONY : src/graphics/device.cpp.i
 
 src/graphics/device.s: src/graphics/device.cpp.s
@@ -492,8 +515,7 @@ src/graphics/device.s: src/graphics/device.cpp.s
 
 # target to generate assembly for a file
 src/graphics/device.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/src/graphics/device.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/src/graphics/device.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/carthage.dir/build.make CMakeFiles/carthage.dir/src/graphics/device.cpp.s
 .PHONY : src/graphics/device.cpp.s
 
 src/main.o: src/main.cpp.o
@@ -501,7 +523,7 @@ src/main.o: src/main.cpp.o
 
 # target to build an object file
 src/main.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/src/main.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/main.cpp.o
 .PHONY : src/main.cpp.o
 
 src/main.i: src/main.cpp.i
@@ -509,7 +531,7 @@ src/main.i: src/main.cpp.i
 
 # target to preprocess a source file
 src/main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/src/main.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/main.cpp.i
 .PHONY : src/main.cpp.i
 
 src/main.s: src/main.cpp.s
@@ -517,7 +539,7 @@ src/main.s: src/main.cpp.s
 
 # target to generate assembly for a file
 src/main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/src/main.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
 src/obj.o: src/obj.cpp.o
@@ -525,7 +547,7 @@ src/obj.o: src/obj.cpp.o
 
 # target to build an object file
 src/obj.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/src/obj.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/obj.dir/build.make CMakeFiles/obj.dir/src/obj.cpp.o
 .PHONY : src/obj.cpp.o
 
 src/obj.i: src/obj.cpp.i
@@ -533,7 +555,7 @@ src/obj.i: src/obj.cpp.i
 
 # target to preprocess a source file
 src/obj.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/src/obj.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/obj.dir/build.make CMakeFiles/obj.dir/src/obj.cpp.i
 .PHONY : src/obj.cpp.i
 
 src/obj.s: src/obj.cpp.s
@@ -541,16 +563,39 @@ src/obj.s: src/obj.cpp.s
 
 # target to generate assembly for a file
 src/obj.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/src/obj.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/obj.dir/build.make CMakeFiles/obj.dir/src/obj.cpp.s
 .PHONY : src/obj.cpp.s
+
+src/octree.o: src/octree.cpp.o
+.PHONY : src/octree.o
+
+# target to build an object file
+src/octree.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/octree.dir/build.make CMakeFiles/octree.dir/src/octree.cpp.o
+.PHONY : src/octree.cpp.o
+
+src/octree.i: src/octree.cpp.i
+.PHONY : src/octree.i
+
+# target to preprocess a source file
+src/octree.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/octree.dir/build.make CMakeFiles/octree.dir/src/octree.cpp.i
+.PHONY : src/octree.cpp.i
+
+src/octree.s: src/octree.cpp.s
+.PHONY : src/octree.s
+
+# target to generate assembly for a file
+src/octree.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/octree.dir/build.make CMakeFiles/octree.dir/src/octree.cpp.s
+.PHONY : src/octree.cpp.s
 
 src/resources/resources.o: src/resources/resources.cpp.o
 .PHONY : src/resources/resources.o
 
 # target to build an object file
 src/resources/resources.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/src/resources/resources.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/src/resources/resources.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/carthage.dir/build.make CMakeFiles/carthage.dir/src/resources/resources.cpp.o
 .PHONY : src/resources/resources.cpp.o
 
 src/resources/resources.i: src/resources/resources.cpp.i
@@ -558,8 +603,7 @@ src/resources/resources.i: src/resources/resources.cpp.i
 
 # target to preprocess a source file
 src/resources/resources.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/src/resources/resources.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/src/resources/resources.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/carthage.dir/build.make CMakeFiles/carthage.dir/src/resources/resources.cpp.i
 .PHONY : src/resources/resources.cpp.i
 
 src/resources/resources.s: src/resources/resources.cpp.s
@@ -567,8 +611,7 @@ src/resources/resources.s: src/resources/resources.cpp.s
 
 # target to generate assembly for a file
 src/resources/resources.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_main.dir/build.make CMakeFiles/aaa_main.dir/src/resources/resources.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/aaa_obj.dir/build.make CMakeFiles/aaa_obj.dir/src/resources/resources.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/carthage.dir/build.make CMakeFiles/carthage.dir/src/resources/resources.cpp.s
 .PHONY : src/resources/resources.cpp.s
 
 # Help Target
@@ -585,9 +628,13 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... uninstall"
 	@echo "... update_mappings"
-	@echo "... aaa_main"
-	@echo "... aaa_obj"
+	@echo "... carthage"
+	@echo "... glad"
 	@echo "... glfw"
+	@echo "... imgui"
+	@echo "... main"
+	@echo "... obj"
+	@echo "... octree"
 	@echo "... ext/glad/src/glad.o"
 	@echo "... ext/glad/src/glad.i"
 	@echo "... ext/glad/src/glad.s"
@@ -624,6 +671,9 @@ help:
 	@echo "... src/obj.o"
 	@echo "... src/obj.i"
 	@echo "... src/obj.s"
+	@echo "... src/octree.o"
+	@echo "... src/octree.i"
+	@echo "... src/octree.s"
 	@echo "... src/resources/resources.o"
 	@echo "... src/resources/resources.i"
 	@echo "... src/resources/resources.s"

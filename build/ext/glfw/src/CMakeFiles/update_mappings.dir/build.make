@@ -53,10 +53,10 @@ RM = /home/mjh/miniforge3/lib/python3.10/site-packages/cmake/data/bin/cmake -E r
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/mjh/Programming/fun/aaa
+CMAKE_SOURCE_DIR = /home/mjh/Programming/fun/carthage
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/mjh/Programming/fun/aaa/build
+CMAKE_BINARY_DIR = /home/mjh/Programming/fun/carthage/build
 
 # Utility rule file for update_mappings.
 
@@ -67,8 +67,8 @@ include ext/glfw/src/CMakeFiles/update_mappings.dir/compiler_depend.make
 include ext/glfw/src/CMakeFiles/update_mappings.dir/progress.make
 
 ext/glfw/src/CMakeFiles/update_mappings:
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/mjh/Programming/fun/aaa/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Updating gamepad mappings from upstream repository"
-	cd /home/mjh/Programming/fun/aaa/ext/glfw/src && /home/mjh/miniforge3/lib/python3.10/site-packages/cmake/data/bin/cmake -P /home/mjh/Programming/fun/aaa/ext/glfw/CMake/GenerateMappings.cmake mappings.h.in mappings.h
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/mjh/Programming/fun/carthage/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Updating gamepad mappings from upstream repository"
+	cd /home/mjh/Programming/fun/carthage/ext/glfw/src && /home/mjh/miniforge3/lib/python3.10/site-packages/cmake/data/bin/cmake -P /home/mjh/Programming/fun/carthage/ext/glfw/CMake/GenerateMappings.cmake mappings.h.in mappings.h
 
 update_mappings: ext/glfw/src/CMakeFiles/update_mappings
 update_mappings: ext/glfw/src/CMakeFiles/update_mappings.dir/build.make
@@ -79,10 +79,10 @@ ext/glfw/src/CMakeFiles/update_mappings.dir/build: update_mappings
 .PHONY : ext/glfw/src/CMakeFiles/update_mappings.dir/build
 
 ext/glfw/src/CMakeFiles/update_mappings.dir/clean:
-	cd /home/mjh/Programming/fun/aaa/build/ext/glfw/src && $(CMAKE_COMMAND) -P CMakeFiles/update_mappings.dir/cmake_clean.cmake
+	cd /home/mjh/Programming/fun/carthage/build/ext/glfw/src && $(CMAKE_COMMAND) -P CMakeFiles/update_mappings.dir/cmake_clean.cmake
 .PHONY : ext/glfw/src/CMakeFiles/update_mappings.dir/clean
 
 ext/glfw/src/CMakeFiles/update_mappings.dir/depend:
-	cd /home/mjh/Programming/fun/aaa/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/mjh/Programming/fun/aaa /home/mjh/Programming/fun/aaa/ext/glfw/src /home/mjh/Programming/fun/aaa/build /home/mjh/Programming/fun/aaa/build/ext/glfw/src /home/mjh/Programming/fun/aaa/build/ext/glfw/src/CMakeFiles/update_mappings.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd /home/mjh/Programming/fun/carthage/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/mjh/Programming/fun/carthage /home/mjh/Programming/fun/carthage/ext/glfw/src /home/mjh/Programming/fun/carthage/build /home/mjh/Programming/fun/carthage/build/ext/glfw/src /home/mjh/Programming/fun/carthage/build/ext/glfw/src/CMakeFiles/update_mappings.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : ext/glfw/src/CMakeFiles/update_mappings.dir/depend
 

@@ -53,10 +53,10 @@ RM = /home/mjh/miniforge3/lib/python3.10/site-packages/cmake/data/bin/cmake -E r
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/mjh/Programming/fun/aaa
+CMAKE_SOURCE_DIR = /home/mjh/Programming/fun/carthage
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/mjh/Programming/fun/aaa/build
+CMAKE_BINARY_DIR = /home/mjh/Programming/fun/carthage/build
 
 # Utility rule file for uninstall.
 
@@ -67,7 +67,7 @@ include ext/glfw/CMakeFiles/uninstall.dir/compiler_depend.make
 include ext/glfw/CMakeFiles/uninstall.dir/progress.make
 
 ext/glfw/CMakeFiles/uninstall:
-	cd /home/mjh/Programming/fun/aaa/build/ext/glfw && /home/mjh/miniforge3/lib/python3.10/site-packages/cmake/data/bin/cmake -P /home/mjh/Programming/fun/aaa/build/ext/glfw/cmake_uninstall.cmake
+	cd /home/mjh/Programming/fun/carthage/build/ext/glfw && /home/mjh/miniforge3/lib/python3.10/site-packages/cmake/data/bin/cmake -P /home/mjh/Programming/fun/carthage/build/ext/glfw/cmake_uninstall.cmake
 
 uninstall: ext/glfw/CMakeFiles/uninstall
 uninstall: ext/glfw/CMakeFiles/uninstall.dir/build.make
@@ -78,10 +78,10 @@ ext/glfw/CMakeFiles/uninstall.dir/build: uninstall
 .PHONY : ext/glfw/CMakeFiles/uninstall.dir/build
 
 ext/glfw/CMakeFiles/uninstall.dir/clean:
-	cd /home/mjh/Programming/fun/aaa/build/ext/glfw && $(CMAKE_COMMAND) -P CMakeFiles/uninstall.dir/cmake_clean.cmake
+	cd /home/mjh/Programming/fun/carthage/build/ext/glfw && $(CMAKE_COMMAND) -P CMakeFiles/uninstall.dir/cmake_clean.cmake
 .PHONY : ext/glfw/CMakeFiles/uninstall.dir/clean
 
 ext/glfw/CMakeFiles/uninstall.dir/depend:
-	cd /home/mjh/Programming/fun/aaa/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/mjh/Programming/fun/aaa /home/mjh/Programming/fun/aaa/ext/glfw /home/mjh/Programming/fun/aaa/build /home/mjh/Programming/fun/aaa/build/ext/glfw /home/mjh/Programming/fun/aaa/build/ext/glfw/CMakeFiles/uninstall.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd /home/mjh/Programming/fun/carthage/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/mjh/Programming/fun/carthage /home/mjh/Programming/fun/carthage/ext/glfw /home/mjh/Programming/fun/carthage/build /home/mjh/Programming/fun/carthage/build/ext/glfw /home/mjh/Programming/fun/carthage/build/ext/glfw/CMakeFiles/uninstall.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : ext/glfw/CMakeFiles/uninstall.dir/depend
 
