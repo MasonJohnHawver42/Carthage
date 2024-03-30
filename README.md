@@ -17,7 +17,15 @@ make
 
 ## Gallery
 
+![render1](data/promo/sponza_vox_bunny.png) 
+
+<details>
+
+<summary>Old Snapshots</summary>
+
 ![render0](data/promo/sponzarender0.png) 
+
+</details>
 
 ## Documentation
 
@@ -52,8 +60,8 @@ For a further understanding read the code or email hawve005@umn.edu.
 - [X] Debug shapes
 - [X] Multiple Objects
 - [X] Scene files
-- [ ] Build Octrees (in prog)
-- [ ] Render Octrees (in prog)
+- [ ] Build Octrees grids (in prog)
+- [X] Render Octrees (in prog)
 - [ ] A* Octree (in prog)
 - [ ] Metropolis Hastings Trajectory sampling (end of the week target)
 - [ ] Frame Buffer stream

@@ -123,7 +123,7 @@ int main(void)
     }
 
     //load scene
-    // res::load_scene("scenes/test.scn", scene, cache);
+    res::load_scene("scenes/test.scn", scene, cache);
 
     // unsigned int bunny_id = res::load_model("binary/bunny.bin", cache);
     // unsigned int model_id = res::load_model("binary/sponza.bin", cache);
@@ -235,7 +235,7 @@ void tick()
 
     gfx::clear();
 
-    // g_scene_renderer->render(*g_cache, *g_camera, *g_scene);
+    g_scene_renderer->render(*g_cache, *g_camera, *g_scene);
     g_debug_renderer->draw(*g_camera);
 
     gfx::bind_pipeline(&g_chunk_renderer->m_pipeline);

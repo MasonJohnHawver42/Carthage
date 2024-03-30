@@ -20,7 +20,7 @@ void main()
 {
     uint x = (aFace >> 10) & 31;
     uint y = (aFace >> 5) & 31;
-    uint z = aFace & 31;
+    uint z = (aFace & 31);
     uint light = (aFace >> 15) & 255;
 
     TexCord = aTexCoords;
@@ -32,5 +32,5 @@ void main()
 
     pos = vec3(x, y, z);
 
-    gl_Position = VP * ((M * vec4(aPos, 1.0f)) + vec4(x, y, z, 0.0));
+    gl_Position = VP * ((M * vec4(aPos, 1.0f)) + vec4(x, y, z, 0.0) + vec4(0, 15, -33, 0));
 }  
