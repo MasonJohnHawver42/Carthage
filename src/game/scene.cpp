@@ -331,3 +331,137 @@ void game::set_color(float r, float g, float b, float a, float* c_dst)
     c_dst[2] = b;
     c_dst[3] = a;
 }
+
+// chunk
+
+// game::Chunk::Chunk() 
+// {
+//     // for (int i = 0; i < 32; i++) 
+//     // {
+//     //     for(int j = 0; j < 32; j++) 
+//     //     {
+//     //         for(int k = 0; k < 32; k++) 
+//     //         {
+//     //             voxels[i][j][k] = 1;
+//     //         }
+//     //     }
+//     // }
+// }
+
+game::ChunkRenderer::ChunkRenderer(gfx::Program prog) 
+{
+    gfx::create_voxel_buffer(262144, 1024, 1024, &m_vb);
+    m_pipeline = {prog, gfx::CullMode::FRONT, gfx::DrawMode::FILL};
+}
+
+void game::ChunkRenderer::free() 
+{
+    gfx::free_program(&m_pipeline.m_prog);
+    gfx::free_voxel_buffer(&m_vb);
+}
+
+
+int ao_axes[] = 
+{
+    2, 1, 1, 1,
+    2, -1, 1, 1,
+    2, -1, 0, 1,
+    2, 1, 0, 1, 
+    0, -1, 1, 1, 
+    0, 1, 1, 1  
+};
+
+int ao_crns[] = 
+{
+    7, 1, 0,
+    7, 5, 6,
+    1, 3, 2,
+    3, 5, 4
+};
+
+
+unsigned int game::mesh_chunk(unsigned char* voxel, unsigned int normal, unsigned int* faces) 
+{
+    unsigned int axis = (normal >> 1) & 0b11; //0, 1, 2 -> x, y, z
+    int dir = (normal & 0b1) == 1 ? 1 : -1; // 0 negative , 1 positive
+
+    unsigned int face_cnt = 0, i, j, ao_data;
+    int pos[3];
+    int nbr[3];
+
+    int* ao_axis = ao_axes + (normal * 4);
+    int* ao_crn;
+
+    char ao_voxel[8];
+    int axis_index, axis_dir;
+
+    for (i = 0; i < 32 * 32 * 32; i++) 
+    {
+
+        pos[0] = (i >> 10) & 0b11111;
+        pos[1] = (i >> 5) & 0b11111;
+        pos[2] = i & 0b11111;
+
+        // if (pos[0] == 2 && pos[1] == 19 && pos[2] == 12) { continue; }
+
+        nbr[0] = pos[0]; nbr[1] = pos[1]; nbr[2] = pos[2];
+        nbr[axis] += dir;
+
+        if (pos[0] == 2 && pos[1] == 19 && pos[2] == 12) 
+        {
+            printf("here\n");
+        }
+        // tmp = ((i >> ((2 - axis) * 5)) & 0b11111 + dir);
+        // nbr = tmp << ((2 - axis) * 5))
+
+        // printf("%d %d %d\n", (i >> 10) & 31,  (i >> 5) & 31, i & 31);
+
+
+        if(voxel[i] != 0 && (((nbr[axis] >=0 && nbr[axis] < 32) && voxel[ (nbr[0] << 10) | (nbr[1] << 5) | nbr[2] ] == 0) || !(nbr[axis] >=0 && nbr[axis] < 32))) 
+        {
+            //mesh it
+
+            nbr[ao_axis[0]] -= ao_axis[1];
+            nbr[ao_axis[2]] -= ao_axis[3];
+
+            if (pos[0] == 2 && pos[1] == 19 && pos[2] == 12) 
+            {
+                printf("\n%d %d %d %d\n", ao_axis[0], ao_axis[1], ao_axis[2], ao_axis[3]);
+            }
+
+            for (j = 0; j < 8; j++) 
+            {
+                axis_index = j & 2;
+                axis_dir = j >> 2 == 0 ? 1 : -1;
+                ao_voxel[j] = (0 <= nbr[0] && nbr[0] < 32 && 0 <= nbr[1] && nbr[1] < 32 && 0 <= nbr[2] && nbr[2] < 32) ? ( voxel[ (nbr[0] << 10) | (nbr[1] << 5) | nbr[2] ] == 0 ? 0 : 1) : 0;
+                // printf("%d %d %d %d %d\n", nbr[0], nbr[1], nbr[2], ao_voxel[j], j);
+                if (pos[0] == 2 && pos[1] == 19 && pos[2] == 12) 
+                {
+                    printf("%d %d %d %d %d\n", nbr[0], nbr[1], nbr[2], ao_voxel[j], j);
+                }
+                
+                nbr[ao_axis[axis_index]] += ao_axis[axis_index + 1] * axis_dir;
+            }
+
+            ao_data = 0;
+
+            for(j = 0; j < 4; j++) 
+            {
+                ao_crn = ao_crns + (j * 3);
+                ao_data |= ((ao_voxel[ao_crn[0]] + ao_voxel[ao_crn[1]] == 2 ? 3 : (ao_voxel[ao_crn[0]] + ao_voxel[ao_crn[1]] + ao_voxel[ao_crn[2]])) & 0b11) << (2 * j);
+            }
+
+            if (pos[0] == 2 && pos[1] == 19 && pos[2] == 12) 
+            {
+                printf("%d\n", ao_data);
+            }
+
+            faces[face_cnt] = i | (ao_data << 15);
+            face_cnt++;
+
+
+        }  
+    }
+
+    return face_cnt;
+}

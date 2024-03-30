@@ -128,5 +128,6 @@ namespace core
         unsigned char allocated[BLOCKS];
         unsigned int lowest_open;
     };
+
     
 }

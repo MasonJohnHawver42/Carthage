@@ -48,4 +48,14 @@ namespace gfx
     void create_quad_buffer(QuadBuffer* qb);
     void draw_quad_buffer(Program program, float* pos, float* size, float* color, QuadBuffer* qb);
     void free_quad_buffer(QuadBuffer* sb);
+
+    //voxels
+    void create_voxel_buffer(unsigned int face_cap, unsigned int chunk_cap, unsigned int draw_cap, VoxelBuffer* vb);
+    unsigned int push_faces_voxel_buffer(unsigned int* faces, unsigned int face_count, VoxelBuffer* vb);
+    void free_faces_voxel_buffer(VoxelBuffer* vb);
+    void draw_chunk_buffer(Program program, unsigned int start, unsigned int count, VoxelBuffer* vb);
+    void draw_voxel_buffer(Program program, unsigned int normal, VoxelBuffer* vb);
+    void free_voxel_buffer(VoxelBuffer* vb);
+
+    float* normal_mat(unsigned int normal);
 }

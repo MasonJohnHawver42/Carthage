@@ -133,4 +133,23 @@ namespace gfx
         unsigned int m_vao;
     };
 
+    struct VoxelChunk { struct { unsigned int start, count; } m_normals[6]; };
+
+    struct VoxelBuffer 
+    {
+        unsigned int m_vbo;
+        unsigned int m_id_vbo;
+        unsigned int m_face_vbo;
+        
+        unsigned int m_vao;
+
+        unsigned int m_chunk_ssbo;
+
+        unsigned int m_draw_call_ib; //indirect buffer
+
+        unsigned int face_cap, faces_used;
+        unsigned int chunk_cap, chunks_used;
+        unsigned int draw_call_cap, draw_calls_used;
+    };
+
 }

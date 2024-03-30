@@ -499,4 +499,136 @@ namespace gfx
         
     }
 
+    float quad_data[] = 
+    {
+        0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 
+        1.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+        1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+    };
+
+    unsigned int quad_id[] = {0, 1, 2, 3};
+
+    float normal_mats[] = {
+        0, 1, 0, 0,
+        1, 0, 0, 0,
+        0, 0, -1, 0,
+        0, 0, 1, 1,
+        
+        0, 1, 0, 0,
+        1, 0, 0, 0,
+        0, 0, 1, 0,
+        1, 0, 0, 1,
+
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1,
+
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, -1, 0,
+        0, 1, 1, 1,
+
+        0, 1, 0, 0,
+        0, 0, -1, 0,
+        1, 0, 0, 0,
+        0, 0, 0, 1,
+
+        0, 1, 0, 0,
+        0, 0, -1, 0,
+        -1, 0, 0, 0,
+        1, 0, 1, 1
+    };
+
+    void create_voxel_buffer(unsigned int face_cap, unsigned int chunk_cap, unsigned int draw_cap, VoxelBuffer* vb) 
+    {
+        vb->face_cap = face_cap; vb->faces_used = 0;
+        vb->chunk_cap = chunk_cap; vb->chunks_used = 0;
+        vb->draw_call_cap = draw_cap; vb->draw_calls_used = 0;
+
+        unsigned int vao, vbo, id_vbo, face_vbo;
+        glGenVertexArrays(1, &vao);
+        glGenBuffers(1, &face_vbo);
+        glGenBuffers(1, &id_vbo);
+        glGenBuffers(1, &vbo);
+
+        glBindVertexArray(vao);
+
+        glBindBuffer(GL_ARRAY_BUFFER, face_vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(unsigned int) * face_cap, NULL, GL_DYNAMIC_DRAW);
+
+        glBindBuffer(GL_ARRAY_BUFFER, id_vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(quad_id), &quad_id, GL_STATIC_DRAW);
+        
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(quad_data), &quad_data, GL_STATIC_DRAW);
+         
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+
+        glEnableVertexAttribArray(2);
+        glBindBuffer(GL_ARRAY_BUFFER, id_vbo); // this attribute comes from a different vertex buffer
+        glVertexAttribIPointer(2, 1, GL_UNSIGNED_INT, sizeof(unsigned int), (void*)0);
+        
+        glEnableVertexAttribArray(3);
+        glBindBuffer(GL_ARRAY_BUFFER, face_vbo); // this attribute comes from a different vertex buffer
+        glVertexAttribIPointer(3, 1, GL_UNSIGNED_INT, sizeof(unsigned int), (void*)0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        
+        glVertexAttribDivisor(3, 1); // tell OpenGL this is an instanced vertex attribute.
+
+        vb->m_face_vbo = face_vbo;
+        vb->m_id_vbo = id_vbo;
+        vb->m_vbo = vbo;
+        vb->m_vao = vao;
+    }
+
+    unsigned int push_faces_voxel_buffer(unsigned int* faces, unsigned int face_count, VoxelBuffer* vb) 
+    {
+        unsigned int start = vb->faces_used;
+
+        glBindBuffer(GL_ARRAY_BUFFER, vb->m_face_vbo);
+        glBufferSubData(GL_ARRAY_BUFFER, start * sizeof(unsigned int), face_count * sizeof(unsigned int), faces);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        vb->faces_used += face_count;
+        return start;
+    }
+
+    void free_faces_voxel_buffer(VoxelBuffer* vb) 
+    {
+        vb->faces_used = 0;
+    }
+
+    float* normal_mat(unsigned int normal) 
+    {
+        return normal_mats + (16 * normal);
+    }
+
+    void draw_chunk_buffer(Program program, unsigned int start, unsigned int count, VoxelBuffer* vb) 
+    {
+        glBindVertexArray(vb->m_vao);
+        glDrawArraysInstancedBaseInstance(GL_TRIANGLE_STRIP, 0, 4, count, start);
+    }
+
+    void draw_voxel_buffer(Program program, unsigned int normal, VoxelBuffer* vb) 
+    {       
+        set_uniform_mat4("M", normal_mats + (16 * normal), program);
+        glBindVertexArray(vb->m_vao);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    }
+
+    void free_voxel_buffer(VoxelBuffer* vb) 
+    {
+        glDeleteBuffers(1, &vb->m_vbo);
+        glDeleteBuffers(1, &vb->m_id_vbo);
+        glDeleteBuffers(1, &vb->m_face_vbo);
+        glDeleteVertexArrays(1, &vb->m_vao);
+    }
+
+
+
 }

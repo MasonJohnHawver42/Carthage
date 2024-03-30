@@ -159,4 +159,23 @@ namespace game
 
     void set_color(float r, float g, float b, float a, float* c_dst);
 
+
+    struct ChunkRenderer 
+    {
+
+        ChunkRenderer(gfx::Program prog);
+
+        void free();
+
+        gfx::VoxelBuffer m_vb;
+        gfx::Pipeline m_pipeline;
+    };
+
+    unsigned int mesh_chunk(unsigned char* voxel, unsigned int dir, unsigned int* face);
+
+    // load octree
+    // mesh each chunk load it into face_vbo adn chunk_ssbo
+    // store a list of chunks cpu side
+    // calc visable chunks and their dirs
+
 }

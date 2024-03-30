@@ -39,6 +39,9 @@ game::Cache*          g_cache;
 game::Scene*          g_scene;
 game::DebugRenderer*  g_debug_renderer;
 game::SceneRenderer*  g_scene_renderer;
+game::ChunkRenderer*  g_chunk_renderer;
+
+gfx::VoxelChunk chunk_test;
 
 // res::Loader*        g_loader;
 
@@ -60,12 +63,14 @@ int main(void)
     game::Cache cache = game::Cache();
     game::Scene scene = game::Scene();
 
-    gfx::Program model_prog, debug_prog;
+    gfx::Program model_prog, debug_prog, voxel_prog;
     res::load_program("shaders/vertex.glsl", "shaders/fragment.glsl", &model_prog);
     res::load_program("shaders/shape_vert.glsl", "shaders/shape_frag.glsl", &debug_prog);
+    res::load_program("shaders/voxel_vert.glsl", "shaders/voxel_frag.glsl", &voxel_prog);
 
     game::DebugRenderer debug_renderer = game::DebugRenderer(debug_prog);
     game::SceneRenderer scene_renderer = game::SceneRenderer(model_prog);
+    game::ChunkRenderer chunk_renderer = game::ChunkRenderer(voxel_prog);
     game::Camera camera = game::Camera({0.0, 0.0, 2.0}, {0.0, 0.0, -1.0}, {0.0, 1.0, 0.0}, 45.0, 0.01f, 300.0f, 640.0f / 480.0f);
     game::CameraOperator cam_op = game::CameraOperator(1, .03);
    
@@ -75,12 +80,50 @@ int main(void)
     g_cache = &cache;
     g_debug_renderer = &debug_renderer;
     g_scene_renderer = &scene_renderer;
+    g_chunk_renderer = &chunk_renderer;
     g_camera = &camera;
     g_cam_op = &cam_op;
     // g_loader = &loader;
 
+
+    unsigned char voxels[32 * 32 * 32];
+
+    for (unsigned int i = 0; i < 32 * 32 * 32; i++) 
+    {
+        float x = (float)((i >> 10) & 31) - 15.5f;
+        float y = (float)((i >> 5) & 31) - 15.5f;
+        float z = (float)(i & 31) - 15.5f;
+
+        if ((x * x + y * y + z * z) <= 15 * 15) 
+        {
+            voxels[i] = 1;
+        }
+        else 
+        {
+            voxels[i] = 0;
+        }
+    }
+
+    voxels[(0 << 10) | (0 << 5) | (0)] = 1;
+    voxels[(0 << 10) | (0 << 5) | (31)] = 1;
+    voxels[(0 << 10) | (31 << 5) | (0)] = 1;
+    voxels[(0 << 10) | (31 << 5) | (31)] = 1;
+    voxels[(31 << 10) | (0 << 5) | (0)] = 1;
+    voxels[(31 << 10) | (0 << 5) | (31)] = 1;
+    voxels[(31 << 10) | (31 << 5) | (0)] = 1;
+    voxels[(31 << 10) | (31 << 5) | (31)] = 1;
+
+    unsigned int faces[32 * 32 * 32];
+
+    for (unsigned int i = 0; i < 6; i++) 
+    {
+        unsigned int count = game::mesh_chunk(voxels, i, faces);
+        unsigned int start = gfx::push_faces_voxel_buffer(faces, count, &chunk_renderer.m_vb);
+        chunk_test.m_normals[i] = {start, count};
+    }
+
     //load scene
-    res::load_scene("scenes/test.scn", scene, cache);
+    // res::load_scene("scenes/test.scn", scene, cache);
 
     // unsigned int bunny_id = res::load_model("binary/bunny.bin", cache);
     // unsigned int model_id = res::load_model("binary/sponza.bin", cache);
@@ -98,13 +141,13 @@ int main(void)
     gfx::ShapeEntry* ent;
     game::Transform trans_tmp;
     
-    for (int i = 0; i < 1000 * 10; i++) 
-    {
-        ent = debug_renderer.shape(gfx::Shape::CUBE);
-        trans_tmp = {{(rand() % 200) * .1 - 10, (rand() % 200) * .1, (rand() % 20) * .1 - 1.4}, {1, 1, 1}, 0, {.1, .1, .1}};
-        trans_tmp.mat4(ent->mat);
-        game::set_color(my_rand(), my_rand(), my_rand(), 1, ent->color);
-    }
+    // for (int i = 0; i < 10 * 10; i++) 
+    // {
+    //     ent = debug_renderer.shape(gfx::Shape::CUBE);
+    //     trans_tmp = {{(rand() % 200) * .1 - 10, (rand() % 200) * .1, (rand() % 20) * .1 - 1.4}, {1, 1, 1}, 0, {.1, .1, .1}};
+    //     trans_tmp.mat4(ent->mat);
+    //     game::set_color(my_rand(), my_rand(), my_rand(), 1, ent->color);
+    // }
 
     // std::thread loader_thread(res::loader_proc, std::ref(loader));
 
@@ -115,6 +158,7 @@ int main(void)
     
     debug_renderer.free();
     scene_renderer.free();
+    chunk_renderer.free();
     cache.free();
 
     ImGui_ImplOpenGL3_Shutdown();
@@ -152,7 +196,20 @@ void tick()
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
-    if (show_demo_window) { ImGui::ShowDemoWindow(&show_demo_window); }
+    // if (show_demo_window) { ImGui::ShowDemoWindow(&show_demo_window); }
+
+    ImGui::Begin("Camera");
+
+    // Display Vec3 values
+    ImGui::Text("Camera Pos: <%.2f, %.2f, %.2f>", g_camera->m_pos.x, g_camera->m_pos.y, g_camera->m_pos.z);
+    ImGui::Text("Camera Dir: <%.2f, %.2f, %.2f>", g_camera->m_dir.x, g_camera->m_dir.y, g_camera->m_dir.z);
+    ImGui::SliderFloat("Fov", &g_camera->m_vfov, 0.01f, 179.9f);
+    ImGui::SliderFloat("Speed", &g_cam_op->speed, 0.0f, 20.0f);
+    ImGui::SliderFloat("Mouse Speed", &g_cam_op->angular_speed, 0.0f, 0.2f);
+    g_camera->m_dirty_p = true;
+
+    ImGui::End();
+
 
     bool setpos, show, hide;
     int nx, ny;
@@ -178,8 +235,27 @@ void tick()
 
     gfx::clear();
 
-    g_scene_renderer->render(*g_cache, *g_camera, *g_scene);
+    // g_scene_renderer->render(*g_cache, *g_camera, *g_scene);
     g_debug_renderer->draw(*g_camera);
+
+    gfx::bind_pipeline(&g_chunk_renderer->m_pipeline);
+    gfx::set_uniform_mat4("VP", &g_camera->m_vp[0][0], g_chunk_renderer->m_pipeline.m_prog);
+    
+    float color[] = {
+        1, 0, 0, 1,
+        0, 1, 0, 1,
+        0, 0, 1, 1,
+        1, 0, 1, 1, 
+        1, 1, 0, 1,
+        0, 1, 1, 1
+    };
+
+    for (unsigned int i = 0; i < 6; i++) 
+    {
+        gfx::set_uniform_mat4("M", gfx::normal_mat(i), g_chunk_renderer->m_pipeline.m_prog);
+        gfx::set_uniform_vec4("color", color + (4 * i), g_chunk_renderer->m_pipeline.m_prog);
+        gfx::draw_chunk_buffer(g_chunk_renderer->m_pipeline.m_prog, chunk_test.m_normals[i].start, chunk_test.m_normals[i].count, &g_chunk_renderer->m_vb);
+    }
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
