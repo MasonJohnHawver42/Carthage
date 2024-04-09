@@ -19,6 +19,7 @@ octree = o3d.geometry.Octree(max_depth=6)
 octree.convert_from_point_cloud(pcd, size_expand=0.01)
 o3d.visualization.draw_geometries([octree])
 
+
 # import numpy as np
 # import trimesh
 # import pymeshfix

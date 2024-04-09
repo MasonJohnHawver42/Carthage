@@ -18,30 +18,42 @@
 
 //my game library
 #include "game/scene.hpp"
-#include "core/octree.hpp"
+#include "game/octree.hpp"
 
 #include <iostream>
 #include <thread>
 #include <unistd.h>
 #include <atomic>
 
+//file loading
+#include <string>
+#include <fstream>
+#include <streambuf>
+#include <iostream>
+#include <cstring>
+#include <cerrno> 
+
+#ifndef MY_DATA_DIR
+#define MY_DATA_DIR
+#endif
+
 void error_callback(int error, const char* description);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
 GLFWwindow* window;
-int width = 640;
-int height = 480;
+int width = 640 * 2;
+int height = 480 * 2;
 
 game::Camera* g_camera;
 game::CameraOperator* g_cam_op;
 
 game::Cache*          g_cache;
 game::Scene*          g_scene;
-game::DebugRenderer*  g_debug_renderer;
 game::SceneRenderer*  g_scene_renderer;
-game::ChunkRenderer*  g_chunk_renderer;
+game::DebugRenderer*  g_debug_renderer;
+game::OctreeRenderer* g_octree_renderer;
 
-gfx::VoxelChunk chunk_test;
+game::Octree* g_octree;
 
 // res::Loader*        g_loader;
 
@@ -68,86 +80,61 @@ int main(void)
     res::load_program("shaders/shape_vert.glsl", "shaders/shape_frag.glsl", &debug_prog);
     res::load_program("shaders/voxel_vert.glsl", "shaders/voxel_frag.glsl", &voxel_prog);
 
-    game::DebugRenderer debug_renderer = game::DebugRenderer(debug_prog);
     game::SceneRenderer scene_renderer = game::SceneRenderer(model_prog);
-    game::ChunkRenderer chunk_renderer = game::ChunkRenderer(voxel_prog);
-    game::Camera camera = game::Camera({0.0, 0.0, 2.0}, {0.0, 0.0, -1.0}, {0.0, 1.0, 0.0}, 45.0, 0.01f, 300.0f, 640.0f / 480.0f);
-    game::CameraOperator cam_op = game::CameraOperator(1, .03);
+    game::DebugRenderer debug_renderer = game::DebugRenderer(debug_prog);
+    game::OctreeRenderer octree_renderer = game::OctreeRenderer(voxel_prog);
+    game::Camera camera = game::Camera({0.0, 0.0, 2.0}, {0.0, 0.0, -1.0}, {0.0, 1.0, 0.0}, 45.0, 0.1f, 300.0f, 640.0f / 480.0f);
+    game::CameraOperator cam_op = game::CameraOperator(1.0, .01);
+    
+    game::Octree octree = game::Octree();
    
     // res::Loader loader = res::Loader();
     
     g_scene = &scene;
     g_cache = &cache;
-    g_debug_renderer = &debug_renderer;
     g_scene_renderer = &scene_renderer;
-    g_chunk_renderer = &chunk_renderer;
+    g_debug_renderer = &debug_renderer;
+    g_octree_renderer = &octree_renderer;
     g_camera = &camera;
     g_cam_op = &cam_op;
+    
+    g_octree = &octree;
     // g_loader = &loader;
-
-
-    unsigned char voxels[32 * 32 * 32];
-
-    for (unsigned int i = 0; i < 32 * 32 * 32; i++) 
-    {
-        float x = (float)((i >> 10) & 31) - 15.5f;
-        float y = (float)((i >> 5) & 31) - 15.5f;
-        float z = (float)(i & 31) - 15.5f;
-
-        if ((x * x + y * y + z * z) <= 15 * 15) 
-        {
-            voxels[i] = 1;
-        }
-        else 
-        {
-            voxels[i] = 0;
-        }
-    }
-
-    voxels[(0 << 10) | (0 << 5) | (0)] = 1;
-    voxels[(0 << 10) | (0 << 5) | (31)] = 1;
-    voxels[(0 << 10) | (31 << 5) | (0)] = 1;
-    voxels[(0 << 10) | (31 << 5) | (31)] = 1;
-    voxels[(31 << 10) | (0 << 5) | (0)] = 1;
-    voxels[(31 << 10) | (0 << 5) | (31)] = 1;
-    voxels[(31 << 10) | (31 << 5) | (0)] = 1;
-    voxels[(31 << 10) | (31 << 5) | (31)] = 1;
-
-    unsigned int faces[32 * 32 * 32];
-
-    for (unsigned int i = 0; i < 6; i++) 
-    {
-        unsigned int count = game::mesh_chunk(voxels, i, faces);
-        unsigned int start = gfx::push_faces_voxel_buffer(faces, count, &chunk_renderer.m_vb);
-        chunk_test.m_normals[i] = {start, count};
-    }
 
     //load scene
     res::load_scene("scenes/test.scn", scene, cache);
+    res::load_octree("scenes/test.oct", octree);
 
-    // unsigned int bunny_id = res::load_model("binary/bunny.bin", cache);
-    // unsigned int model_id = res::load_model("binary/sponza.bin", cache);
-
-    // unsigned int object_id = scene.m_objects.allocate();
-    // game::Object* obj = scene.m_objects[object_id];
-    // obj->model_id = model_id;
-    // obj->m_trans = game::Transform({0, 0, 0}, {0, 1, 0}, 0, {0.01f, 0.01f, 0.01f});
-
-    // object_id = scene.m_objects.allocate();
-    // obj = scene.m_objects[object_id];
-    // obj->model_id = bunny_id;
-    // obj->m_trans = game::Transform({-0.05, 0, -2}, {0, 1, 0}, 0, {1, 1, 1});
+    octree_renderer.mesh_octree(octree);
 
     gfx::ShapeEntry* ent;
     game::Transform trans_tmp;
-    
-    // for (int i = 0; i < 10 * 10; i++) 
-    // {
-    //     ent = debug_renderer.shape(gfx::Shape::CUBE);
-    //     trans_tmp = {{(rand() % 200) * .1 - 10, (rand() % 200) * .1, (rand() % 20) * .1 - 1.4}, {1, 1, 1}, 0, {.1, .1, .1}};
-    //     trans_tmp.mat4(ent->mat);
-    //     game::set_color(my_rand(), my_rand(), my_rand(), 1, ent->color);
-    // }
+
+    float max_e = 0.0f;
+    for (int i = 0; i < 3; i++) 
+    {
+        if (octree.aabb_max[i] - octree.aabb_min[i] > max_e) { max_e = octree.aabb_max[i] - octree.aabb_min[i]; }
+    }
+
+
+    octree.walk([&](unsigned int* v, unsigned int d, game::Frame& frame)
+    {
+        float scale = (max_e / (1 << d));
+        float pos[3] = { (v[0] * scale) + octree.aabb_min[0] + (.5f * scale), 
+                         (v[1] * scale) + octree.aabb_min[1] + (.5f * scale), 
+                         (v[2] * scale) + octree.aabb_min[2] + (.5f * scale)
+                       };
+
+        if (frame.state != game::FrameState::EMPTY) 
+        {
+            ent = debug_renderer.shape(gfx::Shape::CUBE);
+            trans_tmp = {{pos[0], pos[1], pos[2]}, {1, 1, 1}, 0, {scale - (.05f * (octree.frame_depth - d)), scale - (.05f * (octree.frame_depth - d)), scale - (.001f * (octree.frame_depth - d))}};
+            trans_tmp.mat4(ent->mat);
+            game::set_color(my_rand(), my_rand(), my_rand(), 1, ent->color);
+        }
+
+    });
+
 
     // std::thread loader_thread(res::loader_proc, std::ref(loader));
 
@@ -158,7 +145,7 @@ int main(void)
     
     debug_renderer.free();
     scene_renderer.free();
-    chunk_renderer.free();
+    octree_renderer.free();
     cache.free();
 
     ImGui_ImplOpenGL3_Shutdown();
@@ -236,26 +223,8 @@ void tick()
     gfx::clear();
 
     g_scene_renderer->render(*g_cache, *g_camera, *g_scene);
+    g_octree_renderer->render(*g_camera, *g_octree);
     g_debug_renderer->draw(*g_camera);
-
-    gfx::bind_pipeline(&g_chunk_renderer->m_pipeline);
-    gfx::set_uniform_mat4("VP", &g_camera->m_vp[0][0], g_chunk_renderer->m_pipeline.m_prog);
-    
-    float color[] = {
-        1, 0, 0, 1,
-        0, 1, 0, 1,
-        0, 0, 1, 1,
-        1, 0, 1, 1, 
-        1, 1, 0, 1,
-        0, 1, 1, 1
-    };
-
-    for (unsigned int i = 0; i < 6; i++) 
-    {
-        gfx::set_uniform_mat4("M", gfx::normal_mat(i), g_chunk_renderer->m_pipeline.m_prog);
-        gfx::set_uniform_vec4("color", color + (4 * i), g_chunk_renderer->m_pipeline.m_prog);
-        gfx::draw_chunk_buffer(g_chunk_renderer->m_pipeline.m_prog, chunk_test.m_normals[i].start, chunk_test.m_normals[i].count, &g_chunk_renderer->m_vb);
-    }
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

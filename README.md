@@ -1,4 +1,4 @@
-# Graphics Engine : carthage
+# CV Project : carthage
 
 **Author**: Mason Hawver \
 **Email**: hawve005@umn.edu
@@ -17,7 +17,8 @@ make
 
 ## Gallery
 
-![render1](data/promo/sponza_vox_bunny.png) 
+![render2](data/promo/voxel_sponza.png) 
+![render1](data/promo/voxel_sponza_transparent.png) 
 
 <details>
 
@@ -34,7 +35,7 @@ make
 | data      | Textures, 3d models, shaders, and files created by programs | | 
 | ext | Source code for external libraries. | |
 | ext/glad | opengl api. |
-| ext/glfw | cross platform windows api. |
+| ext/glfw | cross platform windowing api. |
 | ext/glm  | matrix math library. |
 | ext/imgui | api agnostic immediate mode gui library. |
 | ext/stb | image loading library. |
@@ -42,7 +43,6 @@ make
 | src       | Source code for this project | |
 | src/main.cpp | Loads a scene then allows the user to control a free cam. | glad glfw imgui src/game src/graphics src/resources |
 | src/obj.cpp | Compresses a .obj file into a .bin file. | src/game src/resources | 
-| src/octree.cpp | Creates an octree for a scene, in progress | | 
 | src/core | project's core library, implements a pool and octree data structure | |
 | src/graphics | project's graphics api for open-gl, isolated glad; use still requires an understanding of open-gl. | glad | 
 | src/game | project's main library for high level abstractions. | std glm src/graphics src/core |
@@ -60,23 +60,25 @@ For a further understanding read the code or email hawve005@umn.edu.
 - [X] Debug shapes
 - [X] Multiple Objects
 - [X] Scene files
-- [ ] Build Octrees grids (in prog)
-- [X] Render Octrees (in prog)
-- [ ] A* Octree (in prog)
-- [ ] Metropolis Hastings Trajectory sampling (end of the week target)
+- [X] Build Octree
+- [X] Render Octree
+    - [ ] make it more efficient
+- [ ] Fix debug renderer with new knowlage
+<!-- - [ ] A* Octree (in prog) -->
+<!-- - [ ] Metropolis Hastings Trajectory sampling (end of the week target) -->
 - [ ] Frame Buffer stream
-- [ ] Data-gen pipeline
-- [X] Add Documentation (in prog)
+<!-- - [ ] Data-gen pipeline -->
+- [ ] Add Documentation (in prog)
+- [ ] Fork for CV
 
 ## Data Pipeline
 
 | Proc | Lang |
 |------|------|
 |.obj -> .bin  | c++  (Done) |
-|.bin -> .scene    | python (Todo) |
-|.scene -> .octree | python (Todo) |
-|.octree -> .rrt   | python (Todo -> if theres not a work around) |
-|.bin .octree .rrt -> data | c++ |
+|.bin -> .scene    | python (Sponza Done | Forest Todo | ...) |
+|.scene -> .octree | python (Done) |
+|.octree .bin .scene -> data (Todo) | c++ |
 |data -> cnn | python (Big Todo) |
 |cnn -> inferance | c++ (Big Todo) |
 

@@ -23,6 +23,24 @@ class Scene:
                 for v in obj["pos"] + obj["quat"] + obj["scale"]:
                     # print(v, struct.pack('f', v))
                     f.write(struct.pack('f', v))
+    
+    def read(self, fn):
+        self.objects = []
+        with open(fn, 'rb') as f:
+            num_objects = struct.unpack('i', f.read(4))[0]
+            for _ in range(num_objects):
+                bin_name = f.read(128).decode(encoding="ascii").split('\0', 1)[0]
+                position = []
+                for _ in range(3):
+                    position.append(struct.unpack('f', f.read(4))[0])
+                quat = []
+                for _ in range(4):
+                    quat.append(struct.unpack('f', f.read(4))[0])
+                scale = []
+                for _ in range(3):
+                    scale.append(struct.unpack('f', f.read(4))[0])
+                self.add_object(bin_name, position, quat, scale)
+
 
 def test_scene():
     scn = Scene()
@@ -32,5 +50,6 @@ def test_scene():
 
 # {-0.05, 0, -2}, {0, 1, 0}, 0, {1, 1, 1}
 
-scn = test_scene()
-scn.write("data/scenes/test.scn")
+if __name__ == "__main__":
+    scn = test_scene()
+    scn.write("data/scenes/test.scn")

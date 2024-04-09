@@ -133,7 +133,14 @@ namespace gfx
         unsigned int m_vao;
     };
 
-    struct VoxelChunk { struct { unsigned int start, count; } m_normals[6]; };
+    struct VoxelChunk { VoxelChunk() {} struct { unsigned int start, count; } m_normals[6]; unsigned int index; };
+
+    struct DrawArraysIndirectCommand {
+        unsigned int count;
+        unsigned int instanceCount;
+        unsigned int first;
+        unsigned int baseInstance;
+    };
 
     struct VoxelBuffer 
     {
@@ -144,6 +151,7 @@ namespace gfx
         unsigned int m_vao;
 
         unsigned int m_chunk_ssbo;
+        unsigned int m_draw_ssbo;
 
         unsigned int m_draw_call_ib; //indirect buffer
 

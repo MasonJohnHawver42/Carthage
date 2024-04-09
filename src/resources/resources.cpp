@@ -62,20 +62,16 @@ unsigned int res::load_texture2d(const char* fn, gfx::WrapConfig xw, gfx::WrapCo
     return index;
 }
 
-unsigned int res::load_model(const char* fn_bin, game::Cache& cache) 
+int res::load_model(const char* fn_bin, game::Model& model) 
 {
-    if (cache.m_model_map.find(fn_bin) != cache.m_model_map.end()) { return cache.m_model_map[fn_bin]; }
-    
     std::string fn = std::string(MY_DATA_DIR) + fn_bin;
     std::ifstream fs(fn, std::ios::binary);
 
     if (!fs.is_open()) 
     {
         std::cerr << "Error opening file: " << fn << " : " << std::strerror(errno) << std::endl;
-        return -1;
+        return 1;
     }
-
-    game::Model model;
 
     fs.read((char*)(&model.vc), sizeof(unsigned int));
     fs.read((char*)(&model.ic), sizeof(unsigned int));
@@ -95,6 +91,58 @@ unsigned int res::load_model(const char* fn_bin, game::Cache& cache)
     fs.read((char*)(model.aabb_max), sizeof(float) * 3);
 
     fs.close();
+
+    return 0;
+}
+
+int res::load_octree(const char* fn_oct, game::Octree& octree) 
+{
+    std::string fn = std::string(MY_DATA_DIR) + fn_oct;
+    std::ifstream fs(fn, std::ios::binary);
+
+    if (!fs.is_open()) 
+    {
+        std::cerr << "Error opening file: " << fn << " : " << std::strerror(errno) << std::endl;
+        return 1;
+    }
+
+    fs.read((char*)(&octree.frame_count), sizeof(unsigned int));    
+    fs.read((char*)(&octree.grid_count), sizeof(unsigned int));    
+    fs.read((char*)(&octree.frame_depth), sizeof(unsigned int));    
+    fs.read((char*)(&octree.grid_depth), sizeof(unsigned int));
+
+    fs.read((char*)(octree.aabb_min + 0), sizeof(float)); 
+    fs.read((char*)(octree.aabb_min + 1), sizeof(float)); 
+    fs.read((char*)(octree.aabb_min + 2), sizeof(float)); 
+
+    fs.read((char*)(octree.aabb_max + 0), sizeof(float)); 
+    fs.read((char*)(octree.aabb_max + 1), sizeof(float)); 
+    fs.read((char*)(octree.aabb_max + 2), sizeof(float)); 
+
+    octree.m_frames = new game::Frame[octree.frame_count];
+    octree.m_grids = new game::Grid[octree.grid_count];
+
+    octree.m_frames = (game::Frame*)malloc(octree.frame_count * sizeof(game::Frame));
+    octree.m_grids = (game::Grid*)malloc(octree.grid_count * sizeof(game::Grid));
+
+    fs.read((char*)(octree.m_frames), octree.frame_count * sizeof(game::Frame));
+    fs.read((char*)(octree.m_grids), octree.grid_count * sizeof(game::Grid));
+
+    fs.close();
+    return 0;
+}
+
+
+unsigned int res::load_model(const char* fn_bin, game::Cache& cache) 
+{
+    if (cache.m_model_map.find(fn_bin) != cache.m_model_map.end()) { return cache.m_model_map[fn_bin]; }
+    
+    game::Model model;
+
+    if (load_model(fn_bin, model)) 
+    {
+        return -1;
+    }
 
     unsigned int model_index = cache.m_model_pool.allocate();
     gfx::Model* gfx_model = cache.m_model_pool[model_index];

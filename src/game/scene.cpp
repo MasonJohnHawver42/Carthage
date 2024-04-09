@@ -18,8 +18,8 @@ void game::Transform::mat4(glm::mat4& mat)
 {
     mat = glm::mat4(1.0f);
     mat = glm::translate(mat, pos);
-    mat *= glm::mat4_cast(orientation);
     mat = glm::scale(mat, scale);
+    // mat *= glm::mat4_cast(orientation);
 }
 
 void game::Transform::mat4(float* mat_ptr)
@@ -260,7 +260,7 @@ void game::SceneRenderer::free()
 
 game::DebugRenderer::DebugRenderer(gfx::Program prog) 
 {
-    shape_pipeline = {prog, gfx::CullMode::BACK, gfx::DrawMode::FILL};
+    shape_pipeline = {prog, gfx::CullMode::NONE, gfx::DrawMode::LINE};
 
     buffer_size = 1024 * 4; 
     gfx::create_shape_buffer(buffer_size, &shape_buffer);
@@ -348,16 +348,114 @@ void game::set_color(float r, float g, float b, float a, float* c_dst)
 //     // }
 // }
 
-game::ChunkRenderer::ChunkRenderer(gfx::Program prog) 
+game::OctreeRenderer::OctreeRenderer(gfx::Program prog) 
 {
-    gfx::create_voxel_buffer(262144, 1024, 1024, &m_vb);
+    // 1 - mb for faces
+    gfx::create_voxel_buffer(1048576, 2048, 2048, &m_vb);
     m_pipeline = {prog, gfx::CullMode::FRONT, gfx::DrawMode::FILL};
 }
 
-void game::ChunkRenderer::free() 
+void game::OctreeRenderer::free() 
 {
     gfx::free_program(&m_pipeline.m_prog);
     gfx::free_voxel_buffer(&m_vb);
+}
+
+void game::OctreeRenderer::mesh_octree(game::Octree& octree) 
+{
+
+    unsigned int faces[32 * 32 * 32];
+    unsigned char* voxel_grids[27];
+
+    float max_e = 0.0f;
+    for (int i = 0; i < 3; i++) 
+    {
+        if (octree.aabb_max[i] - octree.aabb_min[i] > max_e) { max_e = octree.aabb_max[i] - octree.aabb_min[i]; }
+    }
+    float scale = max_e / (((1 << octree.frame_depth)) * 32.0f);
+
+    octree.walk([&](unsigned int* v, unsigned int d, game::Frame& frame){
+        
+        if (frame.state == game::FrameState::GRID && d == octree.frame_depth) 
+        {
+            //mesh it
+            unsigned int index = (v[0] << (octree.frame_depth * 2)) | (v[1] << octree.frame_depth) | (v[2]);
+            Grid& grid = octree.m_grids[frame.child];
+
+
+            if (m_chunks.find(index) == m_chunks.end()) 
+            {
+                m_chunks[index] = gfx::VoxelChunk();
+                gfx::VoxelChunk& chunk = m_chunks[index];
+
+                int offset[3];
+                unsigned int nbr[3];
+                
+                for (unsigned int i = 0; i < 3; i++) {
+                for (unsigned int j = 0; j < 3; j++) {
+                for (unsigned int k = 0; k < 3; k++) {
+                    offset[0] = (i - 1) + v[0];
+                    offset[1] = (j - 1) + v[1];
+                    offset[2] = (k - 1) + v[2];
+
+                    if (offset[0] >= 0 && offset[0] <= ((1 << octree.frame_depth) - 1) && offset[1] >= 0 && offset[1] <= ((1 << octree.frame_depth) - 1) && offset[2] >= 0 && offset[2] <= ((1 << octree.frame_depth) - 1)) 
+                    {
+                        nbr[0] = offset[0]; nbr[1] = offset[1]; nbr[2] = offset[2];
+                        Frame* frame =  octree.get_frame(nbr, d);
+                        voxel_grids[k + 3 * j + 9 * i] = (frame == nullptr || frame->state != FrameState::GRID) ? nullptr : (octree.m_grids + frame->child)->voxels;
+                    }
+                } } }
+                
+                for (unsigned int i = 0; i < 6; i++) 
+                {
+                    unsigned int count = game::mesh_chunk(voxel_grids, i, faces);
+                    unsigned int start = gfx::push_faces_voxel_buffer(faces, count, &m_vb);
+                    
+                    chunk.m_normals[i] = {start, count};
+                }
+
+                float pos[3] = { (v[0] * 32.0f * scale) + octree.aabb_min[0], 
+                         (v[1] * 32.0f * scale) + octree.aabb_min[1],
+                         (v[2] * 32.0f * scale) + octree.aabb_min[2]
+                       };
+                
+                unsigned int chunk_index = push_chunk_voxel_buffer(pos, &m_vb);
+                chunk.index = chunk_index;
+            }
+        }
+    });
+}
+
+void game::OctreeRenderer::render(game::Camera& camera, game::Octree& octree) 
+{
+    gfx::bind_pipeline(&m_pipeline);
+    gfx::set_uniform_mat4("VP", &camera.m_vp[0][0], m_pipeline.m_prog);
+
+    float max_e = 0.0f;
+    for (int i = 0; i < 3; i++) 
+    {
+        if (octree.aabb_max[i] - octree.aabb_min[i] > max_e) { max_e = octree.aabb_max[i] - octree.aabb_min[i]; }
+    }
+
+    float scale = max_e / (((1 << octree.frame_depth)) * 32.0f);
+    gfx::set_uniform_float("scale", scale, m_pipeline.m_prog);
+    // printf("%f\n", scale);
+
+    gfx::VoxelChunk* chunks[octree.grid_count * 6];
+    unsigned int normals[octree.grid_count * 6];
+    unsigned int i = 0;
+
+    for (auto& pair : m_chunks) 
+    {
+        for (unsigned int n = 0; n < 6; n++) 
+        {
+            chunks[i] = &pair.second;
+            normals[i] = n;
+            i++;
+        }
+    }
+
+    gfx::draw_voxel_buffer(m_pipeline.m_prog, chunks, normals, i, &m_vb);
 }
 
 
@@ -379,8 +477,14 @@ int ao_crns[] =
     3, 5, 4
 };
 
+unsigned char get_voxel(int* voxel, unsigned char** voxel_girds) 
+{
+    int grid_index = (((voxel[0] + 32) >> 5) * 9) + (((voxel[1] + 32) >> 5) * 3) + ((voxel[2] + 32) >> 5);    
+    unsigned char* gird_ptr = voxel_girds[grid_index];
+    return gird_ptr != nullptr ? gird_ptr[((voxel[0] & 0b11111) << 10) | ((voxel[1] & 0b11111) << 5) | (voxel[2] & 0b11111)] : 0;
+}
 
-unsigned int game::mesh_chunk(unsigned char* voxel, unsigned int normal, unsigned int* faces) 
+unsigned int game::mesh_chunk(unsigned char** voxel_grids, unsigned int normal, unsigned int* faces) 
 {
     unsigned int axis = (normal >> 1) & 0b11; //0, 1, 2 -> x, y, z
     int dir = (normal & 0b1) == 1 ? 1 : -1; // 0 negative , 1 positive
@@ -389,6 +493,7 @@ unsigned int game::mesh_chunk(unsigned char* voxel, unsigned int normal, unsigne
     int pos[3];
     int nbr[3];
 
+    unsigned char* voxel = voxel_grids[13];
     int* ao_axis = ao_axes + (normal * 4);
     int* ao_crn;
 
@@ -402,43 +507,20 @@ unsigned int game::mesh_chunk(unsigned char* voxel, unsigned int normal, unsigne
         pos[1] = (i >> 5) & 0b11111;
         pos[2] = i & 0b11111;
 
-        // if (pos[0] == 2 && pos[1] == 19 && pos[2] == 12) { continue; }
-
         nbr[0] = pos[0]; nbr[1] = pos[1]; nbr[2] = pos[2];
         nbr[axis] += dir;
 
-        if (pos[0] == 2 && pos[1] == 19 && pos[2] == 12) 
-        {
-            printf("here\n");
-        }
-        // tmp = ((i >> ((2 - axis) * 5)) & 0b11111 + dir);
-        // nbr = tmp << ((2 - axis) * 5))
-
-        // printf("%d %d %d\n", (i >> 10) & 31,  (i >> 5) & 31, i & 31);
-
-
-        if(voxel[i] != 0 && (((nbr[axis] >=0 && nbr[axis] < 32) && voxel[ (nbr[0] << 10) | (nbr[1] << 5) | nbr[2] ] == 0) || !(nbr[axis] >=0 && nbr[axis] < 32))) 
+        if(voxel[i] != 0 && get_voxel(nbr, voxel_grids) == 0)
         {
             //mesh it
-
             nbr[ao_axis[0]] -= ao_axis[1];
             nbr[ao_axis[2]] -= ao_axis[3];
-
-            if (pos[0] == 2 && pos[1] == 19 && pos[2] == 12) 
-            {
-                printf("\n%d %d %d %d\n", ao_axis[0], ao_axis[1], ao_axis[2], ao_axis[3]);
-            }
 
             for (j = 0; j < 8; j++) 
             {
                 axis_index = j & 2;
                 axis_dir = j >> 2 == 0 ? 1 : -1;
-                ao_voxel[j] = (0 <= nbr[0] && nbr[0] < 32 && 0 <= nbr[1] && nbr[1] < 32 && 0 <= nbr[2] && nbr[2] < 32) ? ( voxel[ (nbr[0] << 10) | (nbr[1] << 5) | nbr[2] ] == 0 ? 0 : 1) : 0;
-                // printf("%d %d %d %d %d\n", nbr[0], nbr[1], nbr[2], ao_voxel[j], j);
-                if (pos[0] == 2 && pos[1] == 19 && pos[2] == 12) 
-                {
-                    printf("%d %d %d %d %d\n", nbr[0], nbr[1], nbr[2], ao_voxel[j], j);
-                }
+                ao_voxel[j] = get_voxel(nbr, voxel_grids) == 0 ? 0 : 1; 
                 
                 nbr[ao_axis[axis_index]] += ao_axis[axis_index + 1] * axis_dir;
             }
@@ -451,14 +533,8 @@ unsigned int game::mesh_chunk(unsigned char* voxel, unsigned int normal, unsigne
                 ao_data |= ((ao_voxel[ao_crn[0]] + ao_voxel[ao_crn[1]] == 2 ? 3 : (ao_voxel[ao_crn[0]] + ao_voxel[ao_crn[1]] + ao_voxel[ao_crn[2]])) & 0b11) << (2 * j);
             }
 
-            if (pos[0] == 2 && pos[1] == 19 && pos[2] == 12) 
-            {
-                printf("%d\n", ao_data);
-            }
-
             faces[face_cnt] = i | (ao_data << 15);
             face_cnt++;
-
 
         }  
     }

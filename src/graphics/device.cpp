@@ -81,7 +81,7 @@ namespace gfx
 
     void set_uniform_float(const char* name, float value, Program program) 
     {
-        glUniform1f(glGetUniformLocation(program, name), (int)value);
+        glUniform1f(glGetUniformLocation(program, name), value);
     }
 
     void set_uniform_mat4(const char* name, float* value, Program program) 
@@ -509,38 +509,6 @@ namespace gfx
 
     unsigned int quad_id[] = {0, 1, 2, 3};
 
-    float normal_mats[] = {
-        0, 1, 0, 0,
-        1, 0, 0, 0,
-        0, 0, -1, 0,
-        0, 0, 1, 1,
-        
-        0, 1, 0, 0,
-        1, 0, 0, 0,
-        0, 0, 1, 0,
-        1, 0, 0, 1,
-
-        1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 1,
-
-        1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, -1, 0,
-        0, 1, 1, 1,
-
-        0, 1, 0, 0,
-        0, 0, -1, 0,
-        1, 0, 0, 0,
-        0, 0, 0, 1,
-
-        0, 1, 0, 0,
-        0, 0, -1, 0,
-        -1, 0, 0, 0,
-        1, 0, 1, 1
-    };
-
     void create_voxel_buffer(unsigned int face_cap, unsigned int chunk_cap, unsigned int draw_cap, VoxelBuffer* vb) 
     {
         vb->face_cap = face_cap; vb->faces_used = 0;
@@ -584,6 +552,28 @@ namespace gfx
         vb->m_id_vbo = id_vbo;
         vb->m_vbo = vbo;
         vb->m_vao = vao;
+
+        unsigned int chunk_ssbo, draw_ssbo;
+        glGenBuffers(1, &chunk_ssbo);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, chunk_ssbo);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, chunk_cap * sizeof(float) * 3 , NULL, GL_STATIC_DRAW);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+        glGenBuffers(1, &draw_ssbo);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, draw_ssbo);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, draw_cap * sizeof(unsigned int), NULL, GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+        vb->m_chunk_ssbo = chunk_ssbo;
+        vb->m_draw_ssbo = draw_ssbo;
+
+        unsigned int draw_call_ib;
+        glGenBuffers(1, &draw_call_ib);
+        glBindBuffer(GL_DRAW_INDIRECT_BUFFER, chunk_ssbo);
+        glBufferData(GL_DRAW_INDIRECT_BUFFER, draw_cap * sizeof(DrawArraysIndirectCommand), NULL, GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+
+        vb->m_draw_call_ib = draw_call_ib;
     }
 
     unsigned int push_faces_voxel_buffer(unsigned int* faces, unsigned int face_count, VoxelBuffer* vb) 
@@ -598,27 +588,61 @@ namespace gfx
         return start;
     }
 
-    void free_faces_voxel_buffer(VoxelBuffer* vb) 
+    unsigned int push_chunk_voxel_buffer(float* pos, VoxelBuffer* vb)
     {
-        vb->faces_used = 0;
+        unsigned int start = vb->chunks_used;
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, vb->m_chunk_ssbo);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, start * sizeof(unsigned int) * 3, 3 * sizeof(float), pos);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+        vb->chunks_used++;
+        return start;
     }
 
-    float* normal_mat(unsigned int normal) 
+    void draw_voxel_buffer(Program program, VoxelChunk** chunks, unsigned int* normals, unsigned int draw_count, VoxelBuffer* vb) 
     {
-        return normal_mats + (16 * normal);
-    }
+        unsigned int index_data[draw_count];
+        DrawArraysIndirectCommand draw_data[draw_count]; 
 
-    void draw_chunk_buffer(Program program, unsigned int start, unsigned int count, VoxelBuffer* vb) 
-    {
+        for (int i = 0; i < draw_count; i++) 
+        {
+            index_data[i] = (normals[i] & 0b111) | (chunks[i]->index << 3);
+            draw_data[i].first = 0;
+            draw_data[i].count = 4;
+            draw_data[i].instanceCount = chunks[i]->m_normals[normals[i]].count;
+            draw_data[i].baseInstance = chunks[i]->m_normals[normals[i]].start;
+        }
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, vb->m_draw_ssbo);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, draw_count * sizeof(unsigned int), index_data);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+        // glBindBuffer(GL_DRAW_INDIRECT_BUFFER, vb->m_draw_call_ib);
+        // glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0, draw_count * sizeof(DrawArraysIndirectCommand), draw_data);
+        // glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+
         glBindVertexArray(vb->m_vao);
-        glDrawArraysInstancedBaseInstance(GL_TRIANGLE_STRIP, 0, 4, count, start);
-    }
 
-    void draw_voxel_buffer(Program program, unsigned int normal, VoxelBuffer* vb) 
-    {       
-        set_uniform_mat4("M", normal_mats + (16 * normal), program);
-        glBindVertexArray(vb->m_vao);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        // glBindBuffer(GL_DRAW_INDIRECT_BUFFER, vb->m_draw_call_ib);
+
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, vb->m_chunk_ssbo);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, vb->m_draw_ssbo);
+
+        unsigned int n;
+        for (n = 0; n < draw_count; n++) {
+            const DrawArraysIndirectCommand *cmd;
+            cmd = (const DrawArraysIndirectCommand  *)draw_data + n;
+            // printf("%d %d %d %d\n", cmd->first, cmd->count, cmd->instanceCount, cmd->baseInstance);
+            set_uniform_int("index_data0", n, program);
+            glDrawArraysInstancedBaseInstance(GL_TRIANGLE_STRIP, cmd->first, cmd->count, cmd->instanceCount, cmd->baseInstance);
+        }
+        // set_uniform_int("index_data0", 0, program);
+        // printf("%d %d\n", sizeof(DrawArraysIndirectCommand), sizeof(unsigned int) * 4);
+        // glMultiDrawArraysIndirect(GL_TRIANGLE_STRIP, (GLvoid*)0, draw_count, 0);
+
+        glBindVertexArray(0);
+        // glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, 0);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, 0);
     }
 
     void free_voxel_buffer(VoxelBuffer* vb) 
@@ -626,6 +650,9 @@ namespace gfx
         glDeleteBuffers(1, &vb->m_vbo);
         glDeleteBuffers(1, &vb->m_id_vbo);
         glDeleteBuffers(1, &vb->m_face_vbo);
+        glDeleteBuffers(1, &vb->m_chunk_ssbo);
+        glDeleteBuffers(1, &vb->m_draw_ssbo);
+        glDeleteBuffers(1, &vb->m_draw_call_ib);
         glDeleteVertexArrays(1, &vb->m_vao);
     }
 

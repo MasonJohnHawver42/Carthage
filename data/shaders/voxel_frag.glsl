@@ -6,8 +6,6 @@ flat in vec3 pos;
 
 out vec4 FragColor;
 
-uniform vec4 color;
-
 // float rand1(float n) {return fract(sin(n) * 43758.5453123);}
 
 float rand(vec2 x){
@@ -28,7 +26,7 @@ void main()
     //             ((TexCord.x) * (TexCord.y) * ao_data[3]);
 
     float base = rand(pos.xy);
-    base = rand(vec2(base, pos.z)) * .25;
+    base = rand(vec2(base, pos.z)) * .05 + .1;
 
-    FragColor = vec4(vec3((1 - base) * (1 - ambient)), color[3]);
+    FragColor = vec4(vec3((1 - base) * (1 - ambient)), 0.75f);
 } 

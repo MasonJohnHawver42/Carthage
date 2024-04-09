@@ -9,6 +9,8 @@
 #include "core/containers.hpp"
 #include "graphics/device.hpp"
 
+#include "game/octree.hpp"
+
 namespace game 
 {
 
@@ -160,18 +162,24 @@ namespace game
     void set_color(float r, float g, float b, float a, float* c_dst);
 
 
-    struct ChunkRenderer 
+    struct OctreeRenderer 
     {
 
-        ChunkRenderer(gfx::Program prog);
+        OctreeRenderer(gfx::Program prog);
 
         void free();
+
+        void mesh_octree(game::Octree& octree);
+
+        void render(game::Camera& camera, game::Octree& octree);
+
+        std::unordered_map<unsigned int, gfx::VoxelChunk> m_chunks;
 
         gfx::VoxelBuffer m_vb;
         gfx::Pipeline m_pipeline;
     };
 
-    unsigned int mesh_chunk(unsigned char* voxel, unsigned int dir, unsigned int* face);
+    unsigned int mesh_chunk(unsigned char** voxel, unsigned int dir, unsigned int* face);
 
     // load octree
     // mesh each chunk load it into face_vbo adn chunk_ssbo

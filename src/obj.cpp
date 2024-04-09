@@ -15,6 +15,10 @@
 
 #include "game/scene.hpp"
 
+#ifndef MY_DATA_DIR
+#define MY_DATA_DIR
+#endif
+
 struct Vertex 
 {
     float x, y, z;
