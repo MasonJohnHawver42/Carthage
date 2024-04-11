@@ -122,9 +122,8 @@ def metropolis_alg(nom_path,environment):
         for max_num in range(max_int):
             # Loop over a maxiumum ammount of integers
             for forward_num in range(forward_int-1):
-                test_point = sample_from_normal_distribution(current_position,nom_path[forward_num],nom_path[forward_num+1],variance)
+                test_point = sample_from_normal_distribution(current_position,nom_path[forward_num+1],variance)
                 path.append(test_point)
-                current_position = test_point
 
             if forward_num == forward_int-2:
                 b_spline_points = []
@@ -182,7 +181,6 @@ def metropolis_alg(nom_path,environment):
                 path = []
                 path_to_test = []
                 path.append(start_position)
-                current_position = start_position
 
             if max_num == max_int:
                 print('Could not find path within 10000 iterations')
@@ -216,42 +214,41 @@ def quadratic_bspline(points):
 
     return bspline_x, bspline_y, bspline_z
 
-def sample_from_normal_distribution(current_position, nom_start, nom_next, variance):
+def sample_from_normal_distribution(current_position, nom_point, variance):
     # Extract current position values
-    x_nom, y_nom, height_nom = nom_next['x'], nom_next['y'], nom_next['height']
-    x_nom_before, y_nom_before, height_nom_before = nom_start['x'], nom_start['y'], nom_start['height']
+    x_nom, y_nom, height_nom = nom_point['x'], nom_point['y'], nom_point['height']
     x_start, y_start, height_start = current_position['x'], current_position['y'], current_position['height']
 
-    x_diff = x_nom-x_nom_before
-    y_diff = y_nom-y_nom_before
-    height_diff = height_nom-height_nom_before
+    x_diff = x_nom-x_start
+    y_diff = y_nom-y_start
+    height_diff = height_nom-height_start
 
-    radius_from_nom_start = np.sqrt(x_diff**2 + y_diff**2 + height_diff**2)
-    theta_from_nom_start = np.arccos(height_diff / radius_from_nom_start)
-    phi_from_nom_start = np.arctan2(y_diff, x_diff)
+    radius_from_start = np.sqrt(x_diff**2 + y_diff**2 + height_diff**2)
+    theta_from_start = np.arccos(height_diff / radius_from_start)
+    phi_from_start = np.arctan2(y_diff, x_diff)
 
     # Create a normal distribution of theta and phi
-    theta_variance = np.arcsin((variance/np.sqrt(2))/radius_from_nom_start)
-    phi_variance = np.arcsin((variance/np.sqrt(2))/radius_from_nom_start)
+    theta_variance = np.arcsin((variance/np.sqrt(2))/radius_from_start)
+    phi_variance = np.arcsin((variance/np.sqrt(2))/radius_from_start)
 
     # Generate random offsets for theta and phi
     theta_offset = np.random.normal(loc=0, scale=theta_variance)
     phi_offset = np.random.normal(loc=0, scale=phi_variance)
 
     # New phi and theta coordinates
-    new_theta_from_nom_start = theta_from_nom_start + theta_offset
-    new_phi_from_nom_start = phi_from_nom_start + phi_offset
+    new_theta_from_start = theta_from_start + theta_offset
+    new_phi_from_start = phi_from_start + phi_offset
 
     # Write back to xyz coordinates
-    new_x_from_nom_start = radius_from_nom_start * np.sin(new_theta_from_nom_start) * np.cos(new_phi_from_nom_start)
-    new_y_from_nom_start = radius_from_nom_start * np.sin(new_theta_from_nom_start) * np.sin(new_phi_from_nom_start)
-    new_z_from_nom_start = radius_from_nom_start * np.cos(new_theta_from_nom_start)
+    new_x_from_start = radius_from_start * np.sin(new_theta_from_start) * np.cos(new_phi_from_start)
+    new_y_from_start = radius_from_start * np.sin(new_theta_from_start) * np.sin(new_phi_from_start)
+    new_z_from_start = radius_from_start * np.cos(new_theta_from_start)
 
     # Create and return the new point
     test_point = {
-        'x': x_start + new_x_from_nom_start,
-        'y': y_start + new_y_from_nom_start,
-        'height': height_start + new_z_from_nom_start,
+        'x': x_start + new_x_from_start,
+        'y': y_start + new_y_from_start,
+        'height': height_start + new_z_from_start,
     }
 
     return test_point
