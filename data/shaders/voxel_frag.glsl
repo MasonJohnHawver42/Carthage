@@ -28,5 +28,5 @@ void main()
     float base = rand(pos.xy);
     base = rand(vec2(base, pos.z)) * .05 + .1;
 
-    FragColor = vec4(vec3((1 - base) * (1 - ambient)), 0.75f);
+    FragColor = vec4(vec3((1 - base) * (1 - ambient)), 1.0f);
 } 

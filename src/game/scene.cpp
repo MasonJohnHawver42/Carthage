@@ -4,6 +4,8 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/matrix_interpolation.hpp>
+#include <glm/gtx/scalar_multiplication.hpp>
+#include <glm/gtx/vector_angle.hpp>
 
 #include "graphics/device.hpp"
 
@@ -14,12 +16,24 @@
 game::Transform::Transform(const glm::vec3& p, const glm::vec3& a, float r, const glm::vec3& s) : pos(p), scale(s) { orientation = glm::angleAxis(glm::radians(r), a); }
 game::Transform::Transform() : Transform({0, 0, 0}, {0, 1, 0}, 0, {1, 1, 1}) {}
 
+game::Transform::Transform(const glm::vec3& p, const glm::vec3& f, const glm::vec3& t, const glm::vec3& s) : pos(p), scale(s)
+{
+    glm::vec3 from = glm::normalize(f);
+    glm::vec3 to = glm::normalize(t);
+    glm::vec3 axis = glm::cross(from, to);
+    axis = glm::normalize(axis);
+
+    float angle = glm::orientedAngle(from, to, axis);
+    orientation = glm::angleAxis(angle, axis);
+}
+
+
 void game::Transform::mat4(glm::mat4& mat) 
 {
     mat = glm::mat4(1.0f);
     mat = glm::translate(mat, pos);
+    mat *= glm::mat4_cast(orientation);
     mat = glm::scale(mat, scale);
-    // mat *= glm::mat4_cast(orientation);
 }
 
 void game::Transform::mat4(float* mat_ptr)
@@ -260,7 +274,7 @@ void game::SceneRenderer::free()
 
 game::DebugRenderer::DebugRenderer(gfx::Program prog) 
 {
-    shape_pipeline = {prog, gfx::CullMode::NONE, gfx::DrawMode::LINE};
+    shape_pipeline = {prog, gfx::CullMode::BACK, gfx::DrawMode::FILL};
 
     buffer_size = 1024 * 4; 
     gfx::create_shape_buffer(buffer_size, &shape_buffer);

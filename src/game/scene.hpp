@@ -20,6 +20,7 @@ namespace game
         glm::quat orientation;
 
         Transform(const glm::vec3& p, const glm::vec3& a, float r, const glm::vec3& s);
+        Transform(const glm::vec3& p, const glm::vec3& f, const glm::vec3& t, const glm::vec3& s);
         Transform();
 
         void mat4(glm::mat4& mat);

@@ -29,19 +29,73 @@ namespace game
         Octree(); //: m_frames(nullptr), m_grids(nullptr), frame_count(0), grid_count(0), frame_depth(0), grid_depth(0) {}
 
         ~Octree();
+        void init();
         void walk(std::function<void(unsigned int* v, unsigned int d, Frame& frame)> func);
         void walk_sister(unsigned int* p_voxel, unsigned int p_depth, Frame& frame, std::function<void(unsigned int* v, unsigned int d, Frame& frame)> func);
 
         Frame* get_frame(unsigned int* voxel, unsigned int depth);
 
+        void voxelize(float* pos, unsigned int* vox);
+        unsigned char state(unsigned int* vox);
 
-        unsigned int frame_count, grid_count, frame_depth, grid_depth; 
+        unsigned int frame_count, grid_count, frame_depth, grid_depth, depth; 
 
         float aabb_min[3], aabb_max[3];
+        float max_extent;
 
         Frame* m_frames;
-        Grid* m_grids;        
+        Grid* m_grids; 
     };
+
+    struct SDF 
+    {
+        SDF();
+        ~SDF();
+
+        void init();
+        void voxelize(float* pos, unsigned int* vox);
+        unsigned int index(float x, float y, float z); 
+        unsigned int index(float* pos); 
+        float state(unsigned int index);
+        float state(unsigned int* vox);
+
+
+        unsigned int depth;
+        unsigned int size[3];
+        float * data;
+
+        float aabb_min[3], aabb_max[3];
+        float max_extent;
+    };
+
+    struct Node 
+    {
+        unsigned int pos[3];
+        unsigned int g_score, f_score;
+        unsigned int parent;
+    };
+
+    struct AStarCache 
+    {
+        AStarCache(unsigned int* size);
+        ~AStarCache();
+
+        unsigned int hash(unsigned int* vox);
+        unsigned int index(unsigned int* vox);
+        // unsigned int index(int* vox);
+        unsigned int index(unsigned int hash);
+        void vox(unsigned int index, unsigned int* vox);
+        bool valid(unsigned int* vox);
+        bool valid(int* vox);
+        
+
+        unsigned int m_size[3];
+        unsigned int bit_size[3];
+        unsigned int* m_gscore;
+        unsigned int* m_parent;
+    };
+
+    unsigned int A_Star(AStarCache& cache, unsigned int* start, unsigned int* end, std::function<bool(int*)> solid);
 
 
 

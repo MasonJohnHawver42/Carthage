@@ -88,7 +88,6 @@ def optimize(curr):
             curr.children = None
             curr.states = 1
 
-
 def convert(frame):
     if frame.state == 0 or frame.state == 1:
         return

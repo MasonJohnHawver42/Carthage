@@ -21,17 +21,8 @@
 #include "game/octree.hpp"
 
 #include <iostream>
-#include <thread>
-#include <unistd.h>
-#include <atomic>
-
-//file loading
-#include <string>
-#include <fstream>
-#include <streambuf>
-#include <iostream>
-#include <cstring>
-#include <cerrno> 
+#include <vector>
+#include <math.h> 
 
 #ifndef MY_DATA_DIR
 #define MY_DATA_DIR
@@ -54,6 +45,7 @@ game::DebugRenderer*  g_debug_renderer;
 game::OctreeRenderer* g_octree_renderer;
 
 game::Octree* g_octree;
+game::SDF* g_sdf;
 
 // res::Loader*        g_loader;
 
@@ -67,6 +59,35 @@ float my_rand() { return rand() / (float)RAND_MAX; }
 bool show_demo_window = true;
 bool allow_input = true;
 ImGuiIO* io;
+
+void add_line(float* start, float* end, float radius, game::DebugRenderer* dr)  
+{
+    float midpoint[3];
+    float dir[3];
+    for (int i = 0; i < 3; i++) { midpoint[i] = (start[i] + end[i]) / 2.0f; dir[i] = end[i] - start[i]; }
+
+    float distance = 0.0f;
+    for (int i = 0; i < 3; i++) { distance += (start[i] - end[i]) * (start[i] - end[i]); }
+    distance = sqrt(distance);
+
+    gfx::ShapeEntry* ent;
+    game::Transform trans_tmp;
+
+    // ent = dr->shape(gfx::Shape::CUBE);
+    // trans_tmp = {{start[0], start[1], start[2]}, {1, 1, 1}, 0, {1, 1, 1}};
+    // trans_tmp.mat4(ent->mat);
+    // game::set_color(0, 0, 1, 1, ent->color);
+
+    // ent = dr->shape(gfx::Shape::CUBE);
+    // trans_tmp = {{end[0], end[1], end[2]}, {1, 1, 1}, 0, {1, 1, 1}};
+    // trans_tmp.mat4(ent->mat);
+    // game::set_color(0, 0, 1, 1, ent->color);
+
+     ent = dr->shape(gfx::Shape::CUBE);
+    trans_tmp = {{midpoint[0], midpoint[1], midpoint[2]}, {1, 0, 0}, {dir[0], dir[1], dir[2]}, {distance, radius, radius}};
+    trans_tmp.mat4(ent->mat);
+    game::set_color(0, 0, 1, 1, ent->color);
+}
 
 int main(void)
 {
@@ -87,6 +108,7 @@ int main(void)
     game::CameraOperator cam_op = game::CameraOperator(1.0, .01);
     
     game::Octree octree = game::Octree();
+    game::SDF sdf = game::SDF();
    
     // res::Loader loader = res::Loader();
     
@@ -99,42 +121,64 @@ int main(void)
     g_cam_op = &cam_op;
     
     g_octree = &octree;
+    g_sdf = &sdf;
     // g_loader = &loader;
 
     //load scene
-    res::load_scene("scenes/test.scn", scene, cache);
+    // res::load_scene("scenes/test.scn", scene, cache);
     res::load_octree("scenes/test.oct", octree);
+    res::load_sdf("scenes/test.ff", sdf);
+
+    printf("loaded\n");
+    
+    octree.init();
+    sdf.init();
 
     octree_renderer.mesh_octree(octree);
 
+    float start[3] = {4, 1.5, 4};
+    float end[3] = {-13, 6, -5};
+
+    unsigned int vox_start[3], vox_end[3];
+    sdf.voxelize(start, vox_start);
+    sdf.voxelize(end, vox_end);
+
+    add_line(start, end, 0.05f, &debug_renderer);
+
+    printf("loaded\n");
+
+    auto solid = [&](int* vox) { return octree.state((unsigned int*)vox) == 1 || sdf.state((unsigned int*)vox) < 5.0f; };
+
+    game::AStarCache astar_cache = game::AStarCache(sdf.size);
+    unsigned int end_index = game::A_Star(astar_cache, vox_start, vox_end, solid);
+    
+    unsigned int curr = end_index, v[3], index, next;
+    
     gfx::ShapeEntry* ent;
     game::Transform trans_tmp;
 
-    float max_e = 0.0f;
-    for (int i = 0; i < 3; i++) 
+    while (curr != -1)
     {
-        if (octree.aabb_max[i] - octree.aabb_min[i] > max_e) { max_e = octree.aabb_max[i] - octree.aabb_min[i]; }
-    }
+        index = astar_cache.index(curr);
+        astar_cache.vox(curr, v);
+        printf("c %d %d %d\n", v[0], v[1], v[2]);
+        next = astar_cache.m_parent[index];
 
-
-    octree.walk([&](unsigned int* v, unsigned int d, game::Frame& frame)
-    {
-        float scale = (max_e / (1 << d));
+        float scale = (octree.max_extent / (1 << octree.depth));
         float pos[3] = { (v[0] * scale) + octree.aabb_min[0] + (.5f * scale), 
                          (v[1] * scale) + octree.aabb_min[1] + (.5f * scale), 
                          (v[2] * scale) + octree.aabb_min[2] + (.5f * scale)
                        };
 
-        if (frame.state != game::FrameState::EMPTY) 
-        {
-            ent = debug_renderer.shape(gfx::Shape::CUBE);
-            trans_tmp = {{pos[0], pos[1], pos[2]}, {1, 1, 1}, 0, {scale - (.05f * (octree.frame_depth - d)), scale - (.05f * (octree.frame_depth - d)), scale - (.001f * (octree.frame_depth - d))}};
-            trans_tmp.mat4(ent->mat);
-            game::set_color(my_rand(), my_rand(), my_rand(), 1, ent->color);
-        }
+        ent = debug_renderer.shape(gfx::Shape::CUBE);
+        trans_tmp = {{pos[0], pos[1], pos[2]}, {0, 0, 1}, 0, {scale, scale, scale}};
+        trans_tmp.mat4(ent->mat);
+        game::set_color(1.0f, 0.0, 0.0, 1, ent->color);
 
-    });
+        curr = next;
+    }
 
+    printf("%d\n", end_index);
 
     // std::thread loader_thread(res::loader_proc, std::ref(loader));
 
@@ -195,7 +239,21 @@ void tick()
     ImGui::SliderFloat("Mouse Speed", &g_cam_op->angular_speed, 0.0f, 0.2f);
     g_camera->m_dirty_p = true;
 
+    // unsigned int index = g_sdf->index(g_camera->m_pos.x, g_camera->m_pos.y, g_camera->m_pos.z);
+    // float distance = g_sdf->state(index);
+
+    float pos[3] = {g_camera->m_pos.x, g_camera->m_pos.y, g_camera->m_pos.z};
+    unsigned int vox[3];
+    g_sdf->voxelize(pos, vox);
+
+    ImGui::Separator();
+    ImGui::Text("Voxel crd: <%d, %d, %d>", vox[0], vox[1], vox[2]);
+    ImGui::Text("SDF State: <%.2f>",  g_sdf->state(vox));
+    ImGui::Text("OCT State: <%d>", g_octree->state(vox));
+
     ImGui::End();
+
+    // printf("here");
 
 
     bool setpos, show, hide;
@@ -280,3 +338,32 @@ void init()
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 130");
 }
+
+
+    // gfx::ShapeEntry* ent;
+    // game::Transform trans_tmp;
+
+    // float max_e = 0.0f;
+    // for (int i = 0; i < 3; i++) 
+    // {
+    //     if (octree.aabb_max[i] - octree.aabb_min[i] > max_e) { max_e = octree.aabb_max[i] - octree.aabb_min[i]; }
+    // }
+
+
+    // octree.walk([&](unsigned int* v, unsigned int d, game::Frame& frame)
+    // {
+    //     float scale = (max_e / (1 << d));
+    //     float pos[3] = { (v[0] * scale) + octree.aabb_min[0] + (.5f * scale), 
+    //                      (v[1] * scale) + octree.aabb_min[1] + (.5f * scale), 
+    //                      (v[2] * scale) + octree.aabb_min[2] + (.5f * scale)
+    //                    };
+
+    //     if (frame.state != game::FrameState::EMPTY) 
+    //     {
+    //         ent = debug_renderer.shape(gfx::Shape::CUBE);
+    //         trans_tmp = {{pos[0], pos[1], pos[2]}, {1, 1, 1}, 0, {scale - (.05f * (octree.frame_depth - d)), scale - (.05f * (octree.frame_depth - d)), scale - (.001f * (octree.frame_depth - d))}};
+    //         trans_tmp.mat4(ent->mat);
+    //         game::set_color(my_rand(), my_rand(), my_rand(), 1, ent->color);
+    //     }
+
+    // });

@@ -132,6 +132,35 @@ int res::load_octree(const char* fn_oct, game::Octree& octree)
     return 0;
 }
 
+int res::load_sdf(const char* fn_ff, game::SDF& sdf) 
+{
+    std::string fn = std::string(MY_DATA_DIR) + fn_ff;
+    std::ifstream fs(fn, std::ios::binary);
+
+    if (!fs.is_open()) 
+    {
+        std::cerr << "Error opening file: " << fn << " : " << std::strerror(errno) << std::endl;
+        return 1;
+    }
+
+    fs.read((char*)(&sdf.depth), sizeof(unsigned int));   
+    fs.read((char*)(sdf.size), sizeof(unsigned int) * 3);   
+
+    sdf.data = (float*)malloc(sdf.size[0] * sdf.size[1] * sdf.size[2] * sizeof(float)); 
+    
+    fs.read((char*)(sdf.data), sizeof(float) * sdf.size[0] * sdf.size[1] * sdf.size[2]); 
+
+    fs.read((char*)(sdf.aabb_min + 0), sizeof(float)); 
+    fs.read((char*)(sdf.aabb_min + 1), sizeof(float)); 
+    fs.read((char*)(sdf.aabb_min + 2), sizeof(float)); 
+
+    fs.read((char*)(sdf.aabb_max + 0), sizeof(float)); 
+    fs.read((char*)(sdf.aabb_max + 1), sizeof(float)); 
+    fs.read((char*)(sdf.aabb_max + 2), sizeof(float));
+
+    return 0;
+}
+
 
 unsigned int res::load_model(const char* fn_bin, game::Cache& cache) 
 {
