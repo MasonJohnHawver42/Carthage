@@ -1,9 +1,15 @@
 #pragma once
 
+#include "game/octree.hpp"
 
 namespace game 
 {
 
+
+    struct Waypoints 
+    {
+
+    };
 
     struct B_Spline3 
     {

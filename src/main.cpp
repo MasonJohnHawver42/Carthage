@@ -22,7 +22,7 @@
 
 #include <iostream>
 #include <vector>
-#include <math.h> 
+#include <cmath>
 
 #ifndef MY_DATA_DIR
 #define MY_DATA_DIR
@@ -128,57 +128,67 @@ int main(void)
     // res::load_scene("scenes/test.scn", scene, cache);
     res::load_octree("scenes/test.oct", octree);
     res::load_sdf("scenes/test.ff", sdf);
-
-    printf("loaded\n");
     
     octree.init();
     sdf.init();
 
     octree_renderer.mesh_octree(octree);
 
-    float start[3] = {4, 1.5, 4};
-    float end[3] = {-13, 6, -5};
+    float start[3] = {-3.64, 2.30, -4.73};
+    float end[3] = {11.83, 6.81, -5.06};
+    
+    unsigned vox_start[3], vox_end[3];
 
-    unsigned int vox_start[3], vox_end[3];
     sdf.voxelize(start, vox_start);
     sdf.voxelize(end, vox_end);
-
-    add_line(start, end, 0.05f, &debug_renderer);
-
-    printf("loaded\n");
-
-    auto solid = [&](int* vox) { return octree.state((unsigned int*)vox) == 1 || sdf.state((unsigned int*)vox) < 5.0f; };
-
-    game::AStarCache astar_cache = game::AStarCache(sdf.size);
-    unsigned int end_index = game::A_Star(astar_cache, vox_start, vox_end, solid);
     
-    unsigned int curr = end_index, v[3], index, next;
-    
+    auto solid = [&](int* vox) { return octree.state((unsigned int*)vox) == 1 || sdf.state((unsigned int*)vox) < 6.0f; };
+
+    // add_line(start, end, 0.05f, &debug_renderer);
+
     gfx::ShapeEntry* ent;
     game::Transform trans_tmp;
+
+    // printf("loaded\n");  
+
+    game::PlanningCache astar_cache = game::PlanningCache(sdf.size);
+    unsigned int end_index = game::A_Star(astar_cache, vox_start, vox_end, solid);
+    
+    unsigned int curr = end_index, v[3], n[3], index, next;
+    float color = 1.0f, decay = .75;
 
     while (curr != -1)
     {
         index = astar_cache.index(curr);
+        next = (astar_cache.m_parent[index] >> 2) - 1;
         astar_cache.vox(curr, v);
-        printf("c %d %d %d\n", v[0], v[1], v[2]);
-        next = astar_cache.m_parent[index];
+        astar_cache.vox(next, n);
 
         float scale = (octree.max_extent / (1 << octree.depth));
         float pos[3] = { (v[0] * scale) + octree.aabb_min[0] + (.5f * scale), 
                          (v[1] * scale) + octree.aabb_min[1] + (.5f * scale), 
                          (v[2] * scale) + octree.aabb_min[2] + (.5f * scale)
                        };
+        
+        float pos1[3] = { (n[0] * scale) + octree.aabb_min[0] + (.5f * scale), 
+                          (n[1] * scale) + octree.aabb_min[1] + (.5f * scale), 
+                          (n[2] * scale) + octree.aabb_min[2] + (.5f * scale)
+                       };
 
         ent = debug_renderer.shape(gfx::Shape::CUBE);
         trans_tmp = {{pos[0], pos[1], pos[2]}, {0, 0, 1}, 0, {scale, scale, scale}};
         trans_tmp.mat4(ent->mat);
-        game::set_color(1.0f, 0.0, 0.0, 1, ent->color);
+        game::set_color(color, 0.0, 0.0, 1, ent->color);
+
+        if (next != -1) 
+        {
+            add_line(pos, pos1, 0.05f, &debug_renderer);
+        }
+
+        color *= decay;
 
         curr = next;
     }
-
-    printf("%d\n", end_index);
 
     // std::thread loader_thread(res::loader_proc, std::ref(loader));
 

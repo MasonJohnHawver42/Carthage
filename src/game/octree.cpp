@@ -1,4 +1,6 @@
 #include "game/octree.hpp"
+#include "core/containers.hpp"
+
 #include <unordered_set>
 #include <iostream>
 #include <cstring>
@@ -159,34 +161,34 @@ float game::SDF::state(unsigned int* vox)
     return 0.0f;
 }
 
-game::AStarCache::AStarCache(unsigned int* size) 
+game::PlanningCache::PlanningCache(unsigned int* size) 
 {
     for (int i = 0; i < 3; i++) 
     {
         bit_size[i] = ceil(log2(size[i]));
         m_size[i] = size[i];
-        printf("%d %d\n", m_size[i], bit_size[i]);
+        // printf("%d %d\n", m_size[i], bit_size[i]);
     }
     
     m_gscore = (unsigned int*)malloc(sizeof(unsigned int) * m_size[0] * m_size[1] * m_size[2]);
     m_parent = (unsigned int*)malloc(sizeof(unsigned int) * m_size[0] * m_size[1] * m_size[2]);
 }
 
-game::AStarCache::~AStarCache() 
+game::PlanningCache::~PlanningCache() 
 {
     free(m_gscore);
     free(m_parent);
 }
 
 
-unsigned int game::AStarCache::hash(unsigned int* vox) 
+unsigned int game::PlanningCache::hash(unsigned int* vox) 
 {
     // if (!(vox[0] >= 0 && vox[0] < m_size[0] && vox[1] >= 0 && vox[1] < m_size[1] && vox[2] >= 0 && vox[2] < m_size[2])) { return -1; } 
     return ((vox[0] & ((1 << bit_size[0]) - 1)) << (bit_size[1] + bit_size[2])) | 
             ((vox[1] & ((1 << bit_size[1]) - 1)) << bit_size[2]) | (vox[2] & ((1 << bit_size[2]) - 1));
 }
 
-unsigned int game::AStarCache::index(unsigned int* vox) 
+unsigned int game::PlanningCache::index(unsigned int* vox) 
 {
     return vox[2] + (m_size[2] * (vox[1] + (m_size[1] * vox[0])));
 }
@@ -197,25 +199,25 @@ unsigned int game::AStarCache::index(unsigned int* vox)
 // }
 
 
-unsigned int game::AStarCache::index(unsigned int hash) 
+unsigned int game::PlanningCache::index(unsigned int hash) 
 {
     return (hash & ((1 << bit_size[2]) - 1)) + (m_size[2] * (((hash >> bit_size[2]) & ((1 << bit_size[1]) - 1)) + (m_size[1] * ((hash >> (bit_size[1] + bit_size[2])) & ((1 << bit_size[0]) - 1)))));
 }
 
 
-void game::AStarCache::vox(unsigned int hash, unsigned int* vox) 
+void game::PlanningCache::vox(unsigned int hash, unsigned int* vox) 
 {
     vox[0] = (hash >> (bit_size[1] + bit_size[2])) & ((1 << bit_size[0]) - 1);
     vox[1] = (hash >> bit_size[2]) & ((1 << bit_size[1]) - 1);
     vox[2] = hash & ((1 << bit_size[2]) - 1);
 }
 
-bool game::AStarCache::valid(unsigned int* vox) 
+bool game::PlanningCache::valid(unsigned int* vox) 
 {
     return vox[0] >= 0 && vox[0] < m_size[0] && vox[1] >= 0 && vox[1] < m_size[1] && vox[2] >= 0 && vox[2] < m_size[2];
 }
 
-bool game::AStarCache::valid(int* vox) 
+bool game::PlanningCache::valid(int* vox) 
 {
     return vox[0] >= 0 && vox[0] < m_size[0] && vox[1] >= 0 && vox[1] < m_size[1] && vox[2] >= 0 && vox[2] < m_size[2];
 }
@@ -236,11 +238,10 @@ unsigned int heuristic(unsigned int* a, unsigned int* b)
 
 typedef std::function<bool(unsigned int, unsigned int)> NodeCompare;
 
-unsigned int game::A_Star(game::AStarCache& cache, unsigned int* start, unsigned int* end, std::function<bool(int*)> solid)
+unsigned int game::A_Star(game::PlanningCache& cache, unsigned int* start, unsigned int* end, std::function<bool(int*)> solid)
 {
-
     memset(cache.m_gscore, -1, sizeof(unsigned int) * cache.m_size[0] * cache.m_size[1] * cache.m_size[2]);
-    memset(cache.m_parent, -1, sizeof(unsigned int) * cache.m_size[0] * cache.m_size[1] * cache.m_size[2]);
+    memset(cache.m_parent, 0, sizeof(unsigned int) * cache.m_size[0] * cache.m_size[1] * cache.m_size[2]);
 
     unsigned int start_hash = cache.hash(start);
     unsigned int end_hash = cache.hash(end);
@@ -250,7 +251,7 @@ unsigned int game::A_Star(game::AStarCache& cache, unsigned int* start, unsigned
     if (!(cache.valid(start) && cache.valid(end))) { return -1; }
 
     cache.m_gscore[start_index] = 0;
-    cache.m_parent[start_index] = -1;
+    cache.m_parent[start_index] = 0;
 
     NodeCompare nodeCompare = [&](unsigned int ha, unsigned int hb) {
         unsigned int va[3], vb[3];
@@ -260,23 +261,24 @@ unsigned int game::A_Star(game::AStarCache& cache, unsigned int* start, unsigned
         unsigned int fa = ga + heuristic(va, end);
         unsigned int fb = gb + heuristic(vb, end);
 
-        return (fa > fb) || (fa == fb && ga > gb);
+        return ((fa > fb) || (fa == fb && ga > gb));
     };
 
     std::priority_queue<unsigned int,std::vector<unsigned int>, NodeCompare> open_queue(nodeCompare);
-    std::unordered_set<unsigned int> open_set;
+    // core::MinHeap<unsigned int, NodeCompare> open_queue(nodeCompare);
+    // std::unordered_set<unsigned int> open_set, closed_set;
 
     open_queue.push(start_hash);
-    open_set.insert(start_hash);
+    // open_set.insert(start_hash);
+    cache.m_parent[start_index] |= 0b1;
 
-    unsigned int hash, d, vox[3], g_score;
+    unsigned int hash, d, vox[3], index, g_score, parent_hash, parent_index, prt[3];
     int axis, dir, nbr[3], nbr_index, nbr_hash;
 
-    while (!open_set.empty()) 
+    while (!open_queue.empty()) 
     {
-        hash = open_queue.top();
-        open_queue.pop();
-        open_set.erase(open_set.find(hash));
+        // open_queue.update(0);
+        hash = open_queue.top(); open_queue.pop();
 
         if (hash == end_hash) 
         {
@@ -284,6 +286,13 @@ unsigned int game::A_Star(game::AStarCache& cache, unsigned int* start, unsigned
         }
         
         cache.vox(hash, vox);
+        index = cache.index(vox);
+
+        // open_set.erase(open_set.find(hash));
+        // closed_set.insert(hash);
+
+        cache.m_parent[index] &= ~0b1;
+        cache.m_parent[index] |= 0b10;
 
         // printf("%d %d %d\n", vox[0], vox[1], vox[2]);
 
@@ -299,29 +308,150 @@ unsigned int game::A_Star(game::AStarCache& cache, unsigned int* start, unsigned
 
             // printf("n1 %d %d %d\n", nbr[0], nbr[1], nbr[2]);
 
-            g_score = cache.m_gscore[cache.index(vox)] + 1;
             nbr_index = cache.index((unsigned int*)nbr);
-            
-            if (g_score >= cache.m_gscore[nbr_index]) { continue; }
-
-            // printf("n2 %d %d %d\n", nbr[0], nbr[1], nbr[2]);
-            
-            cache.m_parent[nbr_index] = hash;
-            cache.m_gscore[nbr_index] = g_score;
             nbr_hash = cache.hash((unsigned int*)nbr);
 
-            if (open_set.find(nbr_hash) != open_set.end()) { continue; }
+            if ((cache.m_parent[nbr_index] & 0b10) != 0) { continue; }
+            // if (closed_set.find(nbr_hash) != closed_set.end()) { continue; }
             
-            // printf("n3 %d %d %d\n", nbr[0], nbr[1], nbr[2]);
+            parent_hash = (cache.m_parent[index] >> 2) - 1;
+            cache.vox(parent_hash, prt);
+            parent_index = cache.index(prt);
+            
+            if (parent_hash != -1 && !raycast(prt, (unsigned int*)nbr, solid)) 
+            {
+                g_score = cache.m_gscore[parent_index] + heuristic(prt, (unsigned int*)nbr);
+                if (g_score < cache.m_gscore[nbr_index]) 
+                {
+                    cache.m_parent[nbr_index] = ((parent_hash + 1) << 2) | (cache.m_parent[nbr_index] & 0b11);
+                    cache.m_gscore[nbr_index] = g_score;
+                    
+                    if ((cache.m_parent[nbr_index] & 0b1) == 0) 
+                    {
+                        open_queue.push(nbr_hash);
+                        cache.m_parent[nbr_index] |= 0b1;
+                    }
+                }
 
-            open_queue.push(nbr_hash);
-            open_set.insert(nbr_hash);
+            }
+            else 
+            {
+                g_score = cache.m_gscore[cache.index(vox)] + 1;
+                if (g_score < cache.m_gscore[nbr_index]) 
+                {
+                    cache.m_parent[nbr_index] = ((hash + 1) << 2) | (cache.m_parent[nbr_index] & 0b11);
+                    cache.m_gscore[nbr_index] = g_score;
+                    if ((cache.m_parent[nbr_index] & 0b1) == 0) 
+                    {
+                        open_queue.push(nbr_hash);
+                        cache.m_parent[nbr_index] |= 0b1;
+                    }
+                }
+            }
+            
+            // if (g_score >= cache.m_gscore[nbr_index]) { continue; }
+
+            // // printf("n2 %d %d %d\n", nbr[0], nbr[1], nbr[2]);
+            
+            // cache.m_parent[nbr_index] = ((hash + 1) << 2) | (cache.m_parent[nbr_index] & 0b11);
+            // cache.m_gscore[nbr_index] = g_score;
+            
+            // if ((cache.m_parent[nbr_index] & 0b1) != 0) { continue; }
+            // // if (open_set.find(nbr_hash) != open_set.end()) { continue; }
+            
+            // // printf("n3 %d %d %d\n", nbr[0], nbr[1], nbr[2]);
+
+            // open_queue.push(nbr_hash);
+            // // open_set.insert(nbr_hash);
+            // cache.m_parent[nbr_index] |= 0b1;
         }
 
     }
 
     return -1;
 }
+
+bool game::raycast(unsigned int* start, unsigned int* end, std::function<bool(int*)> solid) 
+{
+    int x1 = end[0], y1 = end[1], z1 = end[2], x0 = start[0], y0 = start[1], z0 = start[2];
+    int tmp[3];
+    int dx = abs(x1 - x0);
+    int dy = abs(y1 - y0);
+    int dz = abs(z1 - z0);
+    int stepX = x0 < x1 ? 1 : -1;
+    int stepY = y0 < y1 ? 1 : -1;
+    int stepZ = z0 < z1 ? 1 : -1;
+    double hypotenuse = sqrt(pow(dx, 2) + pow(dy, 2) + pow(dz, 2));
+    double tMaxX = hypotenuse*0.5 / dx;
+    double tMaxY = hypotenuse*0.5 / dy;
+    double tMaxZ = hypotenuse*0.5 / dz;
+    double tDeltaX = hypotenuse / dx;
+    double tDeltaY = hypotenuse / dy;
+    double tDeltaZ = hypotenuse / dz;
+    while (x0 != x1 || y0 != y1 || z0 != z1){
+        if (tMaxX < tMaxY) {
+            if (tMaxX < tMaxZ) {
+                x0 = x0 + stepX;
+                tMaxX = tMaxX + tDeltaX;
+            }
+            else if (tMaxX >= tMaxZ){
+                z0 = z0 + stepZ;
+                tMaxZ = tMaxZ + tDeltaZ;
+            }
+            else{
+                x0 = x0 + stepX;
+                tMaxX = tMaxX + tDeltaX;
+                z0 = z0 + stepZ;
+                tMaxZ = tMaxZ + tDeltaZ;
+            }
+        }
+        else if (tMaxX > tMaxY){
+            if (tMaxY < tMaxZ) {
+                y0 = y0 + stepY;
+                tMaxY = tMaxY + tDeltaY;
+            }
+            else if (tMaxY >= tMaxZ){
+                z0 = z0 + stepZ;
+                tMaxZ = tMaxZ + tDeltaZ;
+            }
+            else{
+                y0 = y0 + stepY;
+                tMaxY = tMaxY + tDeltaY;
+                z0 = z0 + stepZ;
+                tMaxZ = tMaxZ + tDeltaZ;
+
+            }
+        }
+        else{
+            if (tMaxY < tMaxZ) {
+                y0 = y0 + stepY;
+                tMaxY = tMaxY + tDeltaY;
+                x0 = x0 + stepX;
+                tMaxX = tMaxX + tDeltaX;
+            }
+            else if (tMaxY >= tMaxZ){
+                z0 = z0 + stepZ;
+                tMaxZ = tMaxZ + tDeltaZ;
+            }
+            else{
+                x0 = x0 + stepX;
+                tMaxX = tMaxX + tDeltaX;
+                y0 = y0 + stepY;
+                tMaxY = tMaxY + tDeltaY;
+                z0 = z0 + stepZ;
+                tMaxZ = tMaxZ + tDeltaZ;
+
+            }
+        }
+
+        tmp[0] = x0; tmp[1] = y0; tmp[2] = z0;
+        if (solid(tmp)) { return true; } 
+    }
+
+    return false;
+
+}
+
 
 
 // bool game::Octree::neighbor(unsigned int* voxel, unsigned int depth, int* offset, int* n_voxel) 

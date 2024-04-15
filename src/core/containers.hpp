@@ -1,8 +1,11 @@
 #pragma once
 
+#include <vector>
 #include <cassert>
+#include <algorithm>
 #include <functional>
 #include <string.h>
+#include <iostream>
 
 namespace core 
 {
@@ -129,5 +132,99 @@ namespace core
         unsigned int lowest_open;
     };
 
+
+
+
+    template<typename T, typename Compare = std::less<T>>
+    struct MinHeap {
+        std::vector<T> heap;
+        Compare cmp;
+
+        size_t getParentIndex(size_t index) const {
+            return (index - 1) / 2;
+        }
+
+        size_t getLeftChildIndex(size_t index) const {
+            return 2 * index + 1;
+        }
+
+        size_t getRightChildIndex(size_t index) const {
+            return 2 * index + 2;
+        }
+
+        void heapify(size_t index) {
+            size_t smallest = index;
+            size_t leftChild = getLeftChildIndex(index);
+            size_t rightChild = getRightChildIndex(index);
+
+            if (leftChild < heap.size() && cmp(heap[leftChild], heap[smallest]))
+                smallest = leftChild;
+
+            if (rightChild < heap.size() && cmp(heap[rightChild], heap[smallest]))
+                smallest = rightChild;
+
+            if (smallest != index) {
+                std::swap(heap[index], heap[smallest]);
+                heapify(smallest);
+            }
+        }
+
+        void update(size_t index) 
+        {
+            size_t smallest = index;
+            size_t leftChild = getLeftChildIndex(index);
+            size_t rightChild = getRightChildIndex(index);
+
+            if (leftChild < heap.size())
+                update(leftChild);
+
+            if (rightChild < heap.size())
+                update(rightChild);
+            
+            if (leftChild < heap.size() && cmp(heap[leftChild], heap[smallest]))
+                smallest = leftChild;
+
+            if (rightChild < heap.size() && cmp(heap[rightChild], heap[smallest]))
+                smallest = rightChild;
+            
+            if (smallest != index) {
+                std::swap(heap[index], heap[smallest]);
+                // heapify(smallest);
+            }
+        }
+
+        // MinHeap() {}
+        MinHeap(const Compare& comp = Compare()) : cmp(comp) {}
+
+        void push(const T& value) {
+            heap.push_back(value);
+            size_t index = heap.size() - 1;
+            while (index > 0 && cmp(heap[index], heap[getParentIndex(index)])) {
+                std::swap(heap[index], heap[getParentIndex(index)]);
+                index = getParentIndex(index);
+            }
+        }
+
+        T pop() {
+            T poppedValue = heap.front();
+            std::swap(heap.front(), heap.back());
+            heap.pop_back();
+            heapify(0);
+            return poppedValue;
+        }
+
+        void printHeap() const {
+            std::cout << "Min-Heap: ";
+            for (const auto& item : heap)
+                std::cout << item << " ";
+            std::cout << std::endl;
+        }
+
+        bool empty() { return heap.empty(); }
+
+    };
+
     
 }
+
+

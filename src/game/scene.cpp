@@ -20,7 +20,15 @@ game::Transform::Transform(const glm::vec3& p, const glm::vec3& f, const glm::ve
 {
     glm::vec3 from = glm::normalize(f);
     glm::vec3 to = glm::normalize(t);
+
+    if (abs(glm::dot(from, to)) > 0.9999f) {
+        // Vectors are collinear, set orientation to identity
+        orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+        return;
+    }
+
     glm::vec3 axis = glm::cross(from, to);
+    printf("%f %f %f %f\n", glm::dot(from, to), axis.x, axis.y, axis.z);
     axis = glm::normalize(axis);
 
     float angle = glm::orientedAngle(from, to, axis);

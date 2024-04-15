@@ -64,7 +64,8 @@ For a further understanding read the code or email hawve005@umn.edu.
 - [X] Render Octree
     - [ ] make it more efficient
 - [ ] Fix debug renderer with new knowlage
-<!-- - [ ] A* Octree (in prog) -->
+- [ ] A* Octree (in prog)
+- [ ] Theta* path
 <!-- - [ ] Metropolis Hastings Trajectory sampling (end of the week target) -->
 - [ ] Frame Buffer stream
 <!-- - [ ] Data-gen pipeline -->

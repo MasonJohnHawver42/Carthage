@@ -1,5 +1,6 @@
 import numpy as np
 import struct
+import sys
 
 class Frame:
     def __init__(self):
@@ -105,6 +106,17 @@ def convert(frame):
         index = len(grids)
         grids.append(frame.children)
         frame.children = index
+
+
+if len(sys.argv) != 2:
+    print("Usage: python3 scripts/octree.py <scene file>")
+    exit(0)
+
+scn_fn = sys.argv[1]
+scn_bb = ".".join(sys.argv[1].split(".")[:-1]) + ".bb"
+scn_xyz = ".".join(sys.argv[1].split(".")[:-1]) + ".xyz"
+
+fn_scn = sys.argv[1]
 
 with open("data/scenes/test.xyz", 'rb') as f:
     num_points = struct.unpack('i', f.read(4))[0]

@@ -5,6 +5,8 @@ import transforms3d as tf
 import struct
 import open3d as o3d
 
+import sys
+
 
 def transformation_matrix(position, quaternion, scale):
     rotation_matrix = tf.quaternions.quat2mat(np.array(quaternion))
@@ -12,8 +14,8 @@ def transformation_matrix(position, quaternion, scale):
     transformation = np.eye(4)
     transformation[:3, :3] = rotation_matrix @ scaling_matrix
     transformation[:3, 3] = position
-    print(scaling_matrix, rotation_matrix @ scaling_matrix)
-    print(transformation, scale, quaternion)
+    # print(scaling_matrix, rotation_matrix @ scaling_matrix)
+    # print(transformation, scale, quaternion)
 
     return transformation.T
 
@@ -29,8 +31,19 @@ def combine_bounding_boxes(bounding_box0, bounding_box1):
 
 if __name__ == "__main__":
 
+    if len(sys.argv) != 2:
+        print("Usage: python3 scripts/point_cloud.py <scene file>")
+        exit(0)
+
+    scn_fn = sys.argv[1]
+    scn_bb = ".".join(sys.argv[1].split(".")[:-1]) + ".bb"
+    scn_xyz = ".".join(sys.argv[1].split(".")[:-1]) + ".xyz"
+    scn_npy = ".".join(sys.argv[1].split(".")[:-1]) + "_pcd.npy"
+
+    print(scn_fn, scn_bb, scn_xyz, scn_npy)
+
     scn = Scene()
-    scn.read("data/scenes/test.scn")
+    scn.read(scn_fn)
 
     models = {}
 
@@ -51,33 +64,36 @@ if __name__ == "__main__":
 
         bounding_box_obj = compute_bounding_box(v_trans)
         bounding_box = combine_bounding_boxes(bounding_box, bounding_box_obj)
-        print(bounding_box_obj, bounding_box)
+        # print(bounding_box_obj, bounding_box)
 
         mesh = o3d.geometry.TriangleMesh()
         mesh.vertices = o3d.utility.Vector3dVector(v_trans)
         mesh.triangles = o3d.utility.Vector3iVector(f0)
 
-        print(mesh.get_surface_area())
+        # print(mesh.get_surface_area())
 
-        N = int(np.floor(mesh.get_surface_area() * 1000))
+        N = int(np.floor(mesh.get_surface_area() * 100))
         pcd = mesh.sample_points_uniformly(N)
         downpcd = pcd.voxel_down_sample(voxel_size=0.01)
 
-        o3d.visualization.draw_geometries([downpcd])
+        # o3d.visualization.draw_geometries([downpcd])
 
         xyz.append(np.asarray(downpcd.points))
 
-    with open("data/scenes/test.xyz", 'wb') as f:
-        f.write(struct.pack('i', sum([len(pts) for pts in xyz])))
-        for pts in xyz:
-            for i in range(pts.shape[0]):
-                f.write(struct.pack('f', pts[i, 0]))
-                f.write(struct.pack('f', pts[i, 1]))
-                f.write(struct.pack('f', pts[i, 2]))
+    xyz = np.vstack(xyz)
+    np.save(scn_npy, xyz)
+    # print(xyz)
 
-        print(sum([len(pts) for pts in xyz]))
+    with open(scn_xyz, 'wb') as f:
+        f.write(struct.pack('i', xyz.shape[0]))
+        for i in range(xyz.shape[0]):
+            f.write(struct.pack('f', xyz[i, 0]))
+            f.write(struct.pack('f', xyz[i, 1]))
+            f.write(struct.pack('f', xyz[i, 2]))
+
+        print(sum([len(pts) for pts in xyz]), "bytes")
     
-    with open("data/scenes/test.bb", 'wb') as f:
+    with open(scn_bb, 'wb') as f:
         for pt in bounding_box:
             f.write(struct.pack('f', pt[0]))
             f.write(struct.pack('f', pt[1]))

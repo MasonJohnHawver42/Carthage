@@ -68,17 +68,10 @@ namespace game
         float max_extent;
     };
 
-    struct Node 
+    struct PlanningCache 
     {
-        unsigned int pos[3];
-        unsigned int g_score, f_score;
-        unsigned int parent;
-    };
-
-    struct AStarCache 
-    {
-        AStarCache(unsigned int* size);
-        ~AStarCache();
+        PlanningCache(unsigned int* size);
+        ~PlanningCache();
 
         unsigned int hash(unsigned int* vox);
         unsigned int index(unsigned int* vox);
@@ -88,14 +81,15 @@ namespace game
         bool valid(unsigned int* vox);
         bool valid(int* vox);
         
-
         unsigned int m_size[3];
         unsigned int bit_size[3];
         unsigned int* m_gscore;
         unsigned int* m_parent;
     };
 
-    unsigned int A_Star(AStarCache& cache, unsigned int* start, unsigned int* end, std::function<bool(int*)> solid);
+    bool raycast(unsigned int* start, unsigned int* end, std::function<bool(int*)> solid);
+
+    unsigned int A_Star(PlanningCache& cache, unsigned int* start, unsigned int* end, std::function<bool(int*)> solid);
 
 
 
