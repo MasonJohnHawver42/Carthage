@@ -238,7 +238,7 @@ unsigned int heuristic(unsigned int* a, unsigned int* b)
 
 typedef std::function<bool(unsigned int, unsigned int)> NodeCompare;
 
-unsigned int game::A_Star(game::PlanningCache& cache, unsigned int* start, unsigned int* end, std::function<bool(int*)> solid)
+unsigned int game::theta_star(game::PlanningCache& cache, unsigned int* start, unsigned int* end, std::function<bool(int*, float)> solid, float d_a, float d_w)
 {
     memset(cache.m_gscore, -1, sizeof(unsigned int) * cache.m_size[0] * cache.m_size[1] * cache.m_size[2]);
     memset(cache.m_parent, 0, sizeof(unsigned int) * cache.m_size[0] * cache.m_size[1] * cache.m_size[2]);
@@ -304,7 +304,7 @@ unsigned int game::A_Star(game::PlanningCache& cache, unsigned int* start, unsig
             nbr[0] = vox[0]; nbr[1] = vox[1]; nbr[2] = vox[2];
             nbr[axis] += dir;
 
-            if (!(cache.valid(nbr) && !solid(nbr))) { continue; }
+            if (!(cache.valid(nbr) && !solid(nbr, d_a))) { continue; }
 
             // printf("n1 %d %d %d\n", nbr[0], nbr[1], nbr[2]);
 
@@ -318,7 +318,7 @@ unsigned int game::A_Star(game::PlanningCache& cache, unsigned int* start, unsig
             cache.vox(parent_hash, prt);
             parent_index = cache.index(prt);
             
-            if (parent_hash != -1 && !raycast(prt, (unsigned int*)nbr, solid)) 
+            if (parent_hash != -1 && !raycast(prt, (unsigned int*)nbr, solid, d_w)) 
             {
                 g_score = cache.m_gscore[parent_index] + heuristic(prt, (unsigned int*)nbr);
                 if (g_score < cache.m_gscore[nbr_index]) 
@@ -371,7 +371,7 @@ unsigned int game::A_Star(game::PlanningCache& cache, unsigned int* start, unsig
     return -1;
 }
 
-bool game::raycast(unsigned int* start, unsigned int* end, std::function<bool(int*)> solid) 
+bool game::raycast(unsigned int* start, unsigned int* end, std::function<bool(int*, float)> solid, float d_w) 
 {
     int x1 = end[0], y1 = end[1], z1 = end[2], x0 = start[0], y0 = start[1], z0 = start[2];
     int tmp[3];
@@ -388,7 +388,8 @@ bool game::raycast(unsigned int* start, unsigned int* end, std::function<bool(in
     double tDeltaX = hypotenuse / dx;
     double tDeltaY = hypotenuse / dy;
     double tDeltaZ = hypotenuse / dz;
-    while (x0 != x1 || y0 != y1 || z0 != z1){
+    while (x0 != x1 || y0 != y1 || z0 != z1)
+    {
         if (tMaxX < tMaxY) {
             if (tMaxX < tMaxZ) {
                 x0 = x0 + stepX;
@@ -445,7 +446,7 @@ bool game::raycast(unsigned int* start, unsigned int* end, std::function<bool(in
         }
 
         tmp[0] = x0; tmp[1] = y0; tmp[2] = z0;
-        if (solid(tmp)) { return true; } 
+        if (solid(tmp, d_w)) { return true; } 
     }
 
     return false;

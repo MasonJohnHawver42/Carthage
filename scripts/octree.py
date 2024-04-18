@@ -16,7 +16,7 @@ class Grid:
 def voxelize(pt):
     return [ int(v * (1 << max_depth)) for v in pt]
 
-def add_voxel(voxel):
+def add_voxel(voxel, value):
     
     frame = root
 
@@ -36,7 +36,7 @@ def add_voxel(voxel):
 
     if frame.state == 0:
         frame.children = Grid()
-        frame.state = 3
+        frame.state = max(min(int(value), 255), 0) 
     
     grid = frame.children
     
@@ -152,7 +152,7 @@ max_depth = frame_depth + grid_depth
 
 for i in range(n_points.shape[0]):
     vox = voxelize(n_points[i, :])
-    add_voxel(vox)  
+    add_voxel(vox, 1)  
 
 optimize(root)
 convert(root)

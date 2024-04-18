@@ -6,6 +6,11 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/string_cast.hpp>
 
+#include <Eigen/Dense>
+
+#include "traj_min_jerk.hpp"
+#include "traj_min_snap.hpp"
+
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
@@ -19,10 +24,12 @@
 //my game library
 #include "game/scene.hpp"
 #include "game/octree.hpp"
+#include "game/drone.hpp"
 
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <set>
 
 #ifndef MY_DATA_DIR
 #define MY_DATA_DIR
@@ -60,35 +67,6 @@ bool show_demo_window = true;
 bool allow_input = true;
 ImGuiIO* io;
 
-void add_line(float* start, float* end, float radius, game::DebugRenderer* dr)  
-{
-    float midpoint[3];
-    float dir[3];
-    for (int i = 0; i < 3; i++) { midpoint[i] = (start[i] + end[i]) / 2.0f; dir[i] = end[i] - start[i]; }
-
-    float distance = 0.0f;
-    for (int i = 0; i < 3; i++) { distance += (start[i] - end[i]) * (start[i] - end[i]); }
-    distance = sqrt(distance);
-
-    gfx::ShapeEntry* ent;
-    game::Transform trans_tmp;
-
-    // ent = dr->shape(gfx::Shape::CUBE);
-    // trans_tmp = {{start[0], start[1], start[2]}, {1, 1, 1}, 0, {1, 1, 1}};
-    // trans_tmp.mat4(ent->mat);
-    // game::set_color(0, 0, 1, 1, ent->color);
-
-    // ent = dr->shape(gfx::Shape::CUBE);
-    // trans_tmp = {{end[0], end[1], end[2]}, {1, 1, 1}, 0, {1, 1, 1}};
-    // trans_tmp.mat4(ent->mat);
-    // game::set_color(0, 0, 1, 1, ent->color);
-
-     ent = dr->shape(gfx::Shape::CUBE);
-    trans_tmp = {{midpoint[0], midpoint[1], midpoint[2]}, {1, 0, 0}, {dir[0], dir[1], dir[2]}, {distance, radius, radius}};
-    trans_tmp.mat4(ent->mat);
-    game::set_color(0, 0, 1, 1, ent->color);
-}
-
 int main(void)
 {
     init();
@@ -104,7 +82,7 @@ int main(void)
     game::SceneRenderer scene_renderer = game::SceneRenderer(model_prog);
     game::DebugRenderer debug_renderer = game::DebugRenderer(debug_prog);
     game::OctreeRenderer octree_renderer = game::OctreeRenderer(voxel_prog);
-    game::Camera camera = game::Camera({0.0, 0.0, 2.0}, {0.0, 0.0, -1.0}, {0.0, 1.0, 0.0}, 45.0, 0.1f, 300.0f, 640.0f / 480.0f);
+    game::Camera camera = game::Camera({0.0, 0.0, 2.0}, {0.0, -1.0, 0.0}, {0.0, 0.0, 1.0}, 45.0, 0.1f, 300.0f, 640.0f / 480.0f);
     game::CameraOperator cam_op = game::CameraOperator(1.0, .01);
     
     game::Octree octree = game::Octree();
@@ -134,61 +112,97 @@ int main(void)
 
     octree_renderer.mesh_octree(octree);
 
-    float start[3] = {-3.64, 2.30, -4.73};
-    float end[3] = {11.83, 6.81, -5.06};
+    float start[3] = {-13.05, 2.6, -4.17};
+    float end[3] = {4.82, 6.78, 4.10}   ;
     
     unsigned vox_start[3], vox_end[3];
 
     sdf.voxelize(start, vox_start);
     sdf.voxelize(end, vox_end);
     
-    auto solid = [&](int* vox) { return octree.state((unsigned int*)vox) == 1 || sdf.state((unsigned int*)vox) < 6.0f; };
-
-    // add_line(start, end, 0.05f, &debug_renderer);
+    auto solid = [&](int* vox, float d) { return octree.state((unsigned int*)vox) == 1 || sdf.state((unsigned int*)vox) < d; };
 
     gfx::ShapeEntry* ent;
     game::Transform trans_tmp;
 
     // printf("loaded\n");  
 
-    game::PlanningCache astar_cache = game::PlanningCache(sdf.size);
-    unsigned int end_index = game::A_Star(astar_cache, vox_start, vox_end, solid);
-    
-    unsigned int curr = end_index, v[3], n[3], index, next;
-    float color = 1.0f, decay = .75;
+    game::PlanningCache plan_cache = game::PlanningCache(sdf.size);
+    unsigned int end_index = game::theta_star(plan_cache, vox_start, vox_end, solid, 6.0f, 4.0f);
 
-    while (curr != -1)
-    {
-        index = astar_cache.index(curr);
-        next = (astar_cache.m_parent[index] >> 2) - 1;
-        astar_cache.vox(curr, v);
-        astar_cache.vox(next, n);
+    auto vox = [&](float* p, unsigned int* v) { octree.voxelize(p, v); };
 
+    auto convert = [&](unsigned int* v, float* p) {
         float scale = (octree.max_extent / (1 << octree.depth));
-        float pos[3] = { (v[0] * scale) + octree.aabb_min[0] + (.5f * scale), 
-                         (v[1] * scale) + octree.aabb_min[1] + (.5f * scale), 
-                         (v[2] * scale) + octree.aabb_min[2] + (.5f * scale)
-                       };
-        
-        float pos1[3] = { (n[0] * scale) + octree.aabb_min[0] + (.5f * scale), 
-                          (n[1] * scale) + octree.aabb_min[1] + (.5f * scale), 
-                          (n[2] * scale) + octree.aabb_min[2] + (.5f * scale)
-                       };
+        p[0] = (v[0] * scale) + octree.aabb_min[0] + (.5f * scale); 
+        p[1] = (v[1] * scale) + octree.aabb_min[1] + (.5f * scale); 
+        p[2] = (v[2] * scale) + octree.aabb_min[2] + (.5f * scale);
+    };
 
-        ent = debug_renderer.shape(gfx::Shape::CUBE);
-        trans_tmp = {{pos[0], pos[1], pos[2]}, {0, 0, 1}, 0, {scale, scale, scale}};
-        trans_tmp.mat4(ent->mat);
-        game::set_color(color, 0.0, 0.0, 1, ent->color);
+    // game::Waypoints waypts;
+    // waypts.build(plan_cache, end_index, convert);
 
-        if (next != -1) 
+    min_snap::SnapOpt snapOpt;
+    min_snap::Trajectory minSnapTraj;
+
+    Eigen::MatrixXd route, next_route;
+    Eigen::VectorXd ts, min_ts, dts;
+    Eigen::Matrix<double, 3, 4> iSS, fSS;
+
+    game::build_route(plan_cache, end_index, convert, route);
+    game::allocate_time(route, 5, 3, ts);
+    min_ts = ts;
+
+    iSS.setZero();
+    fSS.setZero();
+
+    iSS.col(0) << route.leftCols<1>();
+    fSS.col(0) << route.rightCols<1>();
+
+    std::cout << route << std::endl;
+
+    float p = 1.0f;
+    float q = 2.0f;
+    float lr = .005f;
+
+    for (int i = 0; i < 5; i++) 
+    {
+
+        for (int i = 0; i < 10; i++) 
         {
-            add_line(pos, pos1, 0.05f, &debug_renderer);
+            snapOpt.reset(iSS, fSS, route.cols() - 1);
+            snapOpt.generate(route.block(0, 1, 3, route.cols() - 2), ts);
+            snapOpt.getTraj(minSnapTraj);
+
+            dts = snapOpt.getGradT();
+
+            for (int j = 0; j < dts.size(); j++) 
+            {
+                if (ts(j) < min_ts(j)) { printf("here\n"); }
+                dts(j) += ts(j) >= min_ts(j) ? 0.0 : p * q * pow(ts(j) - min_ts(j), q - 1.0f);
+            }
+
+            ts -= lr * dts;
         }
 
-        color *= decay;
+        std::cout << ts - min_ts << std::endl;
+        printf("done %d\n", i);
+        bool res = game::rebuild_route(minSnapTraj, route, ts, vox, solid, 2.0f, next_route);
 
-        curr = next;
+        if (!res) { break; }
+        if (i + 1 < 5) 
+        {
+            route = next_route;
+            game::allocate_time(route, 5, 3, ts);
+            min_ts = ts;
+        }
     }
+
+    game::draw_route(route, &debug_renderer);
+    game::draw_traj(minSnapTraj, ts, 100, &debug_renderer);
+
+    game::Quadrotor quadrotor;
+    quadrotor.reset(0, 0, 0, 0, 0, 0);
 
     // std::thread loader_thread(res::loader_proc, std::ref(loader));
 
@@ -258,7 +272,7 @@ void tick()
 
     ImGui::Separator();
     ImGui::Text("Voxel crd: <%d, %d, %d>", vox[0], vox[1], vox[2]);
-    ImGui::Text("SDF State: <%.2f>",  g_sdf->state(vox));
+    ImGui::Text("SDF State: <%.2f>",  g_sdf->state(vox) * g_sdf->state(vox));
     ImGui::Text("OCT State: <%d>", g_octree->state(vox));
 
     ImGui::End();

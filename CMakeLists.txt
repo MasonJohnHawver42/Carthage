@@ -66,6 +66,8 @@ set(
     ext/tinyobjloader
     ext/imgui
     ext/imgui/backends
+    ext/large_scale_traj_optimizer/include
+    ext/eigen
     ${OPENGL_INCLUDE_DIR}
 )
 

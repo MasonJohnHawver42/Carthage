@@ -87,10 +87,10 @@ namespace game
         unsigned int* m_parent;
     };
 
-    bool raycast(unsigned int* start, unsigned int* end, std::function<bool(int*)> solid);
 
-    unsigned int A_Star(PlanningCache& cache, unsigned int* start, unsigned int* end, std::function<bool(int*)> solid);
+    unsigned int theta_star(PlanningCache& cache, unsigned int* start, unsigned int* end, std::function<bool(int*, float)> solid, float d_a, float d_w);
 
+    bool raycast(unsigned int* start, unsigned int* end, std::function<bool(int*, float)> solid, float d_w);
 
 
     // struct OctreeNode;

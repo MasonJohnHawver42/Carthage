@@ -28,7 +28,6 @@ game::Transform::Transform(const glm::vec3& p, const glm::vec3& f, const glm::ve
     }
 
     glm::vec3 axis = glm::cross(from, to);
-    printf("%f %f %f %f\n", glm::dot(from, to), axis.x, axis.y, axis.z);
     axis = glm::normalize(axis);
 
     float angle = glm::orientedAngle(from, to, axis);
@@ -353,6 +352,26 @@ void game::set_color(float r, float g, float b, float a, float* c_dst)
     c_dst[2] = b;
     c_dst[3] = a;
 }
+
+void game::add_line(float* start, float* end, float radius, game::DebugRenderer* dr)  
+{
+    float midpoint[3];
+    float dir[3];
+    for (int i = 0; i < 3; i++) { midpoint[i] = (start[i] + end[i]) / 2.0f; dir[i] = end[i] - start[i]; }
+
+    float distance = 0.0f;
+    for (int i = 0; i < 3; i++) { distance += (start[i] - end[i]) * (start[i] - end[i]); }
+    distance = sqrt(distance);
+
+    gfx::ShapeEntry* ent;
+    game::Transform trans_tmp;
+
+    ent = dr->shape(gfx::Shape::CUBE);
+    trans_tmp = {{midpoint[0], midpoint[1], midpoint[2]}, {1, 0, 0}, {dir[0], dir[1], dir[2]}, {distance, radius, radius}};
+    trans_tmp.mat4(ent->mat);
+    game::set_color(0, 0, 1, 1, ent->color);
+}
+
 
 // chunk
 

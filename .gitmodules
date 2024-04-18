@@ -8,3 +8,12 @@
 [submodule "ext/imgui"]
 	path = ext/imgui
 	url = https://github.com/ocornut/imgui.git
+[submodule "ext/traj_gen"]
+	path = ext/traj_gen
+	url = https://github.com/icsl-Jeon/traj_gen.git
+[submodule "ext/large_scale_traj_optimizer"]
+	path = ext/large_scale_traj_optimizer
+	url = https://github.com/ZJU-FAST-Lab/large_scale_traj_optimizer.git
+[submodule "ext/eigen"]
+	path = ext/eigen
+	url = https://gitlab.com/libeigen/eigen.git

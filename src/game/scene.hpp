@@ -161,7 +161,8 @@ namespace game
     };
 
     void set_color(float r, float g, float b, float a, float* c_dst);
-
+    
+    void add_line(float* start, float* end, float radius, game::DebugRenderer* dr);
 
     struct OctreeRenderer 
     {
