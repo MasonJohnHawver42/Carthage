@@ -48,7 +48,7 @@ for point in n_points:
     grid[vox[0], vox[1], vox[2]] = 1
 
 obstacles = grid != 0
-distance_map = distance_transform_edt(~obstacles, metric="")
+distance_map = distance_transform_edt(~obstacles)
 
 print(distance_map.shape, (2 ** max_depth), ((2 ** max_depth) ** 3) * 4, size[0] * size[1] * size[2] * 4)
 

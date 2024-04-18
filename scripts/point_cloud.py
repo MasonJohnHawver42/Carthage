@@ -1,4 +1,3 @@
-from scene import Scene
 import point_cloud_utils as pcu
 import numpy as np
 import transforms3d as tf
@@ -7,6 +6,7 @@ import open3d as o3d
 
 import sys
 
+from scene import Scene
 
 def transformation_matrix(position, quaternion, scale):
     rotation_matrix = tf.quaternions.quat2mat(np.array(quaternion))
@@ -31,11 +31,13 @@ def combine_bounding_boxes(bounding_box0, bounding_box1):
 
 if __name__ == "__main__":
 
-    if len(sys.argv) != 2:
-        print("Usage: python3 scripts/point_cloud.py <scene file>")
+    if len(sys.argv) != 4:
+        print("Usage: python3 scripts/point_cloud.py <scene file> <data dir> <N : number of points per square meter>")
         exit(0)
 
     scn_fn = sys.argv[1]
+    data_dir = sys.argv[2]
+    Big_N = int(sys.argv[3])
     scn_bb = ".".join(sys.argv[1].split(".")[:-1]) + ".bb"
     scn_xyz = ".".join(sys.argv[1].split(".")[:-1]) + ".xyz"
     scn_npy = ".".join(sys.argv[1].split(".")[:-1]) + "_pcd.npy"
@@ -49,7 +51,7 @@ if __name__ == "__main__":
 
     for obj in scn.objects:
         if obj["fn"] not in models:
-            v, f, n = pcu.load_mesh_vfn("./data/" + ".".join(obj["fn"].split(".")[0 : -1]) + ".obj")
+            v, f, n = pcu.load_mesh_vfn(data_dir + ".".join(obj["fn"].split(".")[0 : -1]) + ".obj")
             models[obj["fn"]] = {"f" : f, "v" : v}
     
     xyz = []
@@ -72,13 +74,13 @@ if __name__ == "__main__":
 
         # print(mesh.get_surface_area())
 
-        N = int(np.floor(mesh.get_surface_area() * 100))
+        N = int(np.floor(mesh.get_surface_area() * Big_N))
         pcd = mesh.sample_points_uniformly(N)
-        downpcd = pcd.voxel_down_sample(voxel_size=0.01)
+        # downpcd = pcd.voxel_down_sample(voxel_size=0.005)
 
         # o3d.visualization.draw_geometries([downpcd])
 
-        xyz.append(np.asarray(downpcd.points))
+        xyz.append(np.asarray(pcd.points))
 
     xyz = np.vstack(xyz)
     np.save(scn_npy, xyz)

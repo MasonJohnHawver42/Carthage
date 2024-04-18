@@ -2,15 +2,17 @@ import numpy as np
 import struct
 import sys
 
+from scipy.ndimage import distance_transform_edt
+
 class Frame:
     def __init__(self):
         self.children = None
         self.state = 0
-        # 0 - empty | 1 - full | 2 - frame | 3 - grid
+        # 0 - empty | 1 - deprecated | 2 - frame | 3 - grid
 
 class Grid:
     def __init__(self):
-        self.occupancy = [0] * 32 * 32  * 32
+        self.occupancy = [255] * 32 * 32  * 32
         # 0 - empty | 1 - full
 
 def voxelize(pt):
@@ -19,6 +21,7 @@ def voxelize(pt):
 def add_voxel(voxel, value):
     
     frame = root
+    v = max(min(int(value), 255), 0) 
 
     for i in range(frame_depth):
         n = grid_depth + (frame_depth - i - 1)
@@ -36,14 +39,14 @@ def add_voxel(voxel, value):
 
     if frame.state == 0:
         frame.children = Grid()
-        frame.state = max(min(int(value), 255), 0) 
+        frame.state = 3
     
     grid = frame.children
     
     mask = (1 << grid_depth) - 1
     index = ((voxel[0] & mask) << 10) | ((voxel[1] & mask) << 5) | ((voxel[2] & mask))
 
-    grid.occupancy[index] = 1
+    grid.occupancy[index] = v
 
 def optimize_sister(parent, child):
 
@@ -61,33 +64,29 @@ def optimize_sister(parent, child):
 
 def optimize(curr):
 
-    if curr.state == 0 or curr.state == 1:
+    if curr.state == 0:
         return
 
     if curr.state == 2:
         for i in range(8):
             optimize(curr.children[i])
 
-        empty_sum = sum([ 1 if child.state == 0 else 0 for child in curr.children])
-        full_sum = sum([ 1 if child.state == 1 else 0 for child in curr.children])
+        uniform = all(child.state == 0 for child in curr.children)
+        uniform = False if not uniform else all((child.children == curr.children[0].children for child in curr.children))
+        # empty_sum = sum([ 1 if child.state == 0 else 0 for child in curr.children])
+        # full_sum = sum([ 1 if child.state == 1 else 0 for child in curr.children])
         
-        if empty_sum == 8:
-            curr.children = None
-            curr.states = 0
-        if full_sum == 8:
-            curr.children = None
-            curr.states = 1
+        if uniform:
+            curr.children = curr.children[0].children
+            curr.state = 0
     
     if curr.state == 3:
         grid = curr.children
 
-        oc_sum = sum(grid.occupancy)
-        if oc_sum == 0:
-            curr.children = None
-            curr.states = 0
-        if oc_sum == 32 * 32 * 32:
-            curr.children = None
-            curr.states = 1
+        uniform = all(o == grid.occupancy[0] for o in grid.occupancy)
+        if uniform:
+            curr.children = grid.occupancy[0]
+            curr.state = 0
 
 def convert(frame):
     if frame.state == 0 or frame.state == 1:
@@ -115,10 +114,11 @@ if len(sys.argv) != 2:
 scn_fn = sys.argv[1]
 scn_bb = ".".join(sys.argv[1].split(".")[:-1]) + ".bb"
 scn_xyz = ".".join(sys.argv[1].split(".")[:-1]) + ".xyz"
+scn_oct = ".".join(sys.argv[1].split(".")[:-1]) + ".oct"
 
 fn_scn = sys.argv[1]
 
-with open("data/scenes/test.xyz", 'rb') as f:
+with open(scn_xyz, 'rb') as f:
     num_points = struct.unpack('i', f.read(4))[0]
     # num_points = min(4, num_points)
     points = []
@@ -130,7 +130,7 @@ with open("data/scenes/test.xyz", 'rb') as f:
     points = np.array(points)
 
 # Read the bounding box from test.bb
-with open("data/scenes/test.bb", 'rb') as f:
+with open(scn_bb, 'rb') as f:
     bounding_box = []
     for _ in range(2):  # Assuming there are 2 points in the bounding box
         x = struct.unpack('f', f.read(4))[0]
@@ -150,17 +150,37 @@ frame_depth = 3
 grid_depth = 5
 max_depth = frame_depth + grid_depth
 
-for i in range(n_points.shape[0]):
-    vox = voxelize(n_points[i, :])
-    add_voxel(vox, 1)  
+p = (bounding_box[1] - bounding_box[0]) / (bounding_box[1] - bounding_box[0]).max()
+size = np.ceil((2 ** frame_depth) * p).astype(int) * 32
 
-optimize(root)
+grid = np.zeros(size)
+
+for point in n_points:
+    vox = voxelize(point)
+    grid[vox[0], vox[1], vox[2]] = 1
+
+obstacles = grid != 0
+distance_map = distance_transform_edt(~obstacles)
+
+for x in range(size[0]):
+    for y in range(size[1]):
+        for z in range(size[2]):
+            add_voxel([x, y, z], distance_map[x, y, z] ** 2)
+
+# print(size)
+
+# for i in range(n_points.shape[0]):
+#     vox = voxelize(n_points[i, :])
+#     add_voxel(vox, 1)  
+
+# optimize(root)
 convert(root)
 
 print(len(frames), len(frames) * 5)
 print(len(grids), len(grids) * 32 * 32 * 32, len(frames) * 5 + len(grids) * 32 * 32 * 32)
+print(scn_oct)
 
-with open("data/scenes/test.oct", 'wb') as f:
+with open(scn_oct, 'wb') as f:
     f.write(struct.pack('I', len(frames)))
     f.write(struct.pack('I', len(grids)))
     f.write(struct.pack('I', frame_depth))

@@ -1,5 +1,8 @@
 import transforms3d as tf
+import numpy as np
 import struct
+
+import sys
 
 class Scene:
     def __init__(self):
@@ -44,12 +47,19 @@ class Scene:
 
 def test_scene():
     scn = Scene()
-    scn.add_object("models/sponza/sponza.bin", [0, 0, 0], list(tf.euler.euler2quat(0, 0, 0, 'sxyz')), [.01, .01, .01])
-    scn.add_object("models/bunny/bunny.bin", [-0.05, 0, -2.0], list(tf.euler.euler2quat(0, 0, 0, 'sxyz')), [1, 1, 1])
+    scn.add_object("models/sponza/sponza.bin", [0, 0, 0], list(tf.euler.euler2quat(np.pi / 2, 0, 0, 'sxyz')), [.01, .01, .01])
+    scn.add_object("models/bunny/bunny.bin", [-0.05, 2.0, 0], list(tf.euler.euler2quat(np.pi / 2, 0, 0, 'sxyz')), [1, 1, 1])
     return scn
 
 # {-0.05, 0, -2}, {0, 1, 0}, 0, {1, 1, 1}
 
+scenes = {
+    "test" : test_scene
+}
+
 if __name__ == "__main__":
-    scn = test_scene()
-    scn.write("data/scenes/test.scn")
+    if len(sys.argv) != 3:
+        print("Usage python3 scene.py <scene name : test> <output file name>")
+
+    scn = scenes[sys.argv[1]]()
+    scn.write(sys.argv[2])

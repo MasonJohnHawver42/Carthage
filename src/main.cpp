@@ -52,7 +52,6 @@ game::DebugRenderer*  g_debug_renderer;
 game::OctreeRenderer* g_octree_renderer;
 
 game::Octree* g_octree;
-game::SDF* g_sdf;
 
 // res::Loader*        g_loader;
 
@@ -86,7 +85,6 @@ int main(void)
     game::CameraOperator cam_op = game::CameraOperator(1.0, .01);
     
     game::Octree octree = game::Octree();
-    game::SDF sdf = game::SDF();
    
     // res::Loader loader = res::Loader();
     
@@ -99,35 +97,42 @@ int main(void)
     g_cam_op = &cam_op;
     
     g_octree = &octree;
-    g_sdf = &sdf;
     // g_loader = &loader;
 
     //load scene
-    // res::load_scene("scenes/test.scn", scene, cache);
+    res::load_scene("scenes/test.scn", scene, cache);
     res::load_octree("scenes/test.oct", octree);
-    res::load_sdf("scenes/test.ff", sdf);
+    // res::load_sdf("scenes/test.ff", sdf);
     
     octree.init();
-    sdf.init();
 
     octree_renderer.mesh_octree(octree);
 
-    float start[3] = {-13.05, 2.6, -4.17};
-    float end[3] = {4.82, 6.78, 4.10}   ;
+    float start[3] = {-13.05, 4.17, 2.6};
+    float end[3] = {4.82, -4.10, 6.78};
     
+
     unsigned vox_start[3], vox_end[3];
 
-    sdf.voxelize(start, vox_start);
-    sdf.voxelize(end, vox_end);
+    octree.voxelize(start, vox_start);
+    octree.voxelize(end, vox_end);
     
-    auto solid = [&](int* vox, float d) { return octree.state((unsigned int*)vox) == 1 || sdf.state((unsigned int*)vox) < d; };
+    auto solid = [&](int* vox, float d) { return octree.state((unsigned int*)vox) < d * d; };
 
     gfx::ShapeEntry* ent;
     game::Transform trans_tmp;
 
     // printf("loaded\n");  
 
-    game::PlanningCache plan_cache = game::PlanningCache(sdf.size);
+    unsigned int size[3];
+    for (int i = 0; i < 3; i++) 
+    {
+        
+        float tmp = (octree.aabb_max[i] - octree.aabb_min[i]) / octree.max_extent;
+        size[i] = ceil((1 << octree.frame_depth) * tmp) * 32;
+    }
+
+    game::PlanningCache plan_cache = game::PlanningCache(size);
     unsigned int end_index = game::theta_star(plan_cache, vox_start, vox_end, solid, 6.0f, 4.0f);
 
     auto vox = [&](float* p, unsigned int* v) { octree.voxelize(p, v); };
@@ -138,9 +143,6 @@ int main(void)
         p[1] = (v[1] * scale) + octree.aabb_min[1] + (.5f * scale); 
         p[2] = (v[2] * scale) + octree.aabb_min[2] + (.5f * scale);
     };
-
-    // game::Waypoints waypts;
-    // waypts.build(plan_cache, end_index, convert);
 
     min_snap::SnapOpt snapOpt;
     min_snap::Trajectory minSnapTraj;
@@ -268,12 +270,12 @@ void tick()
 
     float pos[3] = {g_camera->m_pos.x, g_camera->m_pos.y, g_camera->m_pos.z};
     unsigned int vox[3];
-    g_sdf->voxelize(pos, vox);
+    g_octree->voxelize(pos, vox);
 
     ImGui::Separator();
-    ImGui::Text("Voxel crd: <%d, %d, %d>", vox[0], vox[1], vox[2]);
-    ImGui::Text("SDF State: <%.2f>",  g_sdf->state(vox) * g_sdf->state(vox));
+    ImGui::Text("OCT coord: <%d, %d, %d>", vox[0], vox[1], vox[2]);
     ImGui::Text("OCT State: <%d>", g_octree->state(vox));
+    ImGui::SliderFloat("opacity", &g_octree_renderer->opacity, 0.0f, 1.0f);
 
     ImGui::End();
 

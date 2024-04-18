@@ -47,26 +47,26 @@ namespace game
         Grid* m_grids; 
     };
 
-    struct SDF 
-    {
-        SDF();
-        ~SDF();
+    // struct SDF 
+    // {
+    //     SDF();
+    //     ~SDF();
 
-        void init();
-        void voxelize(float* pos, unsigned int* vox);
-        unsigned int index(float x, float y, float z); 
-        unsigned int index(float* pos); 
-        float state(unsigned int index);
-        float state(unsigned int* vox);
+    //     void init();
+    //     void voxelize(float* pos, unsigned int* vox);
+    //     unsigned int index(float x, float y, float z); 
+    //     unsigned int index(float* pos); 
+    //     float state(unsigned int index);
+    //     float state(unsigned int* vox);
 
 
-        unsigned int depth;
-        unsigned int size[3];
-        float * data;
+    //     unsigned int depth;
+    //     unsigned int size[3];
+    //     float * data;
 
-        float aabb_min[3], aabb_max[3];
-        float max_extent;
-    };
+    //     float aabb_min[3], aabb_max[3];
+    //     float max_extent;
+    // };
 
     struct PlanningCache 
     {

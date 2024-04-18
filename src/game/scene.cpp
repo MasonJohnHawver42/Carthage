@@ -394,6 +394,7 @@ game::OctreeRenderer::OctreeRenderer(gfx::Program prog)
     // 1 - mb for faces
     gfx::create_voxel_buffer(1048576, 2048, 2048, &m_vb);
     m_pipeline = {prog, gfx::CullMode::FRONT, gfx::DrawMode::FILL};
+    opacity = 1.0f;
 }
 
 void game::OctreeRenderer::free() 
@@ -408,12 +409,13 @@ void game::OctreeRenderer::mesh_octree(game::Octree& octree)
     unsigned int faces[32 * 32 * 32];
     unsigned char* voxel_grids[27];
 
-    float max_e = 0.0f;
-    for (int i = 0; i < 3; i++) 
-    {
-        if (octree.aabb_max[i] - octree.aabb_min[i] > max_e) { max_e = octree.aabb_max[i] - octree.aabb_min[i]; }
-    }
-    float scale = max_e / (((1 << octree.frame_depth)) * 32.0f);
+    // float max_e = 0.0f;
+    // for (int i = 0; i < 3; i++) 
+    // {
+    //     if (octree.aabb_max[i] - octree.aabb_min[i] > max_e) { max_e = octree.aabb_max[i] - octree.aabb_min[i]; }
+    // }
+    
+    float scale = octree.max_extent / (((1 << octree.frame_depth)) * 32.0f);
 
     octree.walk([&](unsigned int* v, unsigned int d, game::Frame& frame){
         
@@ -471,6 +473,7 @@ void game::OctreeRenderer::render(game::Camera& camera, game::Octree& octree)
 {
     gfx::bind_pipeline(&m_pipeline);
     gfx::set_uniform_mat4("VP", &camera.m_vp[0][0], m_pipeline.m_prog);
+    gfx::set_uniform_float("opacity", opacity, m_pipeline.m_prog);
 
     float max_e = 0.0f;
     for (int i = 0; i < 3; i++) 
@@ -551,7 +554,9 @@ unsigned int game::mesh_chunk(unsigned char** voxel_grids, unsigned int normal, 
         nbr[0] = pos[0]; nbr[1] = pos[1]; nbr[2] = pos[2];
         nbr[axis] += dir;
 
-        if(voxel[i] != 0 && get_voxel(nbr, voxel_grids) == 0)
+        // printf("%d\n", get_voxel(nbr, voxel_grids));
+
+        if(voxel[i] == 0 && get_voxel(nbr, voxel_grids) > 0)
         {
             //mesh it
             nbr[ao_axis[0]] -= ao_axis[1];
@@ -561,7 +566,7 @@ unsigned int game::mesh_chunk(unsigned char** voxel_grids, unsigned int normal, 
             {
                 axis_index = j & 2;
                 axis_dir = j >> 2 == 0 ? 1 : -1;
-                ao_voxel[j] = get_voxel(nbr, voxel_grids) == 0 ? 0 : 1; 
+                ao_voxel[j] = get_voxel(nbr, voxel_grids) > 0 ? 0 : 1; 
                 
                 nbr[ao_axis[axis_index]] += ao_axis[axis_index + 1] * axis_dir;
             }

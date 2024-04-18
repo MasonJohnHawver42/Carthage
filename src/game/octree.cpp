@@ -92,10 +92,10 @@ unsigned char game::Octree::state(unsigned int* vox)
         return (m_grids + current->child)->voxels[c];
     }
 
-    if (current->state == game::FrameState::EMPTY) { return 0; }
-    if (current->state == game::FrameState::FULL) { return 1; }
+    if (current->state == game::FrameState::EMPTY) { return 255; }
+    // if (current->state == game::FrameState::FULL) { return 1; }
 
-    return 1;
+    return 255;
 }
 
 game::Octree::~Octree() 
@@ -105,61 +105,61 @@ game::Octree::~Octree()
 
 // SDF
 
-game::SDF::SDF() {}
-game::SDF::~SDF() { free(data); }
+// game::SDF::SDF() {}
+// game::SDF::~SDF() { free(data); }
 
-void game::SDF::init() 
-{
-    max_extent = 0.0;
-    for (int i = 0 ; i < 3; i++) 
-    {
-        if (aabb_max[i] - aabb_min[i] >= max_extent) { max_extent = aabb_max[i] - aabb_min[i];}
-    }
-}
+// void game::SDF::init() 
+// {
+//     max_extent = 0.0;
+//     for (int i = 0 ; i < 3; i++) 
+//     {
+//         if (aabb_max[i] - aabb_min[i] >= max_extent) { max_extent = aabb_max[i] - aabb_min[i];}
+//     }
+// }
 
-void game::SDF::voxelize(float* pos, unsigned int* vox) 
-{
-    vox[0] = ((pos[0] - aabb_min[0]) / max_extent) * (1 << depth);
-    vox[1] = ((pos[1] - aabb_min[1]) / max_extent) * (1 << depth);
-    vox[2] = ((pos[2] - aabb_min[2]) / max_extent) * (1 << depth);
-}
+// void game::SDF::voxelize(float* pos, unsigned int* vox) 
+// {
+//     vox[0] = ((pos[0] - aabb_min[0]) / max_extent) * (1 << depth);
+//     vox[1] = ((pos[1] - aabb_min[1]) / max_extent) * (1 << depth);
+//     vox[2] = ((pos[2] - aabb_min[2]) / max_extent) * (1 << depth);
+// }
 
-unsigned int game::SDF::index(float xp, float yp, float zp) 
-{
-    unsigned x, y, z;
-    x = ((xp - aabb_min[0]) / max_extent) * (1 << depth);
-    y = ((yp - aabb_min[1]) / max_extent) * (1 << depth);
-    z = ((zp - aabb_min[2]) / max_extent) * (1 << depth);
+// unsigned int game::SDF::index(float xp, float yp, float zp) 
+// {
+//     unsigned x, y, z;
+//     x = ((xp - aabb_min[0]) / max_extent) * (1 << depth);
+//     y = ((yp - aabb_min[1]) / max_extent) * (1 << depth);
+//     z = ((zp - aabb_min[2]) / max_extent) * (1 << depth);
 
-    if (x >= 0 && x < size[0] && y >= 0 && y < size[1] && z >= 0 && z < size[2]) { return z + (size[2] * (y + (size[1] * x))); }
-    return -1;
-}
+//     if (x >= 0 && x < size[0] && y >= 0 && y < size[1] && z >= 0 && z < size[2]) { return z + (size[2] * (y + (size[1] * x))); }
+//     return -1;
+// }
 
-unsigned int game::SDF::index(float* pos) 
-{
-    unsigned x, y, z;
-    x = ((pos[0] - aabb_min[0]) / max_extent) * (1 << depth);
-    y = ((pos[1] - aabb_min[1]) / max_extent) * (1 << depth);
-    z = ((pos[2] - aabb_min[2]) / max_extent) * (1 << depth);
+// unsigned int game::SDF::index(float* pos) 
+// {
+//     unsigned x, y, z;
+//     x = ((pos[0] - aabb_min[0]) / max_extent) * (1 << depth);
+//     y = ((pos[1] - aabb_min[1]) / max_extent) * (1 << depth);
+//     z = ((pos[2] - aabb_min[2]) / max_extent) * (1 << depth);
 
-    if (x >= 0 && x < size[0] && y >= 0 && y < size[1] && z >= 0 && z < size[2]) { return z + (size[2] * (y + (size[1] * x))); }
-    return -1;
-}
+//     if (x >= 0 && x < size[0] && y >= 0 && y < size[1] && z >= 0 && z < size[2]) { return z + (size[2] * (y + (size[1] * x))); }
+//     return -1;
+// }
 
-float game::SDF::state(unsigned int index) 
-{
-    if (index >= (size[0] * size[1] * size[2]) || index < 0) { return 0.0; }
-    return data[index];
-}
+// float game::SDF::state(unsigned int index) 
+// {
+//     if (index >= (size[0] * size[1] * size[2]) || index < 0) { return 0.0; }
+//     return data[index];
+// }
 
-float game::SDF::state(unsigned int* vox) 
-{
-    if (vox[0] >= 0 && vox[0] < size[0] && vox[1] >= 0 && vox[1] < size[1] && vox[2] >= 0 && vox[2] < size[2]) 
-    { 
-        return data[vox[2] + (size[2] * (vox[1] + (size[1] * vox[0])))]; 
-    }
-    return 0.0f;
-}
+// float game::SDF::state(unsigned int* vox) 
+// {
+//     if (vox[0] >= 0 && vox[0] < size[0] && vox[1] >= 0 && vox[1] < size[1] && vox[2] >= 0 && vox[2] < size[2]) 
+//     { 
+//         return data[vox[2] + (size[2] * (vox[1] + (size[1] * vox[0])))]; 
+//     }
+//     return 0.0f;
+// }
 
 game::PlanningCache::PlanningCache(unsigned int* size) 
 {

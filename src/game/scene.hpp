@@ -179,6 +179,8 @@ namespace game
 
         gfx::VoxelBuffer m_vb;
         gfx::Pipeline m_pipeline;
+
+        float opacity;
     };
 
     unsigned int mesh_chunk(unsigned char** voxel, unsigned int dir, unsigned int* face);

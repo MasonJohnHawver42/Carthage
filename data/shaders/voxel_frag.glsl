@@ -6,6 +6,8 @@ flat in vec3 pos;
 
 out vec4 FragColor;
 
+uniform float opacity;
+
 // float rand1(float n) {return fract(sin(n) * 43758.5453123);}
 
 float rand(vec2 x){
@@ -28,5 +30,5 @@ void main()
     float base = rand(pos.xy);
     base = rand(vec2(base, pos.z)) * .05 + .1;
 
-    FragColor = vec4(vec3((1 - base) * (1 - ambient)), 1.0f);
+    FragColor = vec4(vec3((1 - base) * (1 - ambient)), opacity);
 } 
