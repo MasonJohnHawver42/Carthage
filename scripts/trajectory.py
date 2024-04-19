@@ -42,8 +42,6 @@ def load_trajectory(filename):
             matrix_data = np.fromfile(file, dtype=np.float64, count=rows * cols)
             coef_matrix = np.reshape(matrix_data, (rows, cols), order='F')
 
-            print("c", coef_matrix)
-
             # Store the trajectory piece
             coef_mats.append(coef_matrix)
 

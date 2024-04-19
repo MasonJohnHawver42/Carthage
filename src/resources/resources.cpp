@@ -284,8 +284,6 @@ void res::save_traj(const char* fn_traj, min_snap::Trajectory& traj)
         int rows = coef.rows();
         int cols = coef.cols();
 
-        std::cout << coef << std::endl;
-
         file.write(reinterpret_cast<const char*>(&rows), sizeof(int));
         file.write(reinterpret_cast<const char*>(&cols), sizeof(int));
 
