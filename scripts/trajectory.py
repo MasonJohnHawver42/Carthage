@@ -84,7 +84,8 @@ def sample_traj(t, k, coef_mats, ts):
           0 <= k <= 7
     """
     t, idx = locate_piece_idx(t, ts)
-    return coef_mats[idx] @ polyder(t / ts[idx], k, 8)
+    print(np.power(ts[idx], k))
+    return (coef_mats[idx] @ polyder(t / ts[idx], k, 8)) / (np.power(ts[idx], k))
 
 # Load data
 route, ts_rt = load_route("../data/tmp/route.rt")
@@ -92,16 +93,39 @@ coef_mats, ts_tj = load_trajectory("../data/tmp/traj.traj")
 
 # Sample Trajectory
 N = 100
-times = np.linspace(0, sum(ts_tj), N)
-smooth_pos = np.array([sample_traj(t, 0, coef_mats, ts_tj) for t in times])
+timesteps = np.linspace(0, sum(ts_tj), N)
+smooth_pos = np.array([sample_traj(t, 0, coef_mats, ts_tj) for t in timesteps])
+smoot_vels = np.array([sample_traj(t, 1, coef_mats, ts_tj) for t in timesteps])
 
 # plot route (waypoints) / trajectory
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 ax.plot(route[0, :], route[1, :], route[2, :])
 ax.plot(smooth_pos[:, 0], smooth_pos[:, 1], smooth_pos[:, 2])
+ax.plot(smoot_vels[:, 0], smoot_vels[:, 1], smoot_vels[:, 2])
+
+ax.quiver(smooth_pos[::10, 0], smooth_pos[::10, 1], smooth_pos[::10, 2], smoot_vels[::10, 0], smoot_vels[::10, 1], smoot_vels[::10, 2], length=2, normalize=False)
+
 ax.set_xlabel('X')
 ax.set_ylabel('Y')
 ax.set_zlabel('Z')
 ax.set_title('Route Plot')
 plt.show()
+
+print(polyder(2, 0, 8))
+print(polyder(2, 1, 8))
+print(polyder(2, 2, 8))
+print(polyder(2, 3, 8))
+
+t = 2
+tn = 1
+m = 1
+n = 2
+k = 3
+
+for i in range(7 - 3, -1, -1):
+    print(m * n * k * tn)
+    tn *= t
+    m += 1
+    n += 1
+    k += 1

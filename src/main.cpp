@@ -157,7 +157,7 @@ int main(void)
 
     Eigen::Vector3d start_qp = minSnapTraj.getPos(0.0);
     
-    quadrotor.reset(start_qp.x(), start_qp.y(), start_qp.z(), 0, 0, 0);
+    quadrotor.reset(start_qp.x() + .1, start_qp.y(), start_qp.z(), 0, 0, 0);
     controller.reset();
 
     // std::thread loader_thread(res::loader_proc, std::ref(loader));
