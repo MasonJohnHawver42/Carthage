@@ -22,5 +22,5 @@ void main()
     vec4 albedo = texture(ourTexture, TexCord);
     if(albedo.a < 0.1)
         discard;
-    FragColor = albedo; //vec4(vec3(linearize_depth(gl_FragCoord.z) * .2), 1.0f);
+    FragColor = vec4(albedo.xyz, 1.0f); //vec4(vec3(linearize_depth(gl_FragCoord.z) * .2), 1.0f);
 }

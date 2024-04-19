@@ -39,12 +39,227 @@ game::Quadrotor::Quadrotor()
 
 void game::Quadrotor::reset(double x, double y, double z, double roll, double pitch, double yaw) 
 {
+    for (int i = 0; i < 13; i++) { state[i] = 0; }
+
     Eigen::Quaterniond q = Eigen::AngleAxisd(roll, Eigen::Vector3d::UnitX())
                          * Eigen::AngleAxisd(pitch, Eigen::Vector3d::UnitY())
                          * Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ());
     
-    std::cout << "Quaternion" << std::endl << q.coeffs() << std::endl;
+    state[0] = x;
+    state[1] = y;
+    state[2] = z;
+    state[6] = q.w();
+    state[7] = q.x();
+    state[8] = q.y();
+    state[9] = q.z();
 }
+
+Eigen::Vector3d game::Quadrotor::pos() const 
+{
+    return Eigen::Vector3d(state[0], state[1], state[2]);
+}
+
+Eigen::Vector3d game::Quadrotor::vel() const 
+{
+    return Eigen::Vector3d(state[3], state[4], state[5]);
+}
+
+Eigen::Quaterniond game::Quadrotor::quat() const 
+{
+    return Eigen::Quaterniond(state[6], state[7], state[8], state[9]);
+}
+
+Eigen::Matrix3d game::Quadrotor::rot() const
+{
+    double qw = state[6], qx = state[7], qy = state[8], qz = state[9];
+    Eigen::Quaterniond quat(qw, qx, qy, qz);
+
+    Eigen::Matrix3d rotation_matrix = quat.toRotationMatrix();
+    return rotation_matrix;
+}
+
+Eigen::Vector3d game::Quadrotor::omega() const 
+{
+    return Eigen::Vector3d(state[10], state[11], state[12]);
+}
+
+void game::Quadrotor::grad_state(double *dstate, double F, const Eigen::Vector3d& M) 
+{
+    double x = state[0], y = state[1], z = state[2];
+    double xdot = state[3], ydot = state[4], zdot = state[5];
+    double qw = state[6], qx = state[7], qy = state[8], qz = state[9];
+    double p = state[10], q = state[11], r = state[12];
+
+    Eigen::Quaterniond quat(qw, qx, qy, qz);
+
+    Eigen::Matrix3d bRw = quat.toRotationMatrix(); // world to body rotation matrix
+    Eigen::Matrix3d wRb = bRw.transpose(); // orthogonal matrix inverse = transpose
+
+    Eigen::Vector3d accel = (1.0 / mass) * ((wRb * Eigen::Vector3d(0, 0, F)) - Eigen::Vector3d(0, 0, mass * g));
+
+    double K_quat = 2.0;
+    double quaterror = 1.0 - (qw * qw + qx * qx + qy * qy + qz * qz);
+    
+    Eigen::Matrix<double, 4, 4> Q;
+    Q << 0, -p, -q, -r,
+        p,  0,  r, -q,
+        q, -r,  0,  p,
+        r,  q, -p,  0;
+
+    Eigen::Vector4d qdot_vec = (-0.5) * Q * quat.coeffs() + K_quat * quaterror * quat.coeffs();
+    Eigen::Quaterniond qdot(qdot_vec[3], qdot_vec[0], qdot_vec[1], qdot_vec[2]);
+    
+    Eigen::Vector3d omega(p, q, r);
+    Eigen::Vector3d pqrdot = invI * (M - omega.cross(I * omega));
+
+    dstate[0] = xdot;
+    dstate[1] = ydot;
+    dstate[2] = zdot;
+    dstate[3] = accel[0];
+    dstate[4] = accel[1];
+    dstate[5] = accel[2];
+    dstate[6] = qdot.w();
+    dstate[7] = qdot.x();
+    dstate[8] = qdot.y();
+    dstate[9] = qdot.z();
+    dstate[10] = pqrdot[0];
+    dstate[11] = pqrdot[1];
+    dstate[12] = pqrdot[2];
+}
+
+void game::Quadrotor::update(double dt, double F, const Eigen::Vector3d& M) 
+{
+    double Mt = M(2);
+
+    // Compute individual propeller thrusts
+    Eigen::Vector4d prop_thrusts = invA * Eigen::Vector4d(F, M(0), M(1), M(2));
+    
+    for (int i = 0; i < 4; ++i) {
+        prop_thrusts(i) = std::max(std::min(prop_thrusts(i), maxF/4), minF/4);
+    }
+
+    F = prop_thrusts.sum();
+
+    // Compute torques
+    Eigen::Vector3d M_computed = A.block<3, 4>(1, 0) * prop_thrusts;
+    M_computed(2) = Mt;
+
+    double dstate[13];
+    grad_state(dstate, F, M_computed);
+    
+    for (int j = 0; j < 13; ++j) { state[j] += dstate[j] * dt; }
+}
+
+game::Controller::Controller() { reset(); }
+
+void game::Controller::reset() 
+{
+    kv << 10, 10, 10;
+    kp << 30, 30, 30;
+    kR << 5, 5, 5;
+    kW << 0.05, 0.05, 0.1;
+    eI.setZero();
+}
+
+void game::Controller::run_hover(const Quadrotor& quad_state,
+                                Eigen::Vector3d& desired_pos,
+                                Eigen::Vector3d& desired_vel,
+                                Eigen::Vector3d& desired_acc,
+                                double desired_yaw,
+                                double dt, double& U, Eigen::Vector3d& M) 
+{
+    double yaw_des = desired_yaw;
+
+    Eigen::Vector3d ep = desired_pos - quad_state.pos();
+    Eigen::Vector3d ev = desired_vel - quad_state.vel();
+    eI += ep * dt;
+
+    Eigen::Vector3d commd_acc = kp.cwiseProduct(ep) + kv.cwiseProduct(ev) + kp.cwiseProduct(eI) + desired_acc;
+
+    U = quad_state.mass * commd_acc(2) + quad_state.mass * quad_state.g;
+
+    // Rotation error
+    double phi_des = (1.0 / quad_state.g) * (commd_acc(0) * sin(yaw_des) - commd_acc(1) * cos(yaw_des));
+    double theta_des = (1.0 / quad_state.g) * (commd_acc(0) * cos(yaw_des) + commd_acc(1) * sin(yaw_des));
+    Eigen::Vector3d eR(phi_des, theta_des, yaw_des);
+    Eigen::Vector3d state_rot = quad_state.rot().eulerAngles(0, 1, 2);
+    Eigen::Vector3d eR_error = eR - state_rot;
+    
+    // Angular velocity error
+    Eigen::Vector3d omega_des(0, 0, 0);
+    Eigen::Vector3d eW = omega_des - quad_state.omega();
+
+    // Moment
+    M = kR.cwiseProduct(eR_error) + kW.cwiseProduct(eW);
+}
+
+
+bool game::find_traj(game::PlanningCache& plan_cache, min_snap::SnapOpt& snapOpt, min_snap::Trajectory& minSnapTraj, Eigen::MatrixXd& route, Eigen::VectorXd& ts,
+                        float *start, float *end, 
+                        const std::function<bool(int*, float)>& solid, 
+                        const std::function<void(float*, unsigned int*)>& wtv, 
+                        const std::function<void(unsigned int*, float*)>& vtw,
+                        unsigned int wypt_steps, unsigned int time_steps, float lr)
+{
+    
+    unsigned vox_start[3], vox_end[3];
+    wtv(start, vox_start); wtv(end, vox_end);
+
+    unsigned int end_index = game::theta_star(plan_cache, vox_start, vox_end, solid, 6.0f, 4.0f);
+
+    if (end_index == -1) { return false; }
+
+    Eigen::MatrixXd next_route;
+    Eigen::VectorXd min_ts, dts;
+    Eigen::Matrix<double, 3, 4> iSS, fSS;
+
+    game::build_route(plan_cache, end_index, vtw, route);
+    game::allocate_time(route, 5, 3, ts);
+    min_ts = ts;
+
+    iSS.setZero();
+    fSS.setZero();
+
+    iSS.col(0) << route.leftCols<1>();
+    fSS.col(0) << route.rightCols<1>();
+
+    float p = 1.0f;
+    float q = 2.0f;
+
+    for (int i = 0; i < wypt_steps; i++) 
+    {
+        for (int i = 0; i < time_steps; i++) 
+        {
+            snapOpt.reset(iSS, fSS, route.cols() - 1);
+            snapOpt.generate(route.block(0, 1, 3, route.cols() - 2), ts);
+            snapOpt.getTraj(minSnapTraj);
+
+            dts = snapOpt.getGradT();
+
+            for (int j = 0; j < dts.size(); j++) 
+            {
+                if (ts(j) < min_ts(j)) { printf("WTF\n"); }
+                dts(j) += ts(j) >= min_ts(j) ? 0.0 : p * q * pow(ts(j) - min_ts(j), q - 1.0f);
+            }
+
+            ts -= lr * dts;
+        }
+
+        bool res = game::rebuild_route(minSnapTraj, route, ts, wtv, solid, 2.0f, next_route);
+
+        if (!res) { return true; }
+        if (i + 1 < wypt_steps) 
+        {
+            route = next_route;
+            game::allocate_time(route, 5, 3, ts);
+            min_ts = ts;
+        }
+    }
+
+    return false;
+}
+
+
 
 void game::build_route(PlanningCache& plan_cache, unsigned int end_index, std::function<void(unsigned int*, float*)> convert, Eigen::MatrixXd& route) 
 {

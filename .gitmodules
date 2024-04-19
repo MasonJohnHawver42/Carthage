@@ -9,7 +9,9 @@
 	url = https://github.com/ocornut/imgui.git
 [submodule "ext/large_scale_traj_optimizer"]
 	path = ext/large_scale_traj_optimizer
-	url = https://github.com/ZJU-FAST-Lab/large_scale_traj_optimizer.git
+	url = https://github.com/MasonJohnHawver42/large_scale_traj_optimizer.git
 [submodule "ext/eigen"]
 	path = ext/eigen
 	url = https://gitlab.com/libeigen/eigen.git
+[submodule "ext/large_scale_traj_optimizer/"]
+	url = git@github.com:MasonJohnHawver42/large_scale_traj_optimizer.git

@@ -226,10 +226,12 @@ namespace gfx
         }
 
         load_texture2d(8, 8, 1, data, tex);
+        // printf("Default Texture %d\n", tex->id);
     }
 
     void activate_texture2d(Texture2D* tex) 
     {
+        // printf("%d\n", tex->id);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, tex->id);
     }

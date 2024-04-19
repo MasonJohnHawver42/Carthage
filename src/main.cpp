@@ -52,6 +52,17 @@ game::DebugRenderer*  g_debug_renderer;
 game::OctreeRenderer* g_octree_renderer;
 
 game::Octree* g_octree;
+game::Object* g_drone;
+
+
+min_snap::Trajectory minSnapTraj;
+Eigen::MatrixXd route;
+Eigen::VectorXd ts;
+
+game::Quadrotor quadrotor;
+game::Controller controller;
+
+unsigned int control_freq = 1000;
 
 // res::Loader*        g_loader;
 
@@ -100,111 +111,54 @@ int main(void)
     // g_loader = &loader;
 
     //load scene
-    res::load_scene("scenes/test.scn", scene, cache);
+    // res::load_scene("scenes/test.scn", scene, cache);
     res::load_octree("scenes/test.oct", octree);
-    // res::load_sdf("scenes/test.ff", sdf);
     
     octree.init();
-
     octree_renderer.mesh_octree(octree);
 
+    //add drone object
+    unsigned int drone_model = res::load_model("models/drone/drone.bin", cache);
+    unsigned int drone_object = scene.m_objects.allocate();
+    scene.m_objects[drone_object]->model_id = drone_model;
+    g_drone = scene.m_objects[drone_object];
+
+    unsigned int size[3];
+    for (int i = 0; i < 3; i++) { float tmp = (octree.aabb_max[i] - octree.aabb_min[i]) / octree.max_extent; size[i] = ceil((1 << octree.frame_depth) * tmp) * (1 << octree.grid_depth); }
+
+    game::PlanningCache plan_cache = game::PlanningCache(size);
+    min_snap::SnapOpt snapOpt;
+    
     float start[3] = {-13.05, 4.17, 2.6};
     float end[3] = {4.82, -4.10, 6.78};
     
-
-    unsigned vox_start[3], vox_end[3];
-
-    octree.voxelize(start, vox_start);
-    octree.voxelize(end, vox_end);
-    
     auto solid = [&](int* vox, float d) { return octree.state((unsigned int*)vox) < d * d; };
-
-    gfx::ShapeEntry* ent;
-    game::Transform trans_tmp;
-
-    // printf("loaded\n");  
-
-    unsigned int size[3];
-    for (int i = 0; i < 3; i++) 
-    {
-        
-        float tmp = (octree.aabb_max[i] - octree.aabb_min[i]) / octree.max_extent;
-        size[i] = ceil((1 << octree.frame_depth) * tmp) * 32;
-    }
-
-    game::PlanningCache plan_cache = game::PlanningCache(size);
-    unsigned int end_index = game::theta_star(plan_cache, vox_start, vox_end, solid, 6.0f, 4.0f);
-
-    auto vox = [&](float* p, unsigned int* v) { octree.voxelize(p, v); };
-
-    auto convert = [&](unsigned int* v, float* p) {
+    auto wtv = [&](float* p, unsigned int* v) { octree.voxelize(p, v); };
+    auto vtw = [&](unsigned int* v, float* p) {
         float scale = (octree.max_extent / (1 << octree.depth));
         p[0] = (v[0] * scale) + octree.aabb_min[0] + (.5f * scale); 
         p[1] = (v[1] * scale) + octree.aabb_min[1] + (.5f * scale); 
         p[2] = (v[2] * scale) + octree.aabb_min[2] + (.5f * scale);
     };
 
-    min_snap::SnapOpt snapOpt;
-    min_snap::Trajectory minSnapTraj;
+    bool res = game::find_traj(plan_cache, snapOpt, minSnapTraj, route, ts, start, end, solid, wtv, vtw, 5, 10, .005f);
 
-    Eigen::MatrixXd route, next_route;
-    Eigen::VectorXd ts, min_ts, dts;
-    Eigen::Matrix<double, 3, 4> iSS, fSS;
+    if (res) 
+    {       
+        game::draw_route(route, &debug_renderer);
+        game::draw_traj(minSnapTraj, ts, 100, &debug_renderer);
 
-    game::build_route(plan_cache, end_index, convert, route);
-    game::allocate_time(route, 5, 3, ts);
-    min_ts = ts;
+        std::cout << route << std::endl;
+        std::cout << ts << std::endl;
 
-    iSS.setZero();
-    fSS.setZero();
-
-    iSS.col(0) << route.leftCols<1>();
-    fSS.col(0) << route.rightCols<1>();
-
-    std::cout << route << std::endl;
-
-    float p = 1.0f;
-    float q = 2.0f;
-    float lr = .005f;
-
-    for (int i = 0; i < 5; i++) 
-    {
-
-        for (int i = 0; i < 10; i++) 
-        {
-            snapOpt.reset(iSS, fSS, route.cols() - 1);
-            snapOpt.generate(route.block(0, 1, 3, route.cols() - 2), ts);
-            snapOpt.getTraj(minSnapTraj);
-
-            dts = snapOpt.getGradT();
-
-            for (int j = 0; j < dts.size(); j++) 
-            {
-                if (ts(j) < min_ts(j)) { printf("here\n"); }
-                dts(j) += ts(j) >= min_ts(j) ? 0.0 : p * q * pow(ts(j) - min_ts(j), q - 1.0f);
-            }
-
-            ts -= lr * dts;
-        }
-
-        std::cout << ts - min_ts << std::endl;
-        printf("done %d\n", i);
-        bool res = game::rebuild_route(minSnapTraj, route, ts, vox, solid, 2.0f, next_route);
-
-        if (!res) { break; }
-        if (i + 1 < 5) 
-        {
-            route = next_route;
-            game::allocate_time(route, 5, 3, ts);
-            min_ts = ts;
-        }
+        res::save_route("tmp/route.rt", route, ts);
+        res::save_traj("tmp/traj.traj", minSnapTraj);
     }
 
-    game::draw_route(route, &debug_renderer);
-    game::draw_traj(minSnapTraj, ts, 100, &debug_renderer);
-
-    game::Quadrotor quadrotor;
-    quadrotor.reset(0, 0, 0, 0, 0, 0);
+    Eigen::Vector3d start_qp = minSnapTraj.getPos(0.0);
+    
+    quadrotor.reset(start_qp.x(), start_qp.y(), start_qp.z(), 0, 0, 0);
+    controller.reset();
 
     // std::thread loader_thread(res::loader_proc, std::ref(loader));
 
@@ -245,6 +199,13 @@ unsigned int mode = 0;
 
 void tick() 
 {
+    // dt
+
+    static double lastTime = glfwGetTime();
+    double currentTime = glfwGetTime();
+    double deltaTime = currentTime - lastTime;
+    lastTime = currentTime;
+
     // res::loader_main(*g_loader, *g_cache);
 
     glfwPollEvents();
@@ -255,7 +216,15 @@ void tick()
 
     // if (show_demo_window) { ImGui::ShowDemoWindow(&show_demo_window); }
 
-    ImGui::Begin("Camera");
+    ImGui::Begin("Info");
+
+    static float values[90] = { 0 };
+    static int values_offset = 0;
+    values[values_offset] = deltaTime;
+    values_offset = (values_offset + 1) % IM_ARRAYSIZE(values);
+    ImGui::PlotLines("##Delta Time", values, IM_ARRAYSIZE(values), values_offset, "Delta Time", 0.0f, 0.1f, ImVec2(0, 80), sizeof(float));
+
+    ImGui::Separator();
 
     // Display Vec3 values
     ImGui::Text("Camera Pos: <%.2f, %.2f, %.2f>", g_camera->m_pos.x, g_camera->m_pos.y, g_camera->m_pos.z);
@@ -264,9 +233,6 @@ void tick()
     ImGui::SliderFloat("Speed", &g_cam_op->speed, 0.0f, 20.0f);
     ImGui::SliderFloat("Mouse Speed", &g_cam_op->angular_speed, 0.0f, 0.2f);
     g_camera->m_dirty_p = true;
-
-    // unsigned int index = g_sdf->index(g_camera->m_pos.x, g_camera->m_pos.y, g_camera->m_pos.z);
-    // float distance = g_sdf->state(index);
 
     float pos[3] = {g_camera->m_pos.x, g_camera->m_pos.y, g_camera->m_pos.z};
     unsigned int vox[3];
@@ -277,10 +243,13 @@ void tick()
     ImGui::Text("OCT State: <%d>", g_octree->state(vox));
     ImGui::SliderFloat("opacity", &g_octree_renderer->opacity, 0.0f, 1.0f);
 
+    Eigen::Vector3d quad_xyz = quadrotor.pos();
+
+    ImGui::Separator();
+
+    ImGui::Text("Quad pos: <%.2f, %.2f, %.2f>", quad_xyz.x(), quad_xyz.y(), quad_xyz.z());
+
     ImGui::End();
-
-    // printf("here");
-
 
     bool setpos, show, hide;
     int nx, ny;
@@ -300,6 +269,36 @@ void tick()
     if (show) { glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); io->ConfigFlags &= ~ImGuiConfigFlags_NoMouse; }
     if (hide) { glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); io->ConfigFlags |= ImGuiConfigFlags_NoMouse; }
     if (setpos) { glfwSetCursorPos(window, nx, ny); }
+
+    //update drone
+
+    double F, dt;
+    Eigen::Vector3d M, dp, dv, da;
+
+    unsigned int iter = ceil((double)control_freq * deltaTime);
+
+    // printf("%f %d\n", deltaTime, iter);
+
+    for (int i = 0; i < iter; i++) 
+    {
+        dp = minSnapTraj.getPos(0.0);
+        dv << 0, 0, 0;
+        da << 0, 0, 0;
+
+        dt = deltaTime / ((double)iter);
+
+        controller.run_hover(quadrotor, dp, dv, da, 0, dt, F, M);
+        quadrotor.update(dt, F, M);
+    }
+
+    Eigen::Vector3d quad_pos = quadrotor.pos();
+    Eigen::Quaterniond quad_quat = quadrotor.quat();
+
+    g_drone->m_trans.pos = glm::vec3(quad_pos.x(), quad_pos.y(), quad_pos.z());
+    g_drone->m_trans.orientation = glm::quat(quad_quat.w(), quad_quat.x(), quad_quat.y(), quad_quat.z());
+    g_drone->trans_dirty = true;
+
+    //
 
     g_camera->update_mats();
     g_scene->update_mats();

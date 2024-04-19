@@ -6,5 +6,5 @@ for obj_file in $obj_files; do
     obj_file="${obj_file#./data/}"
     bin_file="${obj_file%.obj}.bin"
     echo $bin_file $obj_file
-    ./build/aaa_obj "$obj_file" "$bin_file"
+    ./build/obj "$obj_file" "$bin_file"
 done

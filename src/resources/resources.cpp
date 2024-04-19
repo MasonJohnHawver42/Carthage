@@ -256,3 +256,73 @@ void res::load_scene(const char* fn_bin, game::Scene& scene, game::Cache& cache)
         obj->trans_dirty = true;
     }
 }
+
+
+
+void res::save_traj(const char* fn_traj, min_snap::Trajectory& traj) 
+{
+    std::string fn = std::string(MY_DATA_DIR) + fn_traj;
+
+    std::ofstream file(fn, std::ios::binary);
+    if (!file.is_open()) {
+        std::cerr << "Error: Unable to open file for writing." << std::endl;
+        return;
+    }
+
+    int piece_n = traj.getPieceNum();
+    file.write(reinterpret_cast<const char*>(&piece_n), sizeof(int));
+
+    Eigen::Matrix<double, min_snap::TrajDim, min_snap::TrajOrder + 1> coef;
+
+    for (int i = 0; i < piece_n; i++) 
+    {
+        min_snap::Piece& piece = traj[i];
+        coef = piece.normalizedCoeffMat();
+
+        double duration = piece.getDuration();
+
+        int rows = coef.rows();
+        int cols = coef.cols();
+
+        std::cout << coef << std::endl;
+
+        file.write(reinterpret_cast<const char*>(&rows), sizeof(int));
+        file.write(reinterpret_cast<const char*>(&cols), sizeof(int));
+
+        file.write(reinterpret_cast<const char*>(&duration), sizeof(double));
+
+        file.write(reinterpret_cast<const char*>(coef.data()), rows * cols * sizeof(double));
+
+    }
+
+    file.close();
+
+}
+
+void res::save_route(const char* fn_rt, Eigen::MatrixXd& route, Eigen::VectorXd& ts) 
+{
+    std::string fn = std::string(MY_DATA_DIR) + fn_rt;
+
+    std::ofstream file(fn, std::ios::binary);
+    if (!file.is_open()) {
+        std::cerr << "Error: Unable to open file for writing." << std::endl;
+        return;
+    }
+
+    int rows = route.rows();
+    int cols = route.cols();
+
+    file.write(reinterpret_cast<const char*>(&rows), sizeof(int));
+    file.write(reinterpret_cast<const char*>(&cols), sizeof(int));
+
+    file.write(reinterpret_cast<const char*>(route.data()), rows * cols * sizeof(double));
+
+    int size = ts.size();
+    
+    file.write(reinterpret_cast<const char*>(&size), sizeof(int));
+
+    file.write(reinterpret_cast<const char*>(ts.data()), size * sizeof(double));
+
+    file.close();
+
+}
