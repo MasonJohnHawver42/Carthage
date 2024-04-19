@@ -54,6 +54,27 @@ def get_nominal_path(velocity):
         if dist>=(0.1*k*velocity):
             sampled_path.append({'x': path[point_ind+1]['x'], 'y':path[point_ind+1]['y'], 'height':path[point_ind+1]['height']})
             k += 1
+        
+
+    # Convert path to numpy arrays for plotting
+    path_array = np.array([(point['x'], point['y'], point['height']) for point in sampled_path])
+    
+    # Plotting
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    
+    # Extract x, y, z coordinates
+    x = path_array[:, 0]
+    y = path_array[:, 1]
+    z = path_array[:, 2]
+    
+    ax.plot(x, y, z, marker='o')
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Height')
+    ax.set_title('Nominal Path')
+    
+    plt.show()
 
     # Print out the points
     print("Point  X       Y       Height")
@@ -121,12 +142,12 @@ def get_environment():
 
 def metropolis_alg(nom_path,point_cloud_tree):
     # Constants
-    num_paths = 1
+    num_paths = 10
     # variances = [2,5,10]
-    variances = [0.5,1,2]
+    variances = [0.2,0.5,1]
     variance_count = 0
     increase_int = 16000
-    forward_int = 11
+    forward_int = 3
     max_int = 10000
 
     metro_paths = []
@@ -135,7 +156,6 @@ def metropolis_alg(nom_path,point_cloud_tree):
 
     # Loop over number of paths
     for path_num in range(num_paths):
-        print('path number')
         print(path_num)
         start_position = nom_path[0]
         if path_num%increase_int == 0:
@@ -145,15 +165,13 @@ def metropolis_alg(nom_path,point_cloud_tree):
         path = []
         path.append(start_position)
         current_position = start_position
+
         for max_num in range(max_int):
             # Loop over a maxiumum amount of integers
             for forward_num in range(forward_int-1):
-                test_point = sample_from_normal_distribution(current_position,nom_path[forward_num],nom_path[forward_num+1],variance,forward_num)
-                if (forward_num+1)%5 == 0 and forward_num != 0:
-                    path.append(test_point)
-                    current_position = test_point
-                else:
-                    current_position = test_point
+                test_point = sample_from_normal_distribution(current_position,nom_path[forward_num*5],nom_path[forward_num*5+5],variance)
+                path.append(test_point)
+                current_position = test_point
 
             b_spline_points = []
             for p in path:
@@ -194,7 +212,7 @@ def metropolis_alg(nom_path,point_cloud_tree):
             closest_start_index = np.argmin(start_distances)
             closest_end_index = np.argmin(end_distances)
             path_to_test[closest_start_index] = start_position
-            path_to_test = path_to_test[closest_start_index:(closest_end_index+40)]
+            path_to_test = path_to_test[closest_start_index:(closest_end_index+20)]
 
             # Make the test path to be sampled with 0.1 seconds
             sampled_test_path = []
@@ -214,9 +232,29 @@ def metropolis_alg(nom_path,point_cloud_tree):
                     else:
                         k+=1
             
+
+            # # Convert path to numpy arrays for plotting
+            # path_to_test_array = np.array([(point['x'], point['y'], point['height']) for point in sampled_test_path])
+            
+            # # Plotting
+            # fig = plt.figure()
+            # ax = fig.add_subplot(111, projection='3d')
+            
+            # # Extract x, y, z coordinates
+            # x = path_to_test_array[:, 0]
+            # y = path_to_test_array[:, 1]
+            # z = path_to_test_array[:, 2]
+            
+            # ax.plot(x, y, z, marker='o')
+            # ax.set_xlabel('X')
+            # ax.set_ylabel('Y')
+            # ax.set_zlabel('Height')
+            # ax.set_title('Nominal Path')
+            
+            # plt.show()
             
             # Calculate cost of path
-            cost_percentage = calc_cost(point_cloud_tree,nom_path,sampled_test_path)
+            cost_percentage = calc_cost(point_cloud_tree,nominal_trajectory,sampled_test_path)
             print('cost percentage')
             print(cost_percentage)
             random_percent = random.random()
@@ -264,7 +302,7 @@ def quadratic_bspline(points):
 
     return bspline_x, bspline_y, bspline_z
 
-def sample_from_normal_distribution(current_position,nom_start,nom_next,variance,index,velocity=5,time=0.1):
+def sample_from_normal_distribution(current_position,nom_start,nom_next,variance):
 
     # Extract current position values
     x_nom, y_nom, height_nom = nom_next['x'], nom_next['y'], nom_next['height']
@@ -276,39 +314,27 @@ def sample_from_normal_distribution(current_position,nom_start,nom_next,variance
     y_diff = y_nom-y_nom_before
     height_diff = height_nom-height_nom_before
 
+    # Distance traveled from last point
     radius_from_nom_start = np.sqrt(x_diff**2 + y_diff**2 + height_diff**2)
     theta_from_nom_start = np.arccos(height_diff / radius_from_nom_start)
     phi_from_nom_start = np.arctan2(y_diff, x_diff)
 
-    if (index+1)%5 == 0 and index != 0:
-        # # Create a normal distribution of theta and phi
-        theta_variance = np.arcsin((variance/np.sqrt(2))/radius_from_nom_start)
-        phi_variance = np.arcsin((variance/np.sqrt(2))/radius_from_nom_start)
+    # Create a normal distribution of theta and phi
+    theta_variance = np.arcsin((variance/np.sqrt(2))/radius_from_nom_start)
+    phi_variance = np.arcsin((variance/np.sqrt(2))/radius_from_nom_start)
 
-        # Calculate maximum allowable offsets
-        # theta_variance = np.arctan(1/(velocity*time))
-        # phi_variance = theta_variance
+    # Generate random offsets for theta and phi
+    theta_offset = np.random.normal(loc=0, scale=theta_variance)
+    phi_offset = np.random.normal(loc=0, scale=phi_variance)
 
-        # Generate random offsets for theta and phi
-        theta_offset = np.random.normal(loc=0, scale=theta_variance)
-        phi_offset = np.random.normal(loc=0, scale=phi_variance)
+    # New phi and theta coordinates
+    new_theta_from_nom_start = theta_from_nom_start + theta_offset
+    new_phi_from_nom_start = phi_from_nom_start + phi_offset
 
-        # New phi and theta coordinates
-        new_theta_from_nom_start = theta_from_nom_start + theta_offset
-        new_phi_from_nom_start = phi_from_nom_start + phi_offset
-
-        # Write back to xyz coordinates
-        new_x_from_nom_start = radius_from_nom_start * np.sin(new_theta_from_nom_start) * np.cos(new_phi_from_nom_start)
-        new_y_from_nom_start = radius_from_nom_start * np.sin(new_theta_from_nom_start) * np.sin(new_phi_from_nom_start)
-        new_z_from_nom_start = radius_from_nom_start * np.cos(new_theta_from_nom_start)
-        
-
-    else:
-        # Write back to xyz coordinates
-        new_x_from_nom_start = radius_from_nom_start * np.sin(theta_from_nom_start) * np.cos(phi_from_nom_start)
-        new_y_from_nom_start = radius_from_nom_start * np.sin(theta_from_nom_start) * np.sin(phi_from_nom_start)
-        new_z_from_nom_start = radius_from_nom_start * np.cos(theta_from_nom_start)
-
+    # Write back to xyz coordinates
+    new_x_from_nom_start = radius_from_nom_start * np.sin(new_theta_from_nom_start) * np.cos(new_phi_from_nom_start)
+    new_y_from_nom_start = radius_from_nom_start * np.sin(new_theta_from_nom_start) * np.sin(new_phi_from_nom_start)
+    new_z_from_nom_start = radius_from_nom_start * np.cos(new_theta_from_nom_start)
 
     # Create and return the new point
     test_point = {
@@ -335,8 +361,9 @@ def calc_cost(point_cloud_tree,nominal_trajectory,test_trajectory):
         if indices:
             d_c = np.sqrt(np.min(distances_squared))
         else:
-            d_c = 3*r_q
+            d_c = 2*r_q
 
+        # cost += np.transpose(test_trajectory-nominal_trajectory)*lambda_d*test_trajectory-nominal_trajectory
 
         if d_c > 2*r_q:
             C_collision = 0
@@ -346,30 +373,6 @@ def calc_cost(point_cloud_tree,nominal_trajectory,test_trajectory):
         x_diff = test_trajectory[j]['x'] - nominal_trajectory[j]['x']
         y_diff = test_trajectory[j]['y'] - nominal_trajectory[j]['y']
         z_diff = test_trajectory[j]['height'] - nominal_trajectory[j]['height']
-        if C_collision != 0:
-            print('Collision')
-            print(C_collision)
-            print('Collision index')
-            print(j)
-            # print('test x')
-            # print(test_trajectory[j]['x'])
-            # print('nominal x')
-            # print(nominal_trajectory[j]['x'])
-            # print('test y')
-            # print(test_trajectory[j]['y'])
-            # print('nominal y')
-            # print(nominal_trajectory[j]['y'])
-            # print('test z')
-            # print(test_trajectory[j]['height'])
-            # print('nominal z')
-            # print(nominal_trajectory[j]['height'])
-            # print('x_diff')
-            # print(x_diff)
-            # print('y_diff')
-            # print(y_diff)
-            # print('z_diff')
-            # print(z_diff)
-
         tau = np.array([x_diff,y_diff,z_diff])
         tau = tau.reshape(3,1)
         cost += (lambda_c*C_collision + tau.T@Q@tau)*0.1
@@ -467,10 +470,9 @@ def visualize_paths(paths, nom_path=None):
 if __name__ == '__main__':
     velocity = 5 # m/s
     nominal_trajectory = get_nominal_path(velocity)
-    # point_cloud_tree = get_environment()
     for path_step in range(len(nominal_trajectory)-2):
         point_cloud_tree = get_environment()
-        metro_paths,metro_samples,costs = metropolis_alg(nominal_trajectory[(path_step):(path_step+11)],point_cloud_tree)
+        metro_paths,metro_samples,costs = metropolis_alg(nominal_trajectory[path_step:(path_step+11)],point_cloud_tree)
         visualize_path(metro_paths[0],metro_samples[0],nominal_trajectory)
-        # visualize_paths(metro_paths,nominal_trajectory)
+        visualize_paths(metro_paths,nominal_trajectory)
         # Chose top 3 paths
