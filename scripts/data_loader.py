@@ -32,7 +32,7 @@ class Input():
             odom[matrix_entry_fmt.format(i)] = rot[:, i]
 
 
-class RolloutDataset: # parse the rollout_director and return dataset
+class RolloutDataset(): # parse the rollout_director and return dataset
     def __init__(self, rollout_dir):
         self.root_dir = rollout_dir
         self.traj_filenames = []
@@ -157,22 +157,22 @@ class RolloutDataset: # parse the rollout_director and return dataset
             "odometry": odometry,
             "pointcloud": pointcloud_data,
             "kdtree": pc_tree,
-            "depths": np.array(depth_data),
+            "depths": torch.Tensor(np.array(depth_data)).to(torch.float32),
             "trajectories": trajectory_data,
-            "imu":self.imu_objs
+            "imu":torch.Tensor(self.imu_objs).to(torch.float32)
         }
         
         
-
-rollout_dir = os.path.join("..", "rollout_21-02-06_22-10-01")
-dt = RolloutDataset(rollout_dir)
-dataset = dt.__getdataset__(1)
-print(dataset["odometry"].shape)
-ptc = dataset["pointcloud"]
-print(np.asarray(ptc.points).shape)
-print(dataset["depths"].shape)
-print(dataset["trajectories"].shape)
-print(dataset["imu"].shape)
+if __name__ == "__main__":
+    rollout_dir = os.path.join("..", "rollout_21-02-06_22-10-01")
+    dt = RolloutDataset(rollout_dir)
+    dataset = dt.__getdataset__(1)
+    print(dataset["odometry"].shape)
+    ptc = dataset["pointcloud"]
+    print(np.asarray(ptc.points).shape)
+    print(dataset["depths"].shape)
+    print(dataset["trajectories"].shape)
+    print(dataset["imu"].shape)
 
 
 

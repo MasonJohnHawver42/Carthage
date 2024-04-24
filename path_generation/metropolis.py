@@ -121,7 +121,7 @@ def get_environment():
 
 def metropolis_alg(nom_path,point_cloud_tree):
     # Constants
-    num_paths = 1
+    num_paths = 3
     # variances = [2,5,10]
     variances = [0.5,1,2]
     variance_count = 0
@@ -324,7 +324,7 @@ def calc_cost(point_cloud_tree,nominal_trajectory,test_trajectory):
     r_q = 0.2
     lambda_c = 100
     Q = np.eye(3)
-    radius_to_check = 100
+    radius_to_check = 0.4
     d_c = np.inf
     cost = 0
     for j in range(len(test_trajectory)):
@@ -337,11 +337,10 @@ def calc_cost(point_cloud_tree,nominal_trajectory,test_trajectory):
         else:
             d_c = 3*r_q
 
-
         if d_c > 2*r_q:
             C_collision = 0
         else:
-            C_collision = (d_c**2)/(r_q**2)
+            C_collision = -(d_c**2)/(r_q**2)+4
 
         x_diff = test_trajectory[j]['x'] - nominal_trajectory[j]['x']
         y_diff = test_trajectory[j]['y'] - nominal_trajectory[j]['y']
@@ -351,24 +350,6 @@ def calc_cost(point_cloud_tree,nominal_trajectory,test_trajectory):
             print(C_collision)
             print('Collision index')
             print(j)
-            # print('test x')
-            # print(test_trajectory[j]['x'])
-            # print('nominal x')
-            # print(nominal_trajectory[j]['x'])
-            # print('test y')
-            # print(test_trajectory[j]['y'])
-            # print('nominal y')
-            # print(nominal_trajectory[j]['y'])
-            # print('test z')
-            # print(test_trajectory[j]['height'])
-            # print('nominal z')
-            # print(nominal_trajectory[j]['height'])
-            # print('x_diff')
-            # print(x_diff)
-            # print('y_diff')
-            # print(y_diff)
-            # print('z_diff')
-            # print(z_diff)
 
         tau = np.array([x_diff,y_diff,z_diff])
         tau = tau.reshape(3,1)
@@ -472,5 +453,5 @@ if __name__ == '__main__':
         point_cloud_tree = get_environment()
         metro_paths,metro_samples,costs = metropolis_alg(nominal_trajectory[(path_step):(path_step+11)],point_cloud_tree)
         visualize_path(metro_paths[0],metro_samples[0],nominal_trajectory)
-        # visualize_paths(metro_paths,nominal_trajectory)
+        visualize_paths(metro_paths,nominal_trajectory)
         # Chose top 3 paths

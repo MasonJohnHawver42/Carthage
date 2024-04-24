@@ -1,6 +1,8 @@
 import sys
 import torch
 import numpy as np
+from forward_pass import Plan_Network
+from data_loader import RolloutDataset
 #sys.path.insert(0, "../path_generation")
 #import metropolis
 
@@ -101,3 +103,19 @@ def Trajectory_Loss(expert_traj, pred_traj):
                 traj_loss += (epsilon/(modes - 1)) * sqr_norm_diff
     return traj_loss
 
+def train_loop():
+    rollout_folder = "rollout_21-02-06_15-12-42"
+    dt = RolloutDataset(rollout_folder)
+    dataset = dt.__getdataset__(0)
+    input_image = dataset["depths"][0].unsqueeze(0)
+    input_imu = dataset["imu"][0].unsqueeze(0)
+    input = [input_image, input_imu]
+    print("input is loaded")
+    print(input[0].shape)
+
+    net = Plan_Network()
+    output = net.forward(input)
+    print(output.shape)
+
+
+train_loop()
