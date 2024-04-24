@@ -14,7 +14,7 @@ def Collission_Loss(point_cloud_trees, imu, y_pred, different_pct=False):
     # else, point_cloud_tree is a list of trees, of len batch_size 
 
     batch_size = imu.size(dim=0)
-    modes = y_pred.size(dim=3)
+    modes = y_pred.size(dim=2)
     pct = None
     if not different_pct:
         pct = point_cloud_trees
@@ -29,6 +29,10 @@ def Collission_Loss(point_cloud_trees, imu, y_pred, different_pct=False):
             pct = point_cloud_trees[a]
         trajectory_costs.append(traj_calc_cost(pct, init_imu, trajectory))
     tc_cost = torch.stack(trajectory_costs) # shape: [batch_size, modes]
+    print("tc_cost:")
+    print(tc_cost)
+    print("pred_cost:")
+    print(pred_costs)
     tc_loss = 2*mse(pred_costs, tc_cost)
     return tc_loss
 
@@ -44,11 +48,11 @@ def traj_calc_cost(pct, init_imu, trajectory):
     cost = []
     for a in range(modes):
         mode_cost = 0
-        traj = wf_traj[a]
-        points = traj[1:, a].reshape(-1, 3) # The kth trajectory point is retrieved by points[k] which will be a 1d tensor [x, y, z]
+        traj = wf_traj[1:,a]
+        points = traj.reshape(-1, 3) # The kth trajectory point is retrieved by points[k] which will be a 1d tensor [x, y, z]
         for b in range(points.size(dim=0)):
-            test_point = points[b].numpy()
-            [_, indices, sqr_dist] = pct.seacrh_radius_vector_3d(test_point, threshold)
+            test_point = points[b].detach().numpy() # Fix later
+            [_, indices, sqr_dist] = pct.search_radius_vector_3d(test_point, threshold)
             if indices:
                 d_c = np.sqrt(np.min(sqr_dist))
             else:
@@ -72,8 +76,8 @@ def Transform_to_world_frame(trajectory, init_imu):
     world_traj = torch.zeros(trajectory.size())
     world_traj[0] = trajectory[0] # copying over the predicted cost
     traj = trajectory[1:].reshape(modes, 3, -1)
-    w_traj = torch.tensordot(R, traj, dims=3) + pos
-    w_traj = w_traj.reshape(1, -1, modes)
+    w_traj = torch.matmul(R, traj) + pos
+    w_traj = w_traj.reshape(-1, modes)
     world_traj[1:] = w_traj
     return world_traj
 
@@ -103,19 +107,28 @@ def Trajectory_Loss(expert_traj, pred_traj):
                 traj_loss += (epsilon/(modes - 1)) * sqr_norm_diff
     return traj_loss
 
+
 def train_loop():
     rollout_folder = "rollout_21-02-06_15-12-42"
     dt = RolloutDataset(rollout_folder)
     dataset = dt.__getdataset__(0)
     input_image = dataset["depths"][0].unsqueeze(0)
     input_imu = dataset["imu"][0].unsqueeze(0)
+    expert_traj = dataset["trajectories"][0].unsqueeze(0)
+    exp = torch.ones(expert_traj.size())
+    print(exp[:, 0, :].shape)
+    exp[:, 0, :] = expert_traj[:, -1, :]
+    exp[:, 1:, :] = expert_traj[:,:-1,:]
     input = [input_image, input_imu]
     print("input is loaded")
-    print(input[0].shape)
 
     net = Plan_Network()
     output = net.forward(input)
-    print(output.shape)
+    print("Forward pass done")
+    point_cloud_trees = dataset["kdtree"]
+    collision_loss = Collission_Loss(point_cloud_trees, input_imu, exp, different_pct=False)
+    print("collison loss")
+    print(collision_loss)
 
 
 train_loop()

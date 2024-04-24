@@ -158,7 +158,7 @@ class RolloutDataset(): # parse the rollout_director and return dataset
             "pointcloud": pointcloud_data,
             "kdtree": pc_tree,
             "depths": torch.Tensor(np.array(depth_data)).to(torch.float32),
-            "trajectories": trajectory_data,
+            "trajectories": torch.Tensor(trajectory_data).to(torch.float32),
             "imu":torch.Tensor(self.imu_objs).to(torch.float32)
         }
         
