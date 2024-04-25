@@ -27,7 +27,7 @@ def Collission_Loss(point_cloud_trees, imu, y_pred, different_pct=False):
         trajectory = y_pred[a]
         if different_pct:
             pct = point_cloud_trees[a]
-        trajectory_costs.append(traj_calc_cost(pct, init_imu, trajectory))
+        trajectory_costs.append(traj_calc_cost(pct, init_imu, trajectory).detach())
     tc_cost = torch.stack(trajectory_costs) # shape: [batch_size, modes]
     print("tc_cost:")
     print(tc_cost)
@@ -42,7 +42,7 @@ def traj_calc_cost(pct, init_imu, trajectory):
     # init_imu shape: [len(imu_obj) = 18/19]
     # output tensor size: (modes)  
     radius_quad = 0.2
-    threshold=0.41
+    threshold = 0.41
     wf_traj = Transform_to_world_frame(trajectory, init_imu)
     modes = trajectory.size(dim=1)
     cost = []
@@ -86,26 +86,38 @@ def Trajectory_Loss(expert_traj, pred_traj):
     modes = expert_traj.size(dim=1)
     epsilon = 0.05
     traj_loss = 0
-    sqr_norm = np.zeros(modes,modes)
+    sqr_norm = np.zeros(shape=(modes,modes))
     for a in range(modes):
-        single_pred_traj = pred_traj[1:, b].reshape(-1, 3).numpy()
+        print(pred_traj.shape)
+        single_pred_traj = pred_traj[1:, a].reshape(-1, 3).detach().numpy()
+        #print(single_pred_traj)
         for b in range(modes):
-            single_expert_traj = expert_traj[1:, a].reshape(-1, 3).numpy()
-            sqr_norm_diff = np.linalg.norm(single_expert_traj, single_pred_traj)**2
+            single_expert_traj = expert_traj[1:, b].reshape(-1, 3).detach().numpy()
+            sqr_norm_diff = np.linalg.norm(single_expert_traj - single_pred_traj)**2
+            # print(sqr_norm_diff)
             sqr_norm[a, b] = sqr_norm_diff
             #   [(expert0, pred0), (expert1, pred0), (expert2, pred0)]   
             #   [(expert0, pred1), (expert1, pred1), (expert2, pred1)]
             #   [(expert0, pred2), (expert1, pred2), (expert2, pred2)]
     for a in range(modes):
-        single_pred_traj = pred_traj[1:, b].reshape(-1, 3).numpy()
+        single_pred_traj = pred_traj[1:, a].reshape(-1, 3).detach().numpy()
         for b in range(modes):
-            single_expert_traj = expert_traj[1:, a].reshape(-1, 3).numpy()
-            sqr_norm_diff = np.linalg.norm(single_expert_traj, single_pred_traj)**2
+            single_expert_traj = expert_traj[1:, b].reshape(-1, 3).detach().numpy()
+            sqr_norm_diff = np.linalg.norm(single_expert_traj - single_pred_traj)**2
+            #print(single_expert_traj)
+            #print(single_pred_traj)
+            #print(sqr_norm_diff)
             if sqr_norm_diff == np.min(sqr_norm[a, :]):
                 traj_loss += (1 - epsilon) * sqr_norm_diff
             else:
                 traj_loss += (epsilon/(modes - 1)) * sqr_norm_diff
     return traj_loss
+
+def total_loss(L_collision,L_trajectory):
+    lambda_collision = 0.1
+    lambda_trajectory = 10
+    loss = lambda_collision*L_collision + lambda_trajectory*L_trajectory
+    return loss
 
 
 def train_loop():
@@ -125,10 +137,36 @@ def train_loop():
     net = Plan_Network()
     output = net.forward(input)
     print("Forward pass done")
+    weights1 = net.state_dict()
     point_cloud_trees = dataset["kdtree"]
-    collision_loss = Collission_Loss(point_cloud_trees, input_imu, exp, different_pct=False)
-    print("collison loss")
+    collision_loss = Collission_Loss(point_cloud_trees, input_imu, output, different_pct=False)
+    print("Collison loss")
     print(collision_loss)
+    #print(exp)
+    #print(output)
+    traj_loss = Trajectory_Loss(exp[0], output[0])
+    print("Trajectory loss")
+    print(traj_loss)
+    loss = total_loss(collision_loss,traj_loss)
+    print("total loss")
+    print(loss)
+    #torch.
+    loss.backward()
 
+    # Extract the initial weights
+    weights2 = net.state_dict()
+
+    # Calculate the difference in weights
+    weight_diff = {name: weights2[name] - weights1[name] for name in weights1}
+
+    print("weigth diff")
+    print(weight_diff)
+
+    # # Calculate the overall weight difference
+    # total_diff = sum([(weights2[name] - weights1[name]).norm().item()**2 for name in weights1])
+    # total_diff = total_diff**0.5  # Take the square root to get the Frobenius norm
+
+    # print("tot weight diff")
+    # print(total_diff)
 
 train_loop()
