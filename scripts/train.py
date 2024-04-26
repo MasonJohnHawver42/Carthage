@@ -1,5 +1,6 @@
 import sys
 import torch
+import matplotlib.pyplot as plt
 import numpy as np
 from forward_pass import Plan_Network
 from data_loader import RolloutDataset
@@ -27,12 +28,8 @@ def Collission_Loss(point_cloud_trees, imu, y_pred, different_pct=False):
         trajectory = y_pred[a]
         if different_pct:
             pct = point_cloud_trees[a]
-        trajectory_costs.append(traj_calc_cost(pct, init_imu, trajectory).detach())
+        trajectory_costs.append(traj_calc_cost(pct, init_imu, trajectory)) # .detach()
     tc_cost = torch.stack(trajectory_costs) # shape: [batch_size, modes]
-    print("tc_cost:")
-    print(tc_cost)
-    print("pred_cost:")
-    print(pred_costs)
     tc_loss = 2*mse(pred_costs, tc_cost)
     return tc_loss
 
@@ -88,25 +85,19 @@ def Trajectory_Loss(expert_traj, pred_traj):
     traj_loss = 0
     sqr_norm = np.zeros(shape=(modes,modes))
     for a in range(modes):
-        print(pred_traj.shape)
-        single_pred_traj = pred_traj[1:, a].reshape(-1, 3).detach().numpy()
-        #print(single_pred_traj)
+        single_pred_traj = pred_traj[1:, a].reshape(-1, 3)
         for b in range(modes):
-            single_expert_traj = expert_traj[1:, b].reshape(-1, 3).detach().numpy()
-            sqr_norm_diff = np.linalg.norm(single_expert_traj - single_pred_traj)**2
-            # print(sqr_norm_diff)
+            single_expert_traj = expert_traj[1:, b].reshape(-1, 3)
+            sqr_norm_diff = torch.norm(single_expert_traj - single_pred_traj)**2
             sqr_norm[a, b] = sqr_norm_diff
             #   [(expert0, pred0), (expert1, pred0), (expert2, pred0)]   
             #   [(expert0, pred1), (expert1, pred1), (expert2, pred1)]
             #   [(expert0, pred2), (expert1, pred2), (expert2, pred2)]
     for a in range(modes):
-        single_pred_traj = pred_traj[1:, a].reshape(-1, 3).detach().numpy()
+        single_pred_traj = pred_traj[1:, a].reshape(-1, 3)
         for b in range(modes):
-            single_expert_traj = expert_traj[1:, b].reshape(-1, 3).detach().numpy()
-            sqr_norm_diff = np.linalg.norm(single_expert_traj - single_pred_traj)**2
-            #print(single_expert_traj)
-            #print(single_pred_traj)
-            #print(sqr_norm_diff)
+            single_expert_traj = expert_traj[1:, b].reshape(-1, 3)
+            sqr_norm_diff = torch.norm(single_expert_traj - single_pred_traj)**2
             if sqr_norm_diff == np.min(sqr_norm[a, :]):
                 traj_loss += (1 - epsilon) * sqr_norm_diff
             else:
@@ -121,6 +112,7 @@ def total_loss(L_collision,L_trajectory):
 
 
 def train_loop():
+    # Get data
     rollout_folder = "rollout_21-02-06_15-12-42"
     dt = RolloutDataset(rollout_folder)
     dataset = dt.__getdataset__(0)
@@ -128,45 +120,51 @@ def train_loop():
     input_imu = dataset["imu"][0].unsqueeze(0)
     expert_traj = dataset["trajectories"][0].unsqueeze(0)
     exp = torch.ones(expert_traj.size())
-    print(exp[:, 0, :].shape)
     exp[:, 0, :] = expert_traj[:, -1, :]
     exp[:, 1:, :] = expert_traj[:,:-1,:]
     input = [input_image, input_imu]
     print("input is loaded")
 
+    # Create network
     net = Plan_Network()
-    output = net.forward(input)
-    print("Forward pass done")
-    weights1 = net.state_dict()
-    point_cloud_trees = dataset["kdtree"]
-    collision_loss = Collission_Loss(point_cloud_trees, input_imu, output, different_pct=False)
-    print("Collison loss")
-    print(collision_loss)
-    #print(exp)
-    #print(output)
-    traj_loss = Trajectory_Loss(exp[0], output[0])
-    print("Trajectory loss")
-    print(traj_loss)
-    loss = total_loss(collision_loss,traj_loss)
-    print("total loss")
-    print(loss)
-    #torch.
-    loss.backward()
+    net.train()
 
-    # Extract the initial weights
-    weights2 = net.state_dict()
+    # Define optimizer
+    optimizer = torch.optim.SGD(net.parameters(), lr=0.0001)
+    loss_arr = []
+    for i in range(len(dataset["depths"])):
+        # Get data
+        input_image = dataset["depths"][i % len(dataset["depths"])].unsqueeze(0)
+        input_imu = dataset["imu"][i % len(dataset["depths"])].unsqueeze(0)
+        expert_traj = dataset["trajectories"][i % len(dataset["depths"])].unsqueeze(0)
+        point_cloud_trees = dataset["kdtree"]
+        exp = torch.ones(expert_traj.size())
+        exp[:, 0, :] = expert_traj[:, -1, :]
+        exp[:, 1:, :] = expert_traj[:,:-1,:] # weights should be on first row not the last row
+        input = [input_image, input_imu]
 
-    # Calculate the difference in weights
-    weight_diff = {name: weights2[name] - weights1[name] for name in weights1}
+        # Forward pass
+        output = net.forward(input)
 
-    print("weigth diff")
-    print(weight_diff)
+        # Calculate loss
+        collision_loss = Collission_Loss(point_cloud_trees, input_imu, output, different_pct=False)
+        traj_loss = Trajectory_Loss(exp[0], output[0])
+        loss = total_loss(collision_loss,traj_loss)
+        print(loss)
+        loss_arr.append(loss.item())
 
-    # # Calculate the overall weight difference
-    # total_diff = sum([(weights2[name] - weights1[name]).norm().item()**2 for name in weights1])
-    # total_diff = total_diff**0.5  # Take the square root to get the Frobenius norm
+        # Backward pass
+        optimizer.zero_grad()
+        loss.backward()
+        
+        # Update weights
+        optimizer.step()
+    plt.plot(loss_arr, label='Training Loss', color='blue')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.title('Training Loss Over Epochs')
+    plt.legend()
+    plt.show()
 
-    # print("tot weight diff")
-    # print(total_diff)
 
 train_loop()
