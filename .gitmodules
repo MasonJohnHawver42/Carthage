@@ -1,17 +1,21 @@
-[submodule "ext/stb"]
-    path = ext/stb
-    url = https://github.com/nothings/stb.git
-[submodule "ext/tinyobjloader"]
-    path = ext/tinyobjloader
-    url = https://github.com/tinyobjloader/tinyobjloader.git
-[submodule "ext/imgui"]
-	path = ext/imgui
-	url = https://github.com/ocornut/imgui.git
-[submodule "ext/large_scale_traj_optimizer"]
-	path = ext/large_scale_traj_optimizer
-	url = https://github.com/MasonJohnHawver42/large_scale_traj_optimizer.git
-[submodule "ext/eigen"]
-	path = ext/eigen
+[submodule "datagen/ext/eigen"]
+	path = datagen/ext/eigen
 	url = https://gitlab.com/libeigen/eigen.git
-[submodule "ext/large_scale_traj_optimizer/"]
-	url = git@github.com:MasonJohnHawver42/large_scale_traj_optimizer.git
+[submodule "datagen/ext/glfw"]
+	path = datagen/ext/glfw
+	url = https://github.com/glfw/glfw.git
+[submodule "datagen/ext/glm"]
+	path = datagen/ext/glm
+	url = https://github.com/g-truc/glm.git
+[submodule "datagen/ext/imgui"]
+	path = datagen/ext/imgui
+	url = https://github.com/ocornut/imgui.git
+[submodule "datagen/ext/large_scale_traj_optimizer"]
+	path = datagen/ext/large_scale_traj_optimizer
+	url = https://github.com/MasonJohnHawver42/large_scale_traj_optimizer.git
+[submodule "datagen/ext/stb"]
+	path = datagen/ext/stb
+	url = https://github.com/nothings/stb.git
+[submodule "datagen/ext/tinyobjloader"]
+	path = datagen/ext/tinyobjloader
+	url = https://github.com/tinyobjloader/tinyobjloader.git
