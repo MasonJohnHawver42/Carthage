@@ -23,6 +23,8 @@ class Plan_Network(nn.Module):
         super().__init__()
         model = models.mobilenet_v3_large(weights=models.MobileNet_V3_Large_Weights.IMAGENET1K_V1) 
         self.backbone = model.features # output channels = 960
+        #for param in self.backbone.parameters():
+        #    param.requires_grad = False
         self.resize_op = nn.Conv1d( in_channels=960, out_channels=128, kernel_size=1, stride=1, padding=0, dilation=1, bias=True) # input channel = 960
         self.modes = 3
         self.img_mergenet = nn.ModuleList([ #input channel = 49*128 = 6272

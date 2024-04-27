@@ -2,3 +2,6 @@ build
 .vscode
 imgui.ini
 *.xyz
+tf_test.py
+depth_00000001.tif
+rollout_21-02-06_22-10-01
