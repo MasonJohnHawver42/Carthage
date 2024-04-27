@@ -110,6 +110,8 @@ namespace game
         unsigned int model_id;
         Transform m_trans;
 
+        bool visible;
+
         bool trans_dirty;
         glm::mat4 trans_mat;
 
@@ -133,7 +135,7 @@ namespace game
 
         SceneRenderer(gfx::Program prog);
 
-        void render(game::Cache& cache, Camera& cam, Scene& scene);
+        void render(game::Cache& cache, Camera& cam, Scene& scene, float ds);
         void free();
     };
 
@@ -162,7 +164,7 @@ namespace game
 
     void set_color(float r, float g, float b, float a, float* c_dst);
     
-    void add_line(float* start, float* end, float radius, game::DebugRenderer* dr);
+    void add_line(float* start, float* end, float radius, float* color, game::DebugRenderer* dr);
 
     struct OctreeRenderer 
     {

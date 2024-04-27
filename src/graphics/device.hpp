@@ -6,6 +6,7 @@ namespace gfx
 {
     //utill
     void clear();
+    void enable_depth();
 
     //program
     void create_shader(ShaderStage stage, const char* source, Shader* shader);
@@ -37,6 +38,12 @@ namespace gfx
     void draw_mesh(Program program, Model* model, unsigned int i, gfx::Material* material);
     void unbind_model();
     void free_model(Model* model);
+
+    //framebuffer
+    void create_framebuffer(unsigned int w, unsigned int h, FrameBuffer* fb);
+    void bind_framebuffer(FrameBuffer* fb);
+    void bind_default_framebuffer();
+    void free_framebuffer(FrameBuffer* fb);
 
     //debug shapes
     void create_shape_buffer(unsigned int size, ShapeBuffer* sb);

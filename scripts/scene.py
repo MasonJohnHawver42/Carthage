@@ -3,6 +3,9 @@ import numpy as np
 import struct
 
 import sys
+import random
+
+import forest
 
 class Scene:
     def __init__(self):
@@ -51,10 +54,20 @@ def test_scene():
     scn.add_object("models/bunny/bunny.bin", [-0.05, 2.0, 0], list(tf.euler.euler2quat(np.pi / 2, 0, 0, 'sxyz')), [1, 1, 1])
     return scn
 
+def forest_scene():
+    samples = forest.make_terrain("../data/models/ground/ground.obj")
+
+    scn = Scene()
+    scn.add_object("models/ground/ground.bin", [0, 0, 0], list(tf.euler.euler2quat(0, 0, 0, 'sxyz')), [1, 1, 1])
+    for i in range(samples.shape[0]):
+        scn.add_object("models/tree/tree.bin", list(samples[i, :]), list(tf.euler.euler2quat(np.pi / 2, 0, 0, 'sxyz')), [1, random.uniform(1.2, 1.75), 1])
+    return scn
+
 # {-0.05, 0, -2}, {0, 1, 0}, 0, {1, 1, 1}
 
 scenes = {
-    "test" : test_scene
+    "test" : test_scene,
+    "forest" : forest_scene
 }
 
 if __name__ == "__main__":

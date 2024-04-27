@@ -9,7 +9,7 @@ game::Quadrotor::Quadrotor()
 {
     mass = 0.18;
     g = 9.8;
-    arm_length = 0.086;
+    arm_length = 0.2;
     height = 0.05;
 
     I << 0.00025, 0, 2.55e-6,
@@ -19,7 +19,7 @@ game::Quadrotor::Quadrotor()
     invI = I.inverse();
 
     minF = 0.0;
-    maxF = 2.0 * mass * g;
+    maxF = 5.0 * mass * g;
 
     km = 1.5e-9;
     kf = 6.11e-8;
@@ -73,7 +73,7 @@ Eigen::Matrix3d game::Quadrotor::rot() const
 {
     double qw = state[6], qx = state[7], qy = state[8], qz = state[9];
     Eigen::Quaterniond quat(qw, qx, qy, qz);
-
+    quat.normalize();
     Eigen::Matrix3d rotation_matrix = quat.toRotationMatrix();
     return rotation_matrix;
 }
@@ -91,7 +91,9 @@ void game::Quadrotor::grad_state(double *dstate, double F, const Eigen::Vector3d
     double p = state[10], q = state[11], r = state[12];
 
     Eigen::Quaterniond quat(qw, qx, qy, qz);
+    Eigen::Vector4d quat_coeffs(qw, qx, qy, qz);
 
+    quat.normalize();
     Eigen::Matrix3d bRw = quat.toRotationMatrix(); // world to body rotation matrix
     Eigen::Matrix3d wRb = bRw.transpose(); // orthogonal matrix inverse = transpose
 
@@ -99,18 +101,21 @@ void game::Quadrotor::grad_state(double *dstate, double F, const Eigen::Vector3d
 
     double K_quat = 2.0;
     double quaterror = 1.0 - (qw * qw + qx * qx + qy * qy + qz * qz);
-    
     Eigen::Matrix<double, 4, 4> Q;
     Q << 0, -p, -q, -r,
-        p,  0,  r, -q,
-        q, -r,  0,  p,
-        r,  q, -p,  0;
+        p,  0,  -r, q,
+        q, r,  0,  -p,
+        r, -q, p, 0;
 
-    Eigen::Vector4d qdot_vec = (-0.5) * Q * quat.coeffs() + K_quat * quaterror * quat.coeffs();
-    Eigen::Quaterniond qdot(qdot_vec[3], qdot_vec[0], qdot_vec[1], qdot_vec[2]);
+    Eigen::Vector4d qdot_vec = ((-0.5) * Q * quat_coeffs) + (K_quat * quaterror * quat_coeffs);
     
+    // std::cout << "FUCK " << qdot_vec << std::endl;
+
     Eigen::Vector3d omega(p, q, r);
     Eigen::Vector3d pqrdot = invI * (M - omega.cross(I * omega));
+
+    // std::cout << "M2 " << M << std::endl;
+    // std::cout << "T " <<  omega.cross(I * omega) << std::endl;
 
     dstate[0] = xdot;
     dstate[1] = ydot;
@@ -118,10 +123,10 @@ void game::Quadrotor::grad_state(double *dstate, double F, const Eigen::Vector3d
     dstate[3] = accel[0];
     dstate[4] = accel[1];
     dstate[5] = accel[2];
-    dstate[6] = qdot.w();
-    dstate[7] = qdot.x();
-    dstate[8] = qdot.y();
-    dstate[9] = qdot.z();
+    dstate[6] = qdot_vec[0];
+    dstate[7] = qdot_vec[1];
+    dstate[8] = qdot_vec[2];
+    dstate[9] = qdot_vec[3];
     dstate[10] = pqrdot[0];
     dstate[11] = pqrdot[1];
     dstate[12] = pqrdot[2];
@@ -148,6 +153,7 @@ void game::Quadrotor::update(double dt, double F, const Eigen::Vector3d& M)
     grad_state(dstate, F, M_computed);
     
     for (int j = 0; j < 13; ++j) { state[j] += dstate[j] * dt; }
+    // printf("\n");
 }
 
 game::Controller::Controller() { reset(); }
@@ -193,10 +199,78 @@ void game::Controller::run_hover(const Quadrotor& quad_state,
     M = kR.cwiseProduct(eR_error) + kW.cwiseProduct(eW);
 }
 
+Eigen::Vector3d vee(const Eigen::Matrix3d& S) {
+    return Eigen::Vector3d(-S(1, 2), S(0, 2), -S(0, 1));
+}
+
+void game::Controller::run(const game::Quadrotor& quad_state,
+                 Eigen::Vector3d& desired_pos, 
+                 Eigen::Vector3d& desired_vel,
+                 Eigen::Vector3d& desired_acc,
+                 Eigen::Vector3d& desired_jerk,
+                 double desired_yaw, double desired_yawdot,
+                 double dt, double& U, Eigen::Vector3d& M) 
+{
+
+    double m = quad_state.mass;
+    double g = quad_state.g;
+
+    Eigen::Matrix3d bRw = quad_state.rot().transpose(); // current Rotation from body frame to world
+    Eigen::Vector3d ZB = bRw.col(2); // normal vector to body frame
+
+    Eigen::Vector3d ep = desired_pos - quad_state.pos(); // position error
+    Eigen::Vector3d ev = desired_vel - quad_state.vel(); // velocity error
+
+    Eigen::Vector3d commd_acc = kp.cwiseProduct(ep) + kv.cwiseProduct(ev) + desired_acc; // command acceleration
+    Eigen::Vector3d F_des = (m * commd_acc) + (m * g * Eigen::Vector3d(0, 0, 1)); // Desired Thrust vector
+    U = F_des.dot(ZB); // Desired Thrust in ZB direction
+
+    Eigen::Vector3d curr_acc = (U * ZB / m) - (g * Eigen::Vector3d(0, 0, 1)); // current acceleration
+    Eigen::Vector3d ea = curr_acc - desired_acc; // acceleration error
+
+    // std::cout << "ZB " << bRw << std::endl;
+    // std::cout << "curr_acc " << curr_acc << std::endl;
+    // std::cout << "ea " << ea << std::endl;
+
+    Eigen::Vector3d commd_jerk = kp.cwiseProduct(ev) + kv.cwiseProduct(ea) + desired_jerk; // command jerk
+    Eigen::Vector3d dF_des = m * commd_jerk; // derivative of desired Thrust vector
+    double dU = dF_des.dot(ZB); // derivative of desired Thrust vector in ZB direction
+
+    // printf("dU %f\n", dU);
+    // std::cout << dF_des << std::endl;
+
+    Eigen::Vector3d ZB_des = F_des.normalized(); // desired direction of normal vector
+
+    Eigen::Vector3d Xc(cos(desired_yaw), sin(desired_yaw), 0);
+    Eigen::Vector3d ZB_Xc = ZB_des.cross(Xc);
+
+    // std::cout << "xc " << Xc << std::endl;
+    // std::cout << "zbxc " << ZB_Xc << std::endl;
+    // std::cout << "zb_des " << ZB_des << std::endl;
+
+    Eigen::Vector3d YB_des = ZB_Xc.normalized();
+    Eigen::Vector3d XB_des = YB_des.cross(ZB_des);
+
+    Eigen::Matrix3d R_des;
+    R_des << XB_des, YB_des, ZB_des; // desired Rotation matrix
+
+    // std::cout << "R_des" << R_des << std::endl;
+
+    Eigen::Vector3d eR = 0.5 * vee(bRw.transpose() * R_des - R_des.transpose() * bRw); // Rotation error
+
+    Eigen::Vector3d hw = (m * commd_jerk - dU * ZB_des) / U; // projection of angular velocity on xB − yB plane
+    Eigen::Vector3d omega_des(-1 * hw.dot(YB_des), hw.dot(XB_des), desired_yawdot * ZB_des.z()); // desired angular velocity
+    // std::cout << "omega_des " << omega_des << std::endl;
+    
+    Eigen::Vector3d eW = omega_des - quad_state.omega(); // angular velocity error
+
+    M = kR.cwiseProduct(eR) + kW.cwiseProduct(eW); // moment
+}
+
 
 bool game::find_traj(game::PlanningCache& plan_cache, min_snap::SnapOpt& snapOpt, min_snap::Trajectory& minSnapTraj, Eigen::MatrixXd& route, Eigen::VectorXd& ts,
                         float *start, float *end, 
-                        const std::function<bool(int*, float)>& solid, 
+                        const std::function<bool(int*, float)>& solid, float* ds,
                         const std::function<void(float*, unsigned int*)>& wtv, 
                         const std::function<void(unsigned int*, float*)>& vtw,
                         unsigned int wypt_steps, unsigned int time_steps, float lr)
@@ -205,8 +279,8 @@ bool game::find_traj(game::PlanningCache& plan_cache, min_snap::SnapOpt& snapOpt
     unsigned vox_start[3], vox_end[3];
     wtv(start, vox_start); wtv(end, vox_end);
 
-    unsigned int end_index = game::theta_star(plan_cache, vox_start, vox_end, solid, 6.0f, 4.0f);
-
+    unsigned int end_index = game::theta_star(plan_cache, vox_start, vox_end, solid, ds[0], ds[1]);
+    printf("end_index %d\n", end_index);
     if (end_index == -1) { return false; }
 
     Eigen::MatrixXd next_route;
@@ -214,7 +288,8 @@ bool game::find_traj(game::PlanningCache& plan_cache, min_snap::SnapOpt& snapOpt
     Eigen::Matrix<double, 3, 4> iSS, fSS;
 
     game::build_route(plan_cache, end_index, vtw, route);
-    game::allocate_time(route, 5, 3, ts);
+    // std::cout << "route " << route << std::endl;
+    game::allocate_time(route, 3, 3, ts);
     min_ts = ts;
 
     iSS.setZero();
@@ -245,7 +320,7 @@ bool game::find_traj(game::PlanningCache& plan_cache, min_snap::SnapOpt& snapOpt
             ts -= lr * dts;
         }
 
-        bool res = game::rebuild_route(minSnapTraj, route, ts, wtv, solid, 2.0f, next_route);
+        bool res = game::rebuild_route(minSnapTraj, route, ts, wtv, solid, ds[2], next_route);
 
         if (!res) { return true; }
         if (i + 1 < wypt_steps) 
@@ -271,8 +346,6 @@ void game::build_route(PlanningCache& plan_cache, unsigned int end_index, std::f
         N++;
         curr = next;
     }
-
-    printf("%d \n", N);
 
     route = Eigen::MatrixXd(3, N);
 
@@ -405,7 +478,7 @@ bool game::rebuild_route(min_snap::Trajectory& traj, const Eigen::MatrixXd &rout
 }
 
 
-void game::draw_route(const Eigen::MatrixXd &route, game::DebugRenderer* dr) 
+void game::draw_route(const Eigen::MatrixXd &route, game::DebugRenderer* dr, double r1, double r2, float* color) 
 {
     gfx::ShapeEntry* ent;
     game::Transform trans_tmp;
@@ -414,25 +487,24 @@ void game::draw_route(const Eigen::MatrixXd &route, game::DebugRenderer* dr)
     {
         float pos0[] = {(float)route(0, i - 1), (float)route(1, i - 1), (float)route(2, i - 1)};
         float pos1[] = {(float)route(0, i), (float)route(1, i), (float)route(2, i)};
-        add_line(pos0, pos1, 0.025f, dr);
+        add_line(pos0, pos1, r1, color, dr);
 
         ent = dr->shape(gfx::Shape::CUBE);
-        trans_tmp = {{pos0[0], pos0[1], pos0[2]}, {0, 0, 1}, 0, {.1, .1, .1}};
+        trans_tmp = {{pos0[0], pos0[1], pos0[2]}, {0, 0, 1}, 0, {r2, r2, r2}};
         trans_tmp.mat4(ent->mat);
         game::set_color(0.0, 0.0, 0.0, 1, ent->color);
     }
 }
 
-void game::draw_traj(min_snap::Trajectory& traj, const Eigen::VectorXd& ts, unsigned int N, game::DebugRenderer* dr) 
+void game::draw_traj(min_snap::Trajectory& traj, unsigned int N, double r2, float* color, double start, double end, game::DebugRenderer* dr) 
 {
-    double max_time = ts.sum();
-    double t_step = max_time / N, t = 0.0f;
+    double t_step = (end - start) / N, t = start;
     Eigen::Vector3d p0, p1;
 
     gfx::ShapeEntry* ent;
     game::Transform trans_tmp;
 
-    while (t < max_time) 
+    while (t < end) 
     {
         p0 = traj.getPos(t);
         p1 = traj.getPos(t + t_step);
@@ -440,12 +512,12 @@ void game::draw_traj(min_snap::Trajectory& traj, const Eigen::VectorXd& ts, unsi
         float pos0[] = {(float)p0(0), (float)p0(1), (float)p0(2)};
         float pos1[] = {(float)p1(0), (float)p1(1), (float)p1(2)};
 
-        add_line(pos0, pos1, 0.05f, dr);
+        add_line(pos0, pos1, r2, color, dr);
 
-        ent = dr->shape(gfx::Shape::CUBE);
-        trans_tmp = {{pos0[0], pos0[1], pos0[2]}, {0, 0, 1}, 0, {.1, .1, .1}};
-        trans_tmp.mat4(ent->mat);
-        game::set_color(0.0, 1.0, 0.0, 1, ent->color);
+        // ent = dr->shape(gfx::Shape::CUBE);
+        // trans_tmp = {{pos0[0], pos0[1], pos0[2]}, {0, 0, 1}, 0, {.1, .1, .1}};
+        // trans_tmp.mat4(ent->mat);
+        // game::set_color(0.0, 1.0, 0.0, 1, ent->color);
 
         t += t_step;
     }

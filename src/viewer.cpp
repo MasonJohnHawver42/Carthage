@@ -90,8 +90,8 @@ int main(void)
     g_octree = &octree;
 
     //load scene
-    res::load_scene("scenes/test.scn", scene, cache);
-    res::load_octree("scenes/test.oct", octree);
+    res::load_scene("scenes/forest.scn", scene, cache);
+    res::load_octree("scenes/forest.oct", octree);
     
     octree.init();
     octree_renderer.mesh_octree(octree);
@@ -192,7 +192,7 @@ void tick()
 
     gfx::clear();
 
-    g_scene_renderer->render(*g_cache, *g_camera, *g_scene);
+    g_scene_renderer->render(*g_cache, *g_camera, *g_scene, 0.0f);
     g_octree_renderer->render(*g_camera, *g_octree);
     g_debug_renderer->draw(*g_camera);
 

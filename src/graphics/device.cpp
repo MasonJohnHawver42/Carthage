@@ -244,6 +244,11 @@ namespace gfx
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
+    void enable_depth() 
+    {
+        glEnable(GL_DEPTH_TEST);
+    }
+
     //model
 
     void create_model(float* vs, unsigned int* ind, unsigned int vc, unsigned int ic, Model* model) 
@@ -656,6 +661,61 @@ namespace gfx
         glDeleteBuffers(1, &vb->m_draw_ssbo);
         glDeleteBuffers(1, &vb->m_draw_call_ib);
         glDeleteVertexArrays(1, &vb->m_vao);
+    }
+
+
+    //Frame Buffers
+
+    void create_framebuffer(unsigned int w, unsigned int h, FrameBuffer* fb) 
+    {
+        unsigned int fbo;
+        glGenFramebuffers(1, &fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo); 
+        
+        unsigned int color_texture;
+        glGenTextures(1, &color_texture);
+        glBindTexture(GL_TEXTURE_2D, color_texture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color_texture, 0);
+
+        unsigned int rbo;
+        glGenRenderbuffers(1, &rbo);
+        glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, w, h); // use a single renderbuffer object for both a depth AND stencil buffer.
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+            
+        if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) 
+        { 
+            printf("Frame Buffer Failed\n");
+            return;
+        }
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        fb->m_fbo = fbo;
+        fb->m_color_texture = color_texture;
+        fb->m_depth_rbo = rbo;
+        fb->width = w;
+        fb->hieght = h;
+    }
+
+    void bind_framebuffer(FrameBuffer* fb) 
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, fb->m_fbo);
+    }
+
+    void bind_default_framebuffer() 
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+    
+    void free_framebuffer(FrameBuffer* fb) 
+    {
+        glDeleteTextures(1, &fb->m_color_texture);
+        glDeleteRenderbuffers(1, &fb->m_depth_rbo);
+        glDeleteFramebuffers(1, &fb->m_fbo);  
     }
 
 

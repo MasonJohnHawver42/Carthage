@@ -370,8 +370,13 @@ unsigned int game::theta_star(game::PlanningCache& cache, unsigned int* start, u
 
     return -1;
 }
-
 bool game::raycast(unsigned int* start, unsigned int* end, std::function<bool(int*, float)> solid, float d_w) 
+{
+    unsigned int hit[3];
+    return raycast(start, end, hit, solid, d_w);
+}
+
+bool game::raycast(unsigned int* start, unsigned int* end, unsigned int* hit, std::function<bool(int*, float)> solid, float d_w)
 {
     int x1 = end[0], y1 = end[1], z1 = end[2], x0 = start[0], y0 = start[1], z0 = start[2];
     int tmp[3];
@@ -446,6 +451,7 @@ bool game::raycast(unsigned int* start, unsigned int* end, std::function<bool(in
         }
 
         tmp[0] = x0; tmp[1] = y0; tmp[2] = z0;
+        hit[0] = x0; hit[1] = y0; hit[2] = z0;
         if (solid(tmp, d_w)) { return true; } 
     }
 

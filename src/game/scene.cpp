@@ -6,6 +6,7 @@
 #include <glm/gtx/matrix_interpolation.hpp>
 #include <glm/gtx/scalar_multiplication.hpp>
 #include <glm/gtx/vector_angle.hpp>
+#include <glm/gtc/type_ptr.hpp> // For glm::value_ptr
 
 #include "graphics/device.hpp"
 
@@ -209,7 +210,7 @@ void game::Cache::free()
 
 // Object
 
-game::Object::Object() : model_id(0) , m_trans(), trans_dirty(true)
+game::Object::Object() : model_id(0) , m_trans(), visible(true), trans_dirty(true)
 {
     trans_mat = glm::mat4(1.0f);
 }
@@ -238,7 +239,7 @@ game::SceneRenderer::SceneRenderer(gfx::Program prog)
     model_pipeline = {prog, gfx::CullMode::BACK, gfx::DrawMode::FILL};
 }
 
-void game::SceneRenderer::render(Cache& cache, Camera& cam, Scene& scene) 
+void game::SceneRenderer::render(Cache& cache, Camera& cam, Scene& scene, float ds) 
 {
     gfx::bind_pipeline(&model_pipeline);
 
@@ -246,29 +247,37 @@ void game::SceneRenderer::render(Cache& cache, Camera& cam, Scene& scene)
 
     gfx::set_uniform_float("near", cam.m_near, model_pipeline.m_prog);
     gfx::set_uniform_float("far", cam.m_far, model_pipeline.m_prog);
+    gfx::set_uniform_float("DepthSlider", ds, model_pipeline.m_prog);
+    gfx::set_uniform_mat4("VP", &cam.m_vp[0][0], model_pipeline.m_prog);
 
     scene.m_objects.for_each([&](unsigned int index, Object& obj){
-        mvp = cam.m_vp * obj.trans_mat;
-        gfx::set_uniform_mat4("MVP", &mvp[0][0], model_pipeline.m_prog);
+        // mvp = cam.m_vp * obj.trans_mat;
 
-        // std::cout << obj.trans_mat[0][0] << std::endl;
-
-        gfx::Model* model = cache.m_model_pool[obj.model_id];
-        gfx::bind_model(model);
-
-        gfx::set_uniform_int("ourTexture", 0, model_pipeline.m_prog);
-
-        for (unsigned int i = 0; i < model->mesh_count; i++) 
+        if (obj.visible) 
         {
-            gfx::Material* mat = cache.m_material_pool[model->m_meshes[i].m_mat_id];
-            gfx::Texture2D* albedo = cache.m_texture_pool[mat->diffuse_texture_id];
+            gfx::set_uniform_mat4("M", &obj.trans_mat[0][0], model_pipeline.m_prog);
 
-            gfx::activate_texture2d(albedo);
+            // std::cout << obj.trans_mat[0][0] << std::endl;
 
-            gfx::draw_mesh(model_pipeline.m_prog, model, i, mat);
+            gfx::Model* model = cache.m_model_pool[obj.model_id];
+            gfx::bind_model(model);
+
+            gfx::set_uniform_int("ourTexture", 0, model_pipeline.m_prog);
+
+            for (unsigned int i = 0; i < model->mesh_count; i++) 
+            {
+                gfx::Material* mat = cache.m_material_pool[model->m_meshes[i].m_mat_id];
+                gfx::Texture2D* albedo = cache.m_texture_pool[mat->diffuse_texture_id];
+
+                gfx::set_uniform_float("TextureSlider", albedo->id == cache.m_texture_pool[cache.m_default_tex_id]->id ? 0.0f : 1.0f, model_pipeline.m_prog);
+                gfx::activate_texture2d(albedo);
+
+
+                gfx::draw_mesh(model_pipeline.m_prog, model, i, mat);
+            }
+
+            gfx::unbind_model();
         }
-
-        gfx::unbind_model();
     });
 }
 
@@ -353,7 +362,7 @@ void game::set_color(float r, float g, float b, float a, float* c_dst)
     c_dst[3] = a;
 }
 
-void game::add_line(float* start, float* end, float radius, game::DebugRenderer* dr)  
+void game::add_line(float* start, float* end, float radius, float* color, game::DebugRenderer* dr)  
 {
     float midpoint[3];
     float dir[3];
@@ -369,7 +378,7 @@ void game::add_line(float* start, float* end, float radius, game::DebugRenderer*
     ent = dr->shape(gfx::Shape::CUBE);
     trans_tmp = {{midpoint[0], midpoint[1], midpoint[2]}, {1, 0, 0}, {dir[0], dir[1], dir[2]}, {distance, radius, radius}};
     trans_tmp.mat4(ent->mat);
-    game::set_color(0, 0, 1, 1, ent->color);
+    game::set_color(color[0], color[1], color[2], color[3], ent->color);
 }
 
 

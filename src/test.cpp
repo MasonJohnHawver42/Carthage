@@ -1,32 +1,46 @@
 #include "core/containers.hpp"
 #include <iostream>
 
+#include "game/drone.hpp"
+
 int main() {
-    core::MinHeap<int> minHeap;
 
-    // Insert elements into the heap
-    // std::vector<int> elements = {4, 10, 3, 5, 1, 7, 9};
-    // for (int element : elements) {
-    //     minHeap.push(element);
-    // }
+    game::Quadrotor quadrotor;
+    game::Controller controller;    
 
-    for (int i = 100; i >= 0; i--) 
+    quadrotor.reset(1, 0, 0, 0, 0, 0);
+    controller.reset();
+
+    for (int i = 0; i < 13; i++) { printf("%f ", quadrotor.state[i]); }
+    printf("\n");
+
+    double F, dt;
+    Eigen::Vector3d M, dp, dv, da, dj;
+    double dy, dyd;
+
+    dp << 0, 0, 0;
+    dv << 0, 0, 0;
+    da << 0, 0, 0;
+    dj << 0, 0, 0;
+    dy = 10;
+    dyd = 0;
+    dt = .01;
+
+    for (int k = 0; k < 5; k++) 
     {
-        minHeap.push(i);
+        printf("ITER %d\n", k);
+        controller.run(quadrotor, dp, dv, da, dj, dy, dyd, dt, F, M);
+
+        std::cout << "f " << F << std::endl;
+        std::cout << "M " << M << std::endl;
+
+        if (std::isnan(F)) { exit(1); }
+
+        quadrotor.update(dt, F, M);
+
+        for (int i = 0; i < 13; i++) { printf("%f ", quadrotor.state[i]); }
+        printf("\n");
     }
-
-    // Print the heap
-    minHeap.heap[99] = -1;
-    minHeap.printHeap();
-    minHeap.update(0);
-
-
-    // Pop elements from the heap
-    std::cout << "Popping elements: ";
-    while (!minHeap.empty()) {
-        std::cout << minHeap.pop() << " ";
-    }
-    std::cout << std::endl;
 
     return 0;
 }

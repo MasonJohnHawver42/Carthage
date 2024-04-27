@@ -38,11 +38,16 @@ void convert_path(char* fn)
  
 int convert_object(const char* in_fn, const char* in_dir, const char* out_fn) 
 {
-    std::string inputfn = std::string(MY_DATA_DIR) + in_fn;
-    std::string outputfn = std::string(MY_DATA_DIR) + out_fn;
+    // std::string inputfn = std::string(MY_DATA_DIR) + in_fn;
+    // std::string outputfn = std::string(MY_DATA_DIR) + out_fn;
+    std::string inputfn = in_fn;
+    std::string outputfn = out_fn;
+
 
     tinyobj::ObjReaderConfig reader_config;
-    reader_config.mtl_search_path = std::string(MY_DATA_DIR) + in_dir; // Path to material files
+    // reader_config.mtl_search_path = std::string(MY_DATA_DIR) + in_dir; // Path to material files
+    reader_config.mtl_search_path = in_dir; // Path to material files
+
 
     tinyobj::ObjReader reader;
 

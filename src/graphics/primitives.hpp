@@ -91,6 +91,12 @@ namespace gfx
         Model() : ready(false) {}
     };
 
+    struct FrameBuffer 
+    {
+        unsigned int m_fbo, m_color_texture, m_depth_rbo;
+        unsigned int width, hieght;
+    };
+
     enum Shape 
     {
         CUBE = 0,
