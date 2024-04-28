@@ -202,6 +202,7 @@ filtered_points = points[(points[:, 2] >= z_min) & (points[:, 2] <= z_max)]
 filtered_point_cloud = o3d.geometry.PointCloud()
 filtered_point_cloud.points = o3d.utility.Vector3dVector(filtered_points)
 o3d.visualization.draw_geometries([filtered_point_cloud] + geometries)
+o3d.visualization.draw_geometries([point_cloud] + geometries)
 
 
 
