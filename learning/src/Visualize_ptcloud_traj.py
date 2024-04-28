@@ -58,6 +58,21 @@ print("number of trajectories: ", len(all_expert_trajectories))
 # print("pos shape: ", pos.shape)
 # print("pos: ", pos)
 
+def Collision_detector(kd_tree, pred_traj, imu_obj, threshold=0.41):
+    # pred_traj shape = [31, mode]
+    # imu_obj shape = [18]
+    # kd_tree is assumed to be a KDTreeFlann object
+    modes = pred_traj.shape[1]
+    collosion = np.zeros(modes, dtype=bool) # shape = (modes,)
+    pred_traj_wf = transform_nn_output_to_world_frame(pred_traj, imu_obj)
+    for i in range(modes):
+        traj = pred_traj_wf[1:, i].reshape(-1, 3)
+        _, _, distances = kd_tree.search_radius_vector_3d(traj, threshold)
+        distances = np.sqrt(distances)
+        collosion[i] = np.any(distances < threshold)
+    return collosion # shape = (modes,); collision[i] is true if ith mode trajectory has collisions, false otherwise
+
+
 
 # transform body frame to world frame using odometry
 def transfrom_trajectories_to_world_frame(trajectories, odometry, traj_indexes):
@@ -68,6 +83,7 @@ def transfrom_trajectories_to_world_frame(trajectories, odometry, traj_indexes):
         R = Rotation.from_quat(quarternion).as_matrix().reshape((3, 3))
         pos = odometry[["pos_x", "pos_y", "pos_z"]].values[int(traj_indexes[i])].reshape((3, 1))
         trajectories[i] = transform_trajectory_to_world_frame(trajectory, R, pos)
+    return trajectories
 
 def transform_trajectory_to_world_frame(trajectory, R, pos):
     # Apply the rotation and translation
