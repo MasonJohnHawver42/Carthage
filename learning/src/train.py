@@ -78,6 +78,16 @@ def Transform_to_world_frame(trajectory, init_imu):
     world_traj[1:] = w_traj
     return world_traj
 
+def Batch_Trajectory_Loss(batch_expert_traj, batch_pred_traj):
+    # batch_*_traj shape : [batch, 3*10 + 1, modes = 3]
+    batch_size, _, _ = batch_expert_traj.shape
+    loss_list = []
+    for i in range(batch_size):
+        loss = Trajectory_Loss(batch_expert_traj[i], batch_pred_traj[i])
+        loss_list.append(loss)
+    loss = torch.stack(loss_list) # loss shape: [batch]
+    return torch.mean(loss)
+
 def Trajectory_Loss(expert_traj, pred_traj):
     # trajectory shape: [3*10 + 1 , modes = 3]
     modes = expert_traj.size(dim=1)
