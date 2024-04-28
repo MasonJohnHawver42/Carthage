@@ -176,5 +176,5 @@ def train_loop():
     plt.legend()
     plt.show()
 
-
-train_loop()
+if __name__ == "__main__":
+    train_loop()
