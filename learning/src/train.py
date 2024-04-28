@@ -2,7 +2,7 @@ import sys
 import torch
 import matplotlib.pyplot as plt
 import numpy as np
-from forward_pass import Plan_Network
+from forward_pass_new import Neural_Network
 from data_loader import RolloutDataset
 #sys.path.insert(0, "../path_generation")
 #import metropolis
@@ -136,7 +136,7 @@ def train_loop():
     print("input is loaded")
 
     # Create network
-    net = Plan_Network()
+    net = Neural_Network()
     net.train()
 
     # Define optimizer
