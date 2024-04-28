@@ -72,7 +72,17 @@ def Collision_detector(kd_tree, pred_traj, imu_obj, threshold=0.41):
         collosion[i] = np.any(distances < threshold)
     return collosion # shape = (modes,); collision[i] is true if ith mode trajectory has collisions, false otherwise
 
-
+def collision_percentage(kd_tree, pred_trajs, imu_objs, threshold=0.41):
+    # pred_trajs shape = [batch, 31, mode]
+    # imu_objs shape = [batch, 18]
+    # kd_tree is assumed to be a KDTreeFlann object
+    batch = pred_trajs.shape[0]
+    num_collisions = 0
+    for i in range(batch):
+        traj = pred_trajs[i]
+        imu = imu_objs[i]
+        num_collisions += np.any(Collision_detector(kd_tree, traj, imu, threshold)==True)
+    return (num_collisions/batch) * 100
 
 # transform body frame to world frame using odometry
 def transfrom_trajectories_to_world_frame(trajectories, odometry, traj_indexes):
