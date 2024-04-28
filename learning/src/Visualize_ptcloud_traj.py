@@ -83,20 +83,6 @@ def transform_nn_output_to_world_frame(pred_traj, imu_obj):
     pos = imu_obj[:3]
     return transform_trajectory_to_world_frame(pred_traj, R, pos)
 
-"""
-def transformToWorldFrame(trajectory, start_pos, start_att, ref_frame='bf'):
-    if ref_frame == 'bf':
-        T_W_S = Pose(start_att, start_pos)
-    else:
-        assert False, "Unknown reference frame."
-
-    for i in range(trajectory.shape[1]):
-        bf_pose = Pose(np.eye(3), trajectory[:, i].reshape((3, 1)))
-        wf_pose = T_W_S * bf_pose
-        trajectory[:, i] = np.squeeze(wf_pose.t)
-    return trajectory
-"""
-
 transfrom_trajectories_to_world_frame(all_expert_trajectories, odometry, traj_indexes) 
 # bf_traj_towf = transform_trajectory_to_world_frame(bf_traj, R, pos)
 # print(bf_traj_towf)
@@ -163,7 +149,7 @@ def traj_lines_and_spheres_from_points(multi_mode_traj):
     spheres = []
     for i in range(modes):
         lines.append(create_line(multi_mode_traj[i], colors[i]))
-        spheres += create_spheres(multi_mode_traj[i], radius=0.05, color=colors[i])
+        spheres += create_spheres(multi_mode_traj[i], radius=0.15, color=colors[i])
     return lines, spheres
 
 # Specify the center and radius of the sphere
@@ -194,18 +180,6 @@ geometries += all_spheres
 # visualize the trajectories for pointcloud that does not have canopy
 points = np.asarray(point_cloud.points)
 
-# Filter the points based on the z-axis range
-z_min, z_max = -2.0871169567108154, 2.7
-filtered_points = points[(points[:, 2] >= z_min) & (points[:, 2] <= z_max)]
-
-# Create a new point cloud with the filtered points
-filtered_point_cloud = o3d.geometry.PointCloud()
-filtered_point_cloud.points = o3d.utility.Vector3dVector(filtered_points)
-o3d.visualization.draw_geometries([filtered_point_cloud] + geometries)
-o3d.visualization.draw_geometries([point_cloud] + geometries)
-
-
-
 """
 points = np.asarray(point_cloud.points)
 
@@ -218,3 +192,16 @@ print("Y-axis interval:", y_interval)
 print("Z-axis interval:", z_interval)
 
 """
+
+# X-axis interval: (-29.900005340576172, 49.90015411376953)
+# Y-axis interval: (10.099995613098145, 29.900043487548828)
+# Z-axis interval: (-2.0871169567108154, 6.712880611419678)
+# Filter the points based on the z-axis range
+z_min, z_max = -2.0871169567108154, 3 # This has to be chosen manually for a rollout
+filtered_points = points[(points[:, 2] >= z_min) & (points[:, 2] <= z_max)]
+
+# Create a new point cloud with the filtered points
+filtered_point_cloud = o3d.geometry.PointCloud()
+filtered_point_cloud.points = o3d.utility.Vector3dVector(filtered_points)
+o3d.visualization.draw_geometries([filtered_point_cloud] + geometries)
+o3d.visualization.draw_geometries([point_cloud] + geometries)
