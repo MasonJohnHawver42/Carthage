@@ -78,10 +78,8 @@ class Neural_Network(nn.Module):
         backbone_depth = backbone_depth.reshape(backbone_depth.shape[0], -1) # [batch_size, 960*49 = 47040]
         backbone_depth = backbone_depth.unsqueeze(-1) # [batch_size, 47040, 1]
         backbone_depth = self.depth_backbone_conv1d_1(backbone_depth) # [batch_size, 32, 1]
-        backbone_depth = self.depth_backbone_relu(backbone_depth)
         backbone_depth = backbone_depth.permute(0, 2, 1) # [batch_size, 1, 32]
         backbone_depth = self.backbone_conv1d_reshape(backbone_depth) # [batch_size, 3, 32]
-        backbone_depth = self.depth_backbone_relu(backbone_depth)
 
         # Get imu from input and run through forward layers
         backbone_states = input[1] #  [batch_size, 18]
