@@ -68,6 +68,7 @@ set(
     ext/imgui/backends
     ext/large_scale_traj_optimizer/include
     ext/eigen
+    ext/glm
     ${OPENGL_INCLUDE_DIR}
 )
 

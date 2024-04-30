@@ -6,7 +6,7 @@
 ## Install, Compile, and Run 
 
 ```
-sudo apt install build-essential cmake libglu1-mesa-dev freeglut3-dev mesa-common-dev
+sudo apt install build-essential cmake libglu1-mesa-dev freeglut3-dev  mesa-common-dev libxkbcommon-dev
 git submodule update --init --recursive
 mkdir build
 cmake -B build
