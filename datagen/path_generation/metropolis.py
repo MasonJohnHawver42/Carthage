@@ -1,106 +1,73 @@
+import argparse
 import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
 import random
-import struct
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.interpolate import BSpline
 import open3d as o3d
+import pandas as pd
+import csv
+import os
+import shutil
 
-def get_nominal_path(velocity):
-    # Open the text file for reading
-    with open('path_generation/path.txt', 'r') as file:
-        # Read the contents of the file
-        data = file.read()
 
-    # Split the data into lines and remove empty lines
-    lines = data.strip().split('\n')
+def get_nominal_path(nom_path):
+    given_path = pd.read_csv(nom_path)
+    return given_path
 
-    # Predefine the coord list
-    x_values = []
-    y_values = []
-    height_values = []
-    for line in lines:
-        line_split = line.split()
-        x_values.append(float(line_split[0]))
-        y_values.append(float(line_split[1]))
-        height_values.append(float(line_split[2]))
+def sample_test_path(path):
+    first_time_step = path.iloc[0]
+    prev_time = first_time_step['time_from_start']
+    time_step = prev_time
+    sampled_path = path[path['time_from_start']==prev_time]
+    count = 1
+    for time in path['time_from_start']:
+        if time >= (time_step+0.1):
+            lower_percent = (time - (0.1+time_step))/(time-prev_time)
+            upper_percent = (0.1+time_step - prev_time)/(time-prev_time)
+            lower_labels = path[path['time_from_start']==prev_time]
+            upper_labels = path[path['time_from_start']==time]
+            time_step+=0.1
+            row_upper = upper_labels.iloc[0]
+            row_lower = lower_labels.iloc[0]
+            new_labels = row_lower*lower_percent+row_upper*upper_percent
 
-    path = []
-    for i in range(len(lines) - 1):
-        p1 = {'x': x_values[i], 'y': y_values[i], 'height': height_values[i]}
-        p2 = {'x': x_values[i + 1], 'y': y_values[i + 1], 'height': height_values[i + 1]}
-        
-        # Interpolate 10 points between p1 and p2
-        interpolated_points = interpolate_points(p1, p2, 1000)
-        
-        # Add the points to the path
-        path.extend(interpolated_points)    
-
-    # Add the last point
-    path.append({'x': x_values[-1], 'y': y_values[-1], 'height': height_values[-1]})
-
-    # Calculate distance between points
-    sampled_path = []
-    dist = 0
-    # Add first point
-    sampled_path.append({'x': x_values[0], 'y': y_values[0], 'height': height_values[0]})
-    k=1
-    for point_ind in range(len(path)-1):
-        p_current = np.array([path[point_ind]['x'],path[point_ind]['y'],path[point_ind]['height']])
-        p_next = np.array([path[point_ind+1]['x'],path[point_ind+1]['y'],path[point_ind+1]['height']])
-        dist += np.linalg.norm(p_next-p_current)
-        # print(0.1*k*velocity)
-        if dist>=(0.1*k*velocity):
-            sampled_path.append({'x': path[point_ind+1]['x'], 'y':path[point_ind+1]['y'], 'height':path[point_ind+1]['height']})
-            k += 1
-
-    # Print out the points
-    print("Point  X       Y       Height")
-    for i in range(len(lines)):
-        print(f"{i+1:<7}{x_values[i]:<8.2f}{y_values[i]:<8.2f}{height_values[i]:<8.2f}")
-
+            # Create the DataFrame with the provided values
+            new_row = pd.DataFrame({
+                'time_from_start': new_labels['time_from_start'],  # 'time_from_start' already rounded
+                'pos_x': new_labels['pos_x'],
+                'pos_y': new_labels['pos_y'],
+                'pos_z': new_labels['pos_z'],
+                'vel_x': new_labels['vel_x'],
+                'vel_y': new_labels['vel_y'],
+                'vel_z': new_labels['vel_z'],
+                'acc_x': new_labels['acc_x'],
+                'acc_y': new_labels['acc_y'],
+                'acc_z': new_labels['acc_z'],
+                'q_w': new_labels['q_w'],
+                'q_x': new_labels['q_x'],
+                'q_y': new_labels['q_y'],
+                'q_z': new_labels['q_z'],
+                'omega_x': new_labels['omega_x'],
+                'omega_y': new_labels['omega_y'],
+                'omega_z': new_labels['omega_z'],
+                'reference_progress': new_labels['reference_progress'],
+                'pitch_angle': new_labels['pitch_angle']
+            },index = [count])
+            count += 1
+            # Concatenate the new row with the original DataFrame
+            sampled_path = pd.concat([sampled_path, new_row], ignore_index=True)
+        prev_time = time
     return sampled_path
 
-def interpolate_points(p1, p2, num_points):
-    """
-    Interpolate points between p1 and p2.
-    """
-    x_values = np.linspace(p1['x'], p2['x'], num_points + 2)[1:-1]
-    y_values = np.linspace(p1['y'], p2['y'], num_points + 2)[1:-1]
-    height_values = np.linspace(p1['height'], p2['height'], num_points + 2)[1:-1]
-    
-    interpolated_points = [{'x': x, 'y': y, 'height': h} for x, y, h in zip(x_values, y_values, height_values)]
-    
-    return interpolated_points
 
-def get_environment():
+def get_environment(pointcloud_path):
     # Define the file path
-    file_path = "data/scenes/test.xyz"
-
-    # Open the file for reading in binary mode
-    with open(file_path, 'rb') as f:
-        # Read the total number of points
-        total_points = struct.unpack('i', f.read(4))[0]
-
-        # Initialize a list to store point cloud data
-        point_cloud = []
-
-        # Read point cloud data
-        for _ in range(total_points):
-            point = np.zeros(3, dtype=np.float32)
-            point[0] = struct.unpack('f', f.read(4))[0]
-            point[1] = struct.unpack('f', f.read(4))[0]
-            point[2] = struct.unpack('f', f.read(4))[0]
-            point_cloud.append(point)
-
-    # Convert point cloud to Open3D format
-    point_cloud_o3d = o3d.geometry.PointCloud()
-    point_cloud_o3d.points = o3d.utility.Vector3dVector(point_cloud)
-    point_cloud_tree = o3d.geometry.KDTreeFlann(point_cloud_o3d)
+    pointcloud_data = o3d.io.read_point_cloud(pointcloud_path)
+    point_cloud_tree = o3d.geometry.KDTreeFlann(pointcloud_data)
 
     test_point = np.array([11.821883,6.802271,-5.069488])
-    # Reshape the array to a 3x1 vector
     test_point = test_point.reshape(3, 1)
 
     collision_threshold = 1
@@ -110,30 +77,55 @@ def get_environment():
     if indices:
         # Find the closest point and its distance
         closest_distance = np.min(distances_squared)
-        closest_point_index = np.argmin(distances_squared)
-        closest_point = point_cloud[indices[closest_point_index]]
-        
-        print("Closest Point:", closest_point)
         print("Closest Distance:", np.sqrt(closest_distance))
     
     return point_cloud_tree
 
+def create_dataset(odometry,reference_trajectory,environment,img_dir):
+    # Create the folder
+    rollout_dir = 'Rollout'
+    os.makedirs('Rollout',exist_ok=True)
+    os.makedirs('Rollout/img',exist_ok=True)
+    os.makedirs('Rollout/trajectories',exist_ok=True)
+
+    # Copy files to the respective folders
+    shutil.copy(odometry, os.path.join(rollout_dir,'odometry.csv'))
+    shutil.copy(reference_trajectory, os.path.join(rollout_dir,'reference_trajectory.csv'))
+    shutil.copy(environment, os.path.join(rollout_dir,'pointcloud-unity.ply'))
+
+    # Iterate over files in the source directory
+    for filename in os.listdir(img_dir):
+        if filename.startswith("gt"):  # Check if filename starts with "gt"
+            # Construct full paths for source and destination files
+            source_file = os.path.join(img_dir, filename)
+            destination_file = os.path.join('Rollout/img', filename)
+            
+            # Copy the file to the destination directory
+            shutil.copy(source_file, destination_file)
+    
 
 def metropolis_alg(nom_path,point_cloud_tree):
     # Constants
-    num_paths = 3
-    # variances = [2,5,10]
-    variances = [0.5,1,2]
+    num_paths = 5000
+    variances = [0.1,0.5,0.9,0.95]
     variance_count = 0
-    increase_int = 16000
+    increase_int = 1600
     forward_int = 11
-    max_int = 10000
+    max_int = 100
 
     metro_paths = []
     metro_samples = []
     costs = []
 
-    # Loop over number of paths
+    ref_dists = []
+    tot_distance = 0
+    for i in range(len(nom_path) - 1):
+        distance = np.sqrt((nom_path[i]['x'] -nom_path[i+1]['x'])**2 + 
+                     (nom_path[i]['y'] - nom_path[i+1]['y'])**2 + 
+                     (nom_path[i]['height'] - nom_path[i+1]['height'])**2)
+        tot_distance += distance
+        ref_dists.append(tot_distance)
+    
     for path_num in range(num_paths):
         print('path number')
         print(path_num)
@@ -179,7 +171,6 @@ def metropolis_alg(nom_path,point_cloud_tree):
                 path_to_test.append(point)
                 vector.append([x,y,z])
 
-
             vector = np.array(vector)
             end_position = path[-1]
 
@@ -194,31 +185,28 @@ def metropolis_alg(nom_path,point_cloud_tree):
             closest_start_index = np.argmin(start_distances)
             closest_end_index = np.argmin(end_distances)
             path_to_test[closest_start_index] = start_position
-            path_to_test = path_to_test[closest_start_index:(closest_end_index+40)]
+            path_to_test = path_to_test[closest_start_index:(closest_end_index+50)]
 
             # Make the test path to be sampled with 0.1 seconds
             sampled_test_path = []
             dist = 0
+            count = 0
+
             # Add first point
             sampled_test_path.append({'x': path_to_test[0]['x'], 'y': path_to_test[0]['y'], 'height': path_to_test[0]['height']})
-            k = 1
-            for point_ind in range(len(path_to_test)):
+            for point_ind in range(len(path_to_test)-1):
                 p_current = np.array([path_to_test[point_ind]['x'],path_to_test[point_ind]['y'],path_to_test[point_ind]['height']])
                 p_next = np.array([path_to_test[point_ind+1]['x'],path_to_test[point_ind+1]['y'],path_to_test[point_ind+1]['height']])
                 dist += np.linalg.norm(p_next-p_current)
 
-                if dist >=(0.1*k*velocity):
+                if dist >= ref_dists[count]:
+                    count += 1
                     sampled_test_path.append({'x': path_to_test[point_ind+1]['x'], 'y': path_to_test[point_ind+1]['y'], 'height': path_to_test[point_ind+1]['height']})
-                    if k == 10:
+                    if len(sampled_test_path) == 11:
                         break
-                    else:
-                        k+=1
-            
             
             # Calculate cost of path
-            cost_percentage = calc_cost(point_cloud_tree,nom_path,sampled_test_path)
-            print('cost percentage')
-            print(cost_percentage)
+            cost_percentage,cost = calc_cost(point_cloud_tree,nom_path,sampled_test_path)
             random_percent = random.random()
             if cost_percentage > random_percent:
                 break
@@ -228,33 +216,33 @@ def metropolis_alg(nom_path,point_cloud_tree):
                 path.append(start_position)
                 current_position = start_position
 
-            if max_num == max_int:
-                print('Could not find path within 10000 iterations')
+            if max_num == max_int-1:
+                print('Could not find path within 100 iterations')
                 path = 'no_path'
-
+                return "no_path","no_samples","no_cost",False
 
         if path != 'no_path':
-            costs.append(cost_percentage)
+            costs.append(cost)
             metro_paths.append(sampled_test_path)
             metro_samples.append(b_spline_points)
 
         else:
-            print('No path found using max iterations. Try to increase iterations, or investigate if path is possible')
-
-    return metro_paths,metro_samples,costs
+            print(f"No path found using max iterations for iteration {path_num}")
+    if len(costs) == 0:
+        print('no_path_found')
+        return "no_path","no_samples","no_cost",False
+    
+    else:
+        return metro_paths,metro_samples,costs,True
 
 
 def quadratic_bspline(points):
-    # Ensure we have exactly 3 points
-    if len(points) != 3:
-        raise ValueError("quadratic_bspline() requires exactly 3 points")
 
     # Extract x, y, z coordinates
     x = [point[0] for point in points]
     y = [point[1] for point in points]
     z = [point[2] for point in points]
 
-    # Parameter values for interpolation
     t = np.linspace(0, 1, 6)  # 3 points + degree + 1
 
     # Quadratic B-spline interpolation
@@ -264,7 +252,7 @@ def quadratic_bspline(points):
 
     return bspline_x, bspline_y, bspline_z
 
-def sample_from_normal_distribution(current_position,nom_start,nom_next,variance,index,velocity=5,time=0.1):
+def sample_from_normal_distribution(current_position,nom_start,nom_next,variance,index):
 
     # Extract current position values
     x_nom, y_nom, height_nom = nom_next['x'], nom_next['y'], nom_next['height']
@@ -282,12 +270,8 @@ def sample_from_normal_distribution(current_position,nom_start,nom_next,variance
 
     if (index+1)%5 == 0 and index != 0:
         # # Create a normal distribution of theta and phi
-        theta_variance = np.arcsin((variance/np.sqrt(2))/radius_from_nom_start)
-        phi_variance = np.arcsin((variance/np.sqrt(2))/radius_from_nom_start)
-
-        # Calculate maximum allowable offsets
-        # theta_variance = np.arctan(1/(velocity*time))
-        # phi_variance = theta_variance
+        theta_variance = variance
+        phi_variance = variance
 
         # Generate random offsets for theta and phi
         theta_offset = np.random.normal(loc=0, scale=theta_variance)
@@ -309,7 +293,6 @@ def sample_from_normal_distribution(current_position,nom_start,nom_next,variance
         new_y_from_nom_start = radius_from_nom_start * np.sin(theta_from_nom_start) * np.sin(phi_from_nom_start)
         new_z_from_nom_start = radius_from_nom_start * np.cos(theta_from_nom_start)
 
-
     # Create and return the new point
     test_point = {
         'x': x_start + new_x_from_nom_start,
@@ -327,10 +310,10 @@ def calc_cost(point_cloud_tree,nominal_trajectory,test_trajectory):
     radius_to_check = 0.4
     d_c = np.inf
     cost = 0
+
     for j in range(len(test_trajectory)):
         test_point = np.array([test_trajectory[j]['x'],test_trajectory[j]['y'],test_trajectory[j]['height']])
         [_,indices,distances_squared] = point_cloud_tree.search_radius_vector_3d(test_point,radius_to_check)
-
         # Check if any points are found within the radius
         if indices:
             d_c = np.sqrt(np.min(distances_squared))
@@ -345,11 +328,6 @@ def calc_cost(point_cloud_tree,nominal_trajectory,test_trajectory):
         x_diff = test_trajectory[j]['x'] - nominal_trajectory[j]['x']
         y_diff = test_trajectory[j]['y'] - nominal_trajectory[j]['y']
         z_diff = test_trajectory[j]['height'] - nominal_trajectory[j]['height']
-        if C_collision != 0:
-            print('Collision')
-            print(C_collision)
-            print('Collision index')
-            print(j)
 
         tau = np.array([x_diff,y_diff,z_diff])
         tau = tau.reshape(3,1)
@@ -357,7 +335,7 @@ def calc_cost(point_cloud_tree,nominal_trajectory,test_trajectory):
 
     cost_percentage = np.exp(-cost)
 
-    return float(cost_percentage)
+    return float(cost_percentage),float(cost)
 
 
 def visualize_path(path, samples, nom_path=None):
@@ -371,11 +349,7 @@ def visualize_path(path, samples, nom_path=None):
 
     # Plot the path
     ax.plot(x_values, y_values, height_values, label='Path')
-
-    # Mark start point
     ax.scatter(x_values[0], y_values[0], height_values[0], c='g', marker='o', label='Start')
-
-    # Mark end point
     ax.scatter(x_values[-1], y_values[-1], height_values[-1], c='r', marker='o', label='End')
 
     # Mark points in between with blue
@@ -434,24 +408,104 @@ def visualize_paths(paths, nom_path=None):
         nom_y_values = [point['y'] for point in nom_path]
         nom_height_values = [point['height'] for point in nom_path]
         ax.plot(nom_x_values, nom_y_values, nom_height_values, c='orange', linestyle='--', label='Nominal Path')
-
+    
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
     ax.set_zlabel('Height')
 
-    # Show legend only for the first plot
+    ax.set_box_aspect([1, 1, 1])
     ax.legend()
 
     plt.show()
 
 
 if __name__ == '__main__':
-    velocity = 5 # m/s
-    nominal_trajectory = get_nominal_path(velocity)
-    # point_cloud_tree = get_environment()
-    for path_step in range(len(nominal_trajectory)-2):
-        point_cloud_tree = get_environment()
-        metro_paths,metro_samples,costs = metropolis_alg(nominal_trajectory[(path_step):(path_step+11)],point_cloud_tree)
-        visualize_path(metro_paths[0],metro_samples[0],nominal_trajectory)
-        visualize_paths(metro_paths,nominal_trajectory)
-        # Chose top 3 paths
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--visualize', action='store_true', help='Option to visualize')
+    parser.add_argument('--path_to_data', type=str, required=True, help='Mandatory argument file to csv file with paths to data is stored')
+    args = parser.parse_args()
+
+    # Create dataset structure
+    path_to_data = pd.read_csv(args.path_to_data)
+    odometry_path = path_to_data['odometry_path'].iloc[0]
+    reference_path = path_to_data['reference_path'].iloc[0]
+    pointcloud_path = path_to_data['pointcloud_path'].iloc[0]
+    img_dir = path_to_data['img_dir'].iloc[0]
+    create_dataset(odometry_path,reference_path,pointcloud_path,img_dir)
+
+    # Get nominal path
+    nominal_trajectory = get_nominal_path(odometry_path)
+
+    # Find last point that could traverse one second in the furute
+    time_at_last_index = nominal_trajectory.iloc[-1]['time_from_start']
+    reversed_nominal_trajectory = nominal_trajectory[::-1]
+    desired_timestep = reversed_nominal_trajectory[reversed_nominal_trajectory['time_from_start'] <= time_at_last_index-1].iloc[0]['time_from_start']
+    last_valid_index = nominal_trajectory[nominal_trajectory['time_from_start'] == desired_timestep].index.tolist()[0]
+
+    for path_step in range(last_valid_index-1):
+        # Sample 1 second to the future with 0.1 seconds interval
+        time_at_path_step = nominal_trajectory.iloc[path_step]['time_from_start']
+        desired_timestep = nominal_trajectory[nominal_trajectory['time_from_start'] >= time_at_path_step+1].iloc[0]['time_from_start']
+        next_path_step = nominal_trajectory[nominal_trajectory['time_from_start'] == desired_timestep].index.tolist()[0]
+        nom_traj_1_second = sample_test_path(nominal_trajectory[path_step:next_path_step+2])
+        # Get environment
+        point_cloud_tree = get_environment(pointcloud_path)
+        nom_traj_list = []
+        # Iterate over each row in the DataFrame
+        for index, row in nom_traj_1_second.iterrows():
+            # Create a dictionary for the current timestep
+            timestep_data = {
+                'x': row['pos_x'],
+                'y': row['pos_y'],
+                'height': row['pos_z']
+            }
+            nom_traj_list.append(timestep_data)
+            
+        metro_paths,metro_samples,costs,valid_path_test = metropolis_alg(nom_traj_list,point_cloud_tree)
+        if valid_path_test:
+            # Enumerate the costs along with their indices and sort them by cost
+            sorted_costs_with_indices = sorted(enumerate(costs), key=lambda x: x[1])
+
+            # Get the indices of the lowest three costs
+            lowest_three_indices = [index for index, _ in sorted_costs_with_indices[:3]]
+
+            # Write data to CSV file
+            csv_names = [f"{prefix}_{index}" for index in range(11) for prefix in ["pos_x", "pos_y", "pos_z", "vel_x", "vel_y", "vel_z", "acc_x", "acc_y", "acc_z"]]
+            csv_names.append("cost")
+
+            # Write only the column names as the first row of the CSV
+            filename = f"Rollout/trajectories/traj{path_step}.csv"
+
+            with open(filename, 'w', newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(csv_names)
+            lowest_metro_paths = []
+            for lowest_cost_ind in lowest_three_indices:
+                lowest_metro_paths.append(metro_paths[lowest_cost_ind])
+                s = 0
+                data_to_csv = []
+                for i in range(len(metro_paths[lowest_cost_ind])):
+                    print(s)
+                    s +=1
+                    data_to_csv.append([metro_paths[lowest_cost_ind][i]['x'], metro_paths[lowest_cost_ind][i]['y'], 
+                                    metro_paths[lowest_cost_ind][i]['height'], nominal_trajectory.iloc[path_step+i]["vel_x"], 
+                                    nominal_trajectory.iloc[path_step+i]["vel_y"], nominal_trajectory.iloc[path_step+i]["vel_z"], 
+                                    nominal_trajectory.iloc[path_step+i]["acc_x"], nominal_trajectory.iloc[path_step+i]["acc_y"], 
+                                    nominal_trajectory.iloc[path_step+i]["acc_z"],costs[lowest_cost_ind]])
+                    
+                # Write data to CSV file
+                flattened_csv = [item for sublist in data_to_csv for item in sublist]
+                filename = f"Rollout/trajectories/traj{path_step}.csv"
+                with open(filename, 'a', newline='') as csvfile:
+                    writer = csv.writer(csvfile)
+                    writer.writerows([flattened_csv])
+            if args.visualize:
+                visualize_path(metro_paths[lowest_three_indices[0]],metro_samples[lowest_three_indices[0]],nom_traj_list)
+                visualize_paths(lowest_metro_paths,nom_traj_list)
+
+        else:
+            print("No path found")
+        
+        # visualize_path(metro_paths[0],metro_samples[0],nom_traj_list)
+        # visualize_paths(metro_paths,nom_traj_list)
