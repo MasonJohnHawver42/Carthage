@@ -1,0 +1,2 @@
+odometry_path,reference_path,pointcloud_path,img_dir
+data/odometry.csv,data/reference_trajectory.csv,data/pointcloud-unity.ply,data/img
